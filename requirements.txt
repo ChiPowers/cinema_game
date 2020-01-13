@@ -1,1 +1,3 @@
+graphx==0.0.4
+IMDbPY==6.8
 
