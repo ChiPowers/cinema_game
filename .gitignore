@@ -111,3 +111,6 @@ Thumbs.db
 
 # .idea files
 .idea
+
+# project specific
+secrets.py
