@@ -1,3 +1,6 @@
+xlrd==1.2.0
+matplotlib==3.1.2
 graphx==0.0.4
 IMDbPY==6.8
+Django==3.0.2
 djangorestframework==3.11.0
