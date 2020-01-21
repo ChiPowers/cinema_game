@@ -114,3 +114,4 @@ Thumbs.db
 
 # project specific
 secrets.py
+db.sqlite3
