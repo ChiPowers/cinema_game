@@ -21,15 +21,6 @@ def add_arc(g: nx.Graph, movie, person, job=None):
         g.edges[(movie, person)]["job"].add(job)
 
 
-def traverse_s3(g: nx.Graph, ia, depth, movies=None, people=None):
-    if movies is not None:
-        for movie in movies:
-            traverse_s3_from_movie(g, ia, depth, movie)
-    if people is not None:
-        for person in people:
-            traverse_s3_from_person(g, ia, depth, person)
-
-
 def try_get(id, getter):
     try:
         return getter(id)
@@ -53,46 +44,83 @@ def interpret_objects(objs, getter):
     return objs
 
 
-def is_actress(person):
-    if "primary profession" in person:
-        return "actress" in person["primary profession"].split(",")
-    blurt("{} has not primary profession".format(person.getID()))
-    return False
+class GraphMaker:
+    def __init__(self, ia, g: nx.Graph = None):
+        self.depth_record = dict()
+        self.ia = ia
+        if g is None:
+            g = nx.Graph()
+        self.g = g
+
+    def people_from_movie(self, movie):
+        raise NotImplementedError()
+
+    def movies_from_person(self, person):
+        raise NotImplementedError()
+
+    def traverse_from_person(self, person, depth):
+        if depth < 0:
+            blurt("done")
+            return
+        self.ia.update(person, info="main")
+        for movie in self.movies_from_person(person):
+            self.traverse_from_movie(movie, depth)
+
+    def traverse_from_movie(self, movie, depth):
+        if depth < 0:
+            blurt("done")
+            return
+        blurt("movie \"{}\" depth {}".format(movie, depth))
+        people_jobs = self.people_from_movie(movie)
+
+        for person, job in people_jobs:
+            add_arc(self.g, movie.getID(), person.getID(), job=job)
+
+        if movie.getID() not in self.depth_record:
+            self.depth_record[movie.getID()] = depth
+        else:
+            if depth > self.depth_record[movie.getID()]:
+                self.depth_record[movie.getID()] = depth
+                for person, _ in people_jobs:
+                    self.traverse_from_person(person, depth - 1)
+
+    def traverse(self, depth, movies=None, people=None):
+        if movies is not None:
+            for movie in movies:
+                self.traverse_from_movie(movie, depth)
+        if people is not None:
+            for person in people:
+                self.traverse_from_person(person, depth)
 
 
-def traverse_s3_from_movie(g: nx.Graph, ia, depth, movie):
-    blurt("movie {} depth {}".format(movie, depth))
-    if depth < 0:
-        blurt('done')
-        return
-    if "cast" in movie:
-        cast = interpret_objects(movie["cast"], ia.get_person)
-        for person in cast:
-            job = "actress" if is_actress(person) else "actor"
-            add_arc(g, movie.getID(), person.getID(), job=job)
-            traverse_s3_from_person(g, ia, depth - 1, person)
-    if "writer" in movie:
-        for writer in interpret_objects(movie["writer"], ia.get_person):
-            add_arc(g, movie.getID(), writer.getID(), job="writer")
-            traverse_s3_from_person(g, ia, depth - 1, writer)
-    if "director" in movie:
-        for director in interpret_objects(movie["director"], ia.get_person):
-            add_arc(g, movie.getID(), director.getID(), job="director")
-            traverse_s3_from_person(g, ia, depth - 1, director)
-    if "producer" in movie:
-        for producer in interpret_objects(movie["producer"], ia.get_person):
-            add_arc(g, movie.getID(), producer.getID(), job="producer")
-            traverse_s3_from_person(g, ia, depth - 1, producer)
+class S3GraphMaker(GraphMaker):
+    def __init__(self, ia, g: nx.Graph = None):
+        GraphMaker.__init__(self, ia, g=g)
+
+    def people_from_movie(self, movie):
+        people_jobs = []
+
+        def append(people, job):
+            for person in people:
+                people_jobs.append((person, job))
+
+        if "cast" in movie:
+            cast = interpret_objects(movie["cast"], self.ia.get_person)
+            append(cast, "actor")
+        if "writer" in movie:
+            writers = interpret_objects(movie["writer"], self.ia.get_person)
+            append(writers, "writer")
+        if "director" in movie:
+            directors = interpret_objects(movie["director"], self.ia.get_person)
+            append(directors, "director")
+        if "producer" in movie:
+            producers = interpret_objects(movie["producer"], self.ia.get_person)
+            append(producers, "producer")
+        return people_jobs
+
+    def movies_from_person(self, person):
+        if "known for" in person:
+            return interpret_objects(person["known for"], self.ia.get_movie)
+        return []
 
 
-def traverse_s3_from_person(g: nx.Graph, ia, depth, person):
-    blurt("person {} depth {}".format(person, depth))
-    ia.update(person, info='main')
-    if "known for" in person:
-        for movie in interpret_objects(person["known for"], ia.get_movie):
-            blurt(movie)
-            ia.update(movie, info='main')
-            if movie.getID() not in g.nodes:
-                traverse_s3_from_movie(g, ia, depth, movie)
-            else:
-                blurt("already processed {}".format(movie))
