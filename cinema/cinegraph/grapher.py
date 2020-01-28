@@ -9,16 +9,49 @@ def blurt(s):
         print(s)
 
 
-def add_arc(g: nx.Graph, movie, person, job=None):
-    blurt("{} to {}".format(movie, person))
-    if movie not in g.nodes:
-        g.add_node(movie, t="movie")
+class ProfessionalNode:
+    def __init__(self, id, t):
+        self.id = id
+        self.t = t
+
+    def __hash__(self):
+        return hash(self.id) + hash(self.t)
+
+    def __eq__(self, other):
+        return self.id == other.id and self.t == other.t
+
+
+class PersonNode(ProfessionalNode):
+    def __init__(self, id):
+        ProfessionalNode.__init__(self, id, "person")
+
+
+class WorkNode(ProfessionalNode):
+    def __init__(self, id):
+        ProfessionalNode.__init__(self, id, "work")
+
+
+def add_arc(g: nx.Graph, work, person, job=None):
+    """
+    Add an edge between a work and a person in a professional graph. Add movie and person as nodes if not already in
+    graph. A person can be added multiple times to the same work with different jobs by calling this function multiple
+    times.
+    :param g: graph
+    :param work: id for professional work such as a movie, document or music album
+    :param person: id for a person participating in producing a work
+    :param job: the job performed by person in work
+    """
+    blurt("{} to {}".format(work, person))
+    work = WorkNode(work)
+    person = PersonNode(person)
+    if work not in g.nodes:
+        g.add_node(work)
     if person not in g.nodes:
-        g.add_node(person, t="person")
-    if (movie, person) not in g.edges:
-        g.add_edge(movie, person, job=set())
+        g.add_node(person)
+    if (work, person) not in g.edges:
+        g.add_edge(work, person, job=set())
     if job is not None:
-        g.edges[(movie, person)]["job"].add(job)
+        g.edges[(work, person)]["job"].add(job)
 
 
 def try_get(id, getter):
@@ -38,6 +71,13 @@ def try_get_objects(ids: str, getter):
 
 
 def interpret_objects(objs, getter):
+    """
+    If objs is a list of objects, return those objects without alteration. If objs is a comma separated string, spit
+    the string and attempt to get the objects corresponding to string parts interpreted as ids using getter.
+    :param objs: A list of objects or a comma separated string of ids.
+    :param getter: A function for looking up objects by ids.
+    :return: A list of objects
+    """
     blurt("interpreting {}".format(objs))
     if type(objs) is str:
         return try_get_objects(objs, getter)
@@ -45,82 +85,89 @@ def interpret_objects(objs, getter):
 
 
 class GraphMaker:
+    """
+    Utility class for appending connections to a professional graph.
+    """
+
     def __init__(self, ia, g: nx.Graph = None):
+        """
+        Initializer
+        :param ia: database of professional works. Could be imdbpy imdb object for example.
+        :param g: A graph. If none, initializer will create a graph.
+        """
         self.depth_record = dict()
         self.ia = ia
         if g is None:
             g = nx.Graph()
         self.g = g
 
-    def people_from_movie(self, movie):
+    def people_from_work(self, work):
+        """
+        Look up people contributing to a work.
+        :param work: id of a work, movie, document or album from a professional database
+        :return: List of people objects.
+        """
         raise NotImplementedError()
 
-    def movies_from_person(self, person):
+    def works_from_person(self, person):
+        """
+        Look up works to which person has contributed as a collaborator of some sort.
+        :param person: is of person in a database
+        :return: List of work objects.
+        """
         raise NotImplementedError()
 
     def traverse_from_person(self, person, depth):
+        """
+        Add nodes and edges to a professional graph up to depth works started with person and all works to which that
+        person has contributed.
+        :param person: id of person in database
+        :param depth: depth for which to travers professional graph. Stop if less than zero
+        """
+        blurt('work "{}" depth {}'.format(person, depth))
         if depth < 0:
             blurt("done")
             return
-        self.ia.update(person, info="main")
-        for movie in self.movies_from_person(person):
-            self.traverse_from_movie(movie, depth)
+        for work in self.works_from_person(person):
+            self.traverse_from_work(work, depth)
 
-    def traverse_from_movie(self, movie, depth):
+    def traverse_from_work(self, work, depth):
+        """
+        Add nodes and edges to a professional graph up to depth works started with a work and all collaborators on that
+        work.
+        :param work: id of work in database
+        :param depth: depth for which to travers professional graph. Stop if less than zero
+        """
         if depth < 0:
             blurt("done")
             return
-        blurt("movie \"{}\" depth {}".format(movie, depth))
-        people_jobs = self.people_from_movie(movie)
+        blurt('work "{}" depth {}'.format(work, depth))
+        people_jobs = self.people_from_work(work)
 
         for person, job in people_jobs:
-            add_arc(self.g, movie.getID(), person.getID(), job=job)
+            add_arc(self.g, work.getID(), person.getID(), job=job)
 
-        if movie.getID() not in self.depth_record:
-            self.depth_record[movie.getID()] = depth
+        if work.getID() not in self.depth_record:
+            self.depth_record[work.getID()] = depth
         else:
-            if depth > self.depth_record[movie.getID()]:
-                self.depth_record[movie.getID()] = depth
-                for person, _ in people_jobs:
-                    self.traverse_from_person(person, depth - 1)
+            if depth > self.depth_record[work.getID()]:
+                self.depth_record[work.getID()] = depth
+            else:
+                return
 
-    def traverse(self, depth, movies=None, people=None):
-        if movies is not None:
-            for movie in movies:
-                self.traverse_from_movie(movie, depth)
+        for person, _ in people_jobs:
+            self.traverse_from_person(person, depth - 1)
+
+    def traverse(self, depth, works=None, people=None):
+        """
+        Populate graph starting at possibly multiple works.
+        :param depth: depth to which to populate graph from starting works and collaborators
+        :param works: None or a list of ids for works
+        :param people: None or a list of ids for people
+        """
+        if works is not None:
+            for work in works:
+                self.traverse_from_work(work, depth)
         if people is not None:
             for person in people:
                 self.traverse_from_person(person, depth)
-
-
-class S3GraphMaker(GraphMaker):
-    def __init__(self, ia, g: nx.Graph = None):
-        GraphMaker.__init__(self, ia, g=g)
-
-    def people_from_movie(self, movie):
-        people_jobs = []
-
-        def append(people, job):
-            for person in people:
-                people_jobs.append((person, job))
-
-        if "cast" in movie:
-            cast = interpret_objects(movie["cast"], self.ia.get_person)
-            append(cast, "actor")
-        if "writer" in movie:
-            writers = interpret_objects(movie["writer"], self.ia.get_person)
-            append(writers, "writer")
-        if "director" in movie:
-            directors = interpret_objects(movie["director"], self.ia.get_person)
-            append(directors, "director")
-        if "producer" in movie:
-            producers = interpret_objects(movie["producer"], self.ia.get_person)
-            append(producers, "producer")
-        return people_jobs
-
-    def movies_from_person(self, person):
-        if "known for" in person:
-            return interpret_objects(person["known for"], self.ia.get_movie)
-        return []
-
-
