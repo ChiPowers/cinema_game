@@ -10,25 +10,25 @@ def blurt(s):
 
 
 class ProfessionalNode:
-    def __init__(self, id, t):
+    def __init__(self, id, is_person):
         self.id = id
-        self.t = t
+        self.is_person = is_person
 
     def __hash__(self):
-        return hash(self.id) + hash(self.t)
+        return hash(self.id) + hash(self.is_person)
 
     def __eq__(self, other):
-        return self.id == other.id and self.t == other.t
+        return self.id == other.id and self.is_person == other.is_person
 
 
 class PersonNode(ProfessionalNode):
     def __init__(self, id):
-        ProfessionalNode.__init__(self, id, "person")
+        ProfessionalNode.__init__(self, id, True)
 
 
 class WorkNode(ProfessionalNode):
     def __init__(self, id):
-        ProfessionalNode.__init__(self, id, "work")
+        ProfessionalNode.__init__(self, id, False)
 
 
 def add_arc(g: nx.Graph, work, person, job=None):
@@ -124,10 +124,12 @@ class GraphMaker:
         :param person: id of person in database
         :param depth: depth for which to travers professional graph. Stop if less than zero
         """
-        blurt('work "{}" depth {}'.format(person, depth))
-        if depth < 0:
+        if depth <= 0:
             blurt("done")
             return
+
+        blurt('person {} depth {}'.format(person, depth))
+
         for work in self.works_from_person(person):
             self.traverse_from_work(work, depth)
 
@@ -138,22 +140,25 @@ class GraphMaker:
         :param work: id of work in database
         :param depth: depth for which to travers professional graph. Stop if less than zero
         """
-        if depth < 0:
+        if depth <= 0:
             blurt("done")
             return
-        blurt('work "{}" depth {}'.format(work, depth))
+
+        blurt('work {} depth {}'.format(work, depth))
+
+        if work not in self.depth_record:
+            self.depth_record[work] = depth
+        else:
+            if depth > self.depth_record[work]:
+                self.depth_record[work] = depth
+            else:
+                blurt("already explored")
+                return
+
         people_jobs = self.people_from_work(work)
 
         for person, job in people_jobs:
-            add_arc(self.g, work.getID(), person.getID(), job=job)
-
-        if work.getID() not in self.depth_record:
-            self.depth_record[work.getID()] = depth
-        else:
-            if depth > self.depth_record[work.getID()]:
-                self.depth_record[work.getID()] = depth
-            else:
-                return
+            add_arc(self.g, work, person, job=job)
 
         for person, _ in people_jobs:
             self.traverse_from_person(person, depth - 1)

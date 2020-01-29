@@ -13,10 +13,10 @@ class TestGrapher(TestCase):
         pass
 
     def test_professional_node(self):
-        n0 = ProfessionalNode(42, 'movie')
-        n1 = ProfessionalNode(42, 'movie')
-        n2 = ProfessionalNode(41, 'movie')
-        n3 = ProfessionalNode(42, 'person')
+        n0 = ProfessionalNode(42, False)
+        n1 = ProfessionalNode(42, False)
+        n2 = ProfessionalNode(41, False)
+        n3 = ProfessionalNode(42, True)
 
         self.assertEqual(n0, n1)
         self.assertEqual(hash(n0), hash(n1))
@@ -28,18 +28,18 @@ class TestGrapher(TestCase):
         self.assertNotEqual(hash(n0), hash(n3))
 
     def test_person_node(self):
-        n0 = ProfessionalNode(42, 'person')
+        n0 = ProfessionalNode(42, True)
         n1 = PersonNode(42)
 
-        self.assertEqual('person', n1.t)
+        self.assertTrue(n1.is_person)
         self.assertEqual(n0, n1)
         self.assertEqual(hash(n0), hash(n1))
 
     def test_movie_node(self):
-        n0 = ProfessionalNode(42, 'work')
+        n0 = ProfessionalNode(42, False)
         n1 = WorkNode(42)
 
-        self.assertEqual('work', n1.t)
+        self.assertFalse(n1.is_person)
         self.assertEqual(n0, n1)
         self.assertEqual(hash(n0), hash(n1))
 
@@ -92,14 +92,14 @@ class TestGrapher(TestCase):
         # integer id.
 
         g = nx.Graph()
-        n0 = ProfessionalNode(42, "person")
-        n1 = ProfessionalNode(42, "movie")
-        n2 = ProfessionalNode(48, "movie")
+        n0 = ProfessionalNode(42, True)
+        n1 = ProfessionalNode(42, False)
+        n2 = ProfessionalNode(48, False)
 
-        m0 = ProfessionalNode(42, "person")
-        m1 = ProfessionalNode(42, "movie")
-        m2 = ProfessionalNode(48, "movie")
-        m3 = ProfessionalNode(0, "person")
+        m0 = ProfessionalNode(42, True)
+        m1 = ProfessionalNode(42, False)
+        m2 = ProfessionalNode(48, False)
+        m3 = ProfessionalNode(0, True)
 
         g.add_node(n0)
         g.add_node(n1)
