@@ -20,6 +20,13 @@ class ProfessionalNode:
     def __eq__(self, other):
         return self.id == other.id and self.is_person == other.is_person
 
+    @property
+    def description_str(self):
+        return "person" if self.is_person else "work"
+
+    def __str__(self):
+        return "<{} {}>".format(self.description_str, self.id)
+
 
 class PersonNode(ProfessionalNode):
     def __init__(self, id):
@@ -128,7 +135,7 @@ class GraphMaker:
             blurt("done")
             return
 
-        blurt('person {} depth {}'.format(person, depth))
+        blurt("person {} depth {}".format(person, depth))
 
         for work in self.works_from_person(person):
             self.traverse_from_work(work, depth)
@@ -144,7 +151,7 @@ class GraphMaker:
             blurt("done")
             return
 
-        blurt('work {} depth {}'.format(work, depth))
+        blurt("work {} depth {}".format(work, depth))
 
         if work not in self.depth_record:
             self.depth_record[work] = depth

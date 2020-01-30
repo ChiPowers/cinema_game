@@ -1,6 +1,8 @@
 import networkx as nx
 
 from cinema.cinegraph.grapher import GraphMaker, interpret_objects, blurt
+from cinema.cinegraph.professional_path import path_details
+
 
 class S3GraphMaker(GraphMaker):
     """
@@ -14,8 +16,8 @@ class S3GraphMaker(GraphMaker):
 
     def people_from_work(self, work):
         work = self.ia.get_movie(work)
-        if 'title' in work:
-            blurt(work['title'])
+        if "title" in work:
+            blurt(work["title"])
         people_jobs = []
 
         def append(people, job):
@@ -38,9 +40,17 @@ class S3GraphMaker(GraphMaker):
 
     def works_from_person(self, person):
         person = self.ia.get_person(person, info="main")
-        if 'name' in person:
-            blurt(person['name'])
+        if "name" in person:
+            blurt(person["name"])
         works = []
         if "known for" in person:
             works = interpret_objects(person["known for"], self.ia.get_movie)
         return [work.getID() for work in works]
+
+
+def s3_path_details(path, ia):
+    return path_details(
+        path,
+        get_person=lambda id: ia.get_person(id)["name"],
+        get_work=lambda id: ia.get_movie(id)["title"],
+    )
