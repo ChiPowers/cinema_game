@@ -11,8 +11,9 @@ class S3GraphMaker(GraphMaker):
     See https://imdbpy.readthedocs.io/en/latest/usage/s3.html
     """
 
-    def __init__(self, ia, g: nx.Graph = None):
+    def __init__(self, ia, g: nx.Graph = None, just_movies=False):
         GraphMaker.__init__(self, ia, g=g)
+        self.just_movies = just_movies
 
     def people_from_work(self, work):
         work = self.ia.get_movie(work)
@@ -26,16 +27,16 @@ class S3GraphMaker(GraphMaker):
 
         if "cast" in work:
             cast = interpret_objects(work["cast"], self.ia.get_person)
-            append(cast, "actor")
+            append(cast, 'actor')
         if "writer" in work:
             writers = interpret_objects(work["writer"], self.ia.get_person)
-            append(writers, "writer")
+            append(writers, 'writer')
         if "director" in work:
             directors = interpret_objects(work["director"], self.ia.get_person)
-            append(directors, "director")
+            append(directors, 'director')
         if "producer" in work:
             producers = interpret_objects(work["producer"], self.ia.get_person)
-            append(producers, "producer")
+            append(producers, 'producer')
         return people_jobs
 
     def works_from_person(self, person):
@@ -45,6 +46,10 @@ class S3GraphMaker(GraphMaker):
         works = []
         if "known for" in person:
             works = interpret_objects(person["known for"], self.ia.get_movie)
+        if self.just_movies:
+            works = [
+                work for work in works if "kind" in work and work["kind"] == "movie"
+            ]
         return [work.getID() for work in works]
 
 
@@ -53,4 +58,22 @@ def s3_path_details(path, ia):
         path,
         get_person=lambda id: ia.get_person(id)["name"],
         get_work=lambda id: ia.get_movie(id)["title"],
+    )
+
+
+def s3_kind_annotation(g: nx.Graph, ia):
+    for node in g.nodes:
+        if not node.is_person:
+            work = ia.get_movie(node.id)
+            if "kind" in work:
+                g.nodes[node]["kind"] = work["kind"]
+            else:
+                g.nodes[node]["kind"] = "unknown"
+
+
+def is_movie(g, node):
+    return (
+        (not node.is_person)
+        and "kind" in g.nodes[node]
+        and g.nodes[node]["kind"] == "movie"
     )
