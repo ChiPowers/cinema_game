@@ -1,5 +1,5 @@
 from cinema.cinegraph.extractor import filmography_filter
-
+from cinema.cinegraph.grapher import PersonNode, WorkNode
 
 class Game:
     def __init__(self, start_id, end_id, moves=None):
@@ -80,34 +80,36 @@ class Game:
         return possible_works.intersection(known_works_from_people)
 
     def take_step(self, person0, person1, work):
-        possible_people = {int(person.getID()) for person in self.ia.search_person(person0)}
+        possible_people = {
+            int(person.getID()) for person in self.ia.search_person(person0)
+        }
         if len(self.moves) == 0:
             if self.start_node not in possible_people:
-                return False, 'incorrect start'
+                return False, "incorrect start"
             people0 = {self.start_node}
         else:
             _, previous_people, _ = self.moves[-1]
             people0 = possible_people.intersection(previous_people)
             if len(people0) == 0:
-                return False, 'incorrect continuation'
+                return False, "incorrect continuation"
 
         works = self.interpret_work(work, people0)
         if len(works) == 0:
-            return False, 'person0 not in work'
+            return False, "person0 not in work"
 
         people1 = self.interpret_person(person1, works)
         if len(people1) == 0:
-            return False, 'person1 not in work'
+            return False, "person1 not in work"
 
         self.record(people0, people1, works)
 
         if self.end_node in people1:
-            return True, 'you win'
+            return True, "you win"
         else:
-            return True, 'keep playing'
+            return True, "keep playing"
 
 
-class GameHTTPOnly(Game):
+class GameIMDB(Game):
     def __init__(self, start_id, end_id, ia, moves=None):
         super().__init__(start_id, end_id, moves=moves)
         self.ia = ia
@@ -115,15 +117,40 @@ class GameHTTPOnly(Game):
     def fetch_possible_people(self, name):
         return {int(person.getID()) for person in self.ia.search_person(name)}
 
+
+class GameHTTPOnly(GameIMDB):
+    def __init__(self, start_id, end_id, ia, moves=None):
+        super().__init__(start_id, end_id, ia, moves=moves)
+
     def fetch_contributors(self, work):
         movie = self.ia.get_movie(work)
-        return {int(actor.getID()) for actor in movie['cast']}
+        return {int(actor.getID()) for actor in movie["cast"]}
+
+    def fetch_works_for_person(self, person):
+        person = self.ia.get_person(person, info="filmography")
+        films = filmography_filter(person, roles=["actor", "actress"], kind="movie")
+        return {int(film.getID()) for film in films}
 
     def fetch_possible_works(self, title):
         possible_works = self.ia.search_movie(title)
-        return {int(work.getID()) for work in possible_works if work['kind'] == 'movie'}
+        return {int(work.getID()) for work in possible_works if work["kind"] == "movie"}
+
+
+class GameGraphAndS3(GameIMDB):
+    def __init__(self, start_id, end_id, g, ia, moves=None):
+        super().__init__(start_id, end_id, ia, moves=moves)
+        self.g = g
+
+    def fetch_neighbors(self, node):
+        return {int(self.ia.get_movie(node.id).getID()) for node in self.g.neighbors(node)}
+
+    def fetch_contributors(self, work):
+        return self.fetch_neighbors(WorkNode(work))
 
     def fetch_works_for_person(self, person):
-        person = self.ia.get_person(person, info='filmography')
-        films = filmography_filter(person, roles=['actor', 'actress'], kind='movie')
-        return {int(film.getID()) for film in films}
+        return self.fetch_neighbors(PersonNode(person))
+
+    def fetch_possible_works(self, title):
+        possible_works = self.ia.search_movie(title)
+        return {int(work.getID()) for work in possible_works}
+
