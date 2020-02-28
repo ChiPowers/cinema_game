@@ -2,11 +2,44 @@ from cinema.cinegraph.extractor import filmography_filter
 
 
 class Game:
-    def __init__(self, start_id, end_id, ia):
+    def __init__(self, start_id, end_id, moves=None):
         self.start_node = start_id
         self.end_node = end_id
-        self.moves = []
-        self.ia = ia
+        if moves is None:
+            moves = []
+        self.moves = moves
+
+    def fetch_possible_people(self, name):
+        """
+        Search database for people with name.
+        :param name: string name of person.
+        :return: set of IDs representing people
+        """
+        raise NotImplementedError()
+
+    def fetch_contributors(self, work):
+        """
+        Search database for people who contributed to a work.
+        :param work: ID representing a work
+        :return: set of IDs representing contributors
+        """
+        raise NotImplementedError()
+
+    def fetch_possible_works(self, title):
+        """
+        Search database for works with title.
+        :param title: string title
+        :return: set of IDs representing works
+        """
+        raise NotImplementedError()
+
+    def fetch_works_for_person(self, person):
+        """
+        Search database for works to which a person contributed.
+        :param person: ID representing a person
+        :return: set of IDs representing works
+        """
+        raise NotImplementedError()
 
     def record(self, person0, person1, work):
         """
@@ -26,11 +59,9 @@ class Game:
         @return: IDs of valid people with that name or empty set
         """
         contributors = set()
-        for work_id in works:
-            movie = self.ia.get_movie(work_id)
-            actors = [int(actor.getID()) for actor in movie['cast']]
-            contributors.update(actors)
-        possible_people = {int(person.getID()) for person in self.ia.search_person(person)}
+        for work in works:
+            contributors.update(self.fetch_contributors(work))
+        possible_people = self.fetch_possible_people(person)
         return possible_people.intersection(contributors)
 
     def interpret_work(self, work, people):
@@ -41,13 +72,10 @@ class Game:
         @param people: a set of contributors to the work
         @return: IDs of any valid movie with that title or empty set
         """
-        possible_works = self.ia.search_movie(work)
-        possible_works = {int(work.getID()) for work in possible_works if work['kind'] == 'movie'}
+        possible_works = self.fetch_possible_works(work)
         known_works_from_people = set()
         for person_id in people:
-            person = self.ia.get_person(person_id, info='filmography')
-            films = filmography_filter(person, roles=['actor', 'actress'], kind='movie')
-            known_works_from_person = {int(film.getID()) for film in films} # look up works from person
+            known_works_from_person = self.fetch_works_for_person(person_id)
             known_works_from_people.update(known_works_from_person)
         return possible_works.intersection(known_works_from_people)
 
@@ -77,3 +105,25 @@ class Game:
             return True, 'you win'
         else:
             return True, 'keep playing'
+
+
+class GameHTTPOnly(Game):
+    def __init__(self, start_id, end_id, ia, moves=None):
+        super().__init__(start_id, end_id, moves=moves)
+        self.ia = ia
+
+    def fetch_possible_people(self, name):
+        return {int(person.getID()) for person in self.ia.search_person(name)}
+
+    def fetch_contributors(self, work):
+        movie = self.ia.get_movie(work)
+        return {int(actor.getID()) for actor in movie['cast']}
+
+    def fetch_possible_works(self, title):
+        possible_works = self.ia.search_movie(title)
+        return {int(work.getID()) for work in possible_works if work['kind'] == 'movie'}
+
+    def fetch_works_for_person(self, person):
+        person = self.ia.get_person(person, info='filmography')
+        films = filmography_filter(person, roles=['actor', 'actress'], kind='movie')
+        return {int(film.getID()) for film in films}
