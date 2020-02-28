@@ -1,6 +1,7 @@
 from cinema.cinegraph.extractor import filmography_filter
 from cinema.cinegraph.grapher import PersonNode, WorkNode
 
+
 class Game:
     def __init__(self, start_id, end_id, moves=None):
         self.start_node = start_id
@@ -142,7 +143,7 @@ class GameGraphAndS3(GameIMDB):
         self.g = g
 
     def fetch_neighbors(self, node):
-        return {int(self.ia.get_movie(node.id).getID()) for node in self.g.neighbors(node)}
+        return {node.id for node in self.g.neighbors(node)}
 
     def fetch_contributors(self, work):
         return self.fetch_neighbors(WorkNode(work))
@@ -154,3 +155,11 @@ class GameGraphAndS3(GameIMDB):
         possible_works = self.ia.search_movie(title)
         return {int(work.getID()) for work in possible_works}
 
+
+class GameGraphAndHTTP(GameGraphAndS3):
+    def __init__(self, start_id, end_id, g, ia, moves=None):
+        super().__init__(start_id, end_id, g, ia, moves=moves)
+
+    def fetch_possible_works(self, title):
+        possible_works = self.ia.search_movie(title)
+        return {int(work.getID()) for work in possible_works if work["kind"] == "movie"}
