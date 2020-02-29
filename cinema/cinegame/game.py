@@ -81,9 +81,7 @@ class Game:
         return possible_works.intersection(known_works_from_people)
 
     def take_step(self, person0, person1, work):
-        possible_people = {
-            int(person.getID()) for person in self.ia.search_person(person0)
-        }
+        possible_people = self.fetch_possible_people(person0)
         if len(self.moves) == 0:
             if self.start_node not in possible_people:
                 return False, "incorrect start"

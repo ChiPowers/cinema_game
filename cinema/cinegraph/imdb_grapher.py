@@ -1,7 +1,7 @@
 import networkx as nx
 
 from cinema.cinegraph.grapher import GraphMaker, interpret_objects, blurt
-from cinema.cinegraph.professional_path import path_details
+from cinema.cinegraph.professional_path import path_details, professional_subgraph
 
 
 class S3GraphMaker(GraphMaker):
@@ -77,3 +77,9 @@ def is_movie(g, node):
         and "kind" in g.nodes[node]
         and g.nodes[node]["kind"] == "movie"
     )
+
+
+def movie_actor_subgraph(g):
+    movies_and_people = [node for node in g.nodes if node.is_person or is_movie(g, node)]
+    movie_graph = g.subgraph(movies_and_people)
+    return professional_subgraph(movie_graph, ['actor'])
