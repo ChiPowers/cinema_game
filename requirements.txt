@@ -1,6 +1,6 @@
 numpy==1.18.1
 networkx==2.4
 IMDbPY==6.8
-Django==2.2.9
+Django==2.2.10
 djangorestframework==3.11.0
 django-jsonfield==1.4.0
