@@ -1,11 +1,12 @@
 from django.db import models
+import uuid
 import jsonfield
 
 class Gameplay(models.Model):
-    # account of person playing the game - should be foreignkey field
-    user = models.CharField(max_length=200)
-    # id of the game - should be foreignkey field 
-    game = models.CharField(max_length=200)
+    # account id of person playing the game - will be foreign key 
+    user = models.CharField(max_length=200, default = "test_user")
+    # id of the game 
+    game = models.CharField(max_length=200, default=uuid.uuid1())
     # start/source actor or contributor to the work
     start_contributor = models.CharField(max_length=200)
     # end/target actor or contritor to the work
