@@ -1,5 +1,9 @@
+from datetime import datetime
+
 from cinema.cinegraph.extractor import filmography_filter
 from cinema.cinegraph.grapher import PersonNode, WorkNode
+
+from cinema.gameplay.models import Gameplay
 
 
 class Game:
@@ -83,6 +87,7 @@ class Game:
     def take_step(self, person0, person1, work):
         possible_people = self.fetch_possible_people(person0)
         if len(self.moves) == 0:
+            start_time = datetime.utcnow()
             if self.start_node not in possible_people:
                 return False, "incorrect start"
             people0 = {self.start_node}
@@ -90,22 +95,35 @@ class Game:
             _, previous_people, _ = self.moves[-1]
             people0 = possible_people.intersection(previous_people)
             if len(people0) == 0:
+                store_game_info(self, user, person0, person1, start_time, is_solved=False)
                 return False, "incorrect continuation"
 
         works = self.interpret_work(work, people0)
         if len(works) == 0:
+            store_game_info(self, user, person0, person1, start_time, is_solved=False)
             return False, "person0 not in work"
 
         people1 = self.interpret_person(person1, works)
         if len(people1) == 0:
+            store_game_info(self, user, person0, person1, start_time, is_solved=False)
             return False, "person1 not in work"
 
         self.record(people0, people1, works)
 
         if self.end_node in people1:
+            store_game_info(self, user, person0, person1, start_time, is_solved=True)
             return True, "you win"
         else:
             return True, "keep playing"
+
+    def store_game_info(self, user, person0, person1, start_time, is_solved):
+        # filled in the shortest path value to a constant until I determine the best way to generate the shortest path
+        game_data = {"user" = user, "start_contributor": person0, "end_contributor": person1,
+        "start_time": start_time, "end_time": datetime.utcnow(), "shortest_path": 3, "is_solved":is_solved,"moves": self.moves }
+
+        Gameplay.objects.create(**game_data)
+        return
+
 
 
 class GameIMDB(Game):
