@@ -30,7 +30,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'gameplay.apps.GameplayConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +43,7 @@ INSTALLED_APPS = [
 
     # Local Apps (Your project's apps)
     'cinema.core',
+    'cinema.gameplay',
 ]
 
 REST_FRAMEWORK = {
