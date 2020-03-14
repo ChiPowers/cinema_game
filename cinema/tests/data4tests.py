@@ -1,3 +1,7 @@
+import pickle
+import os
+
+
 class MockImdbObject(dict):
     __id = "000000"
 
@@ -35,3 +39,11 @@ def get_air(ia=None):
 # A Powerful Noise Live
 def get_noise(ia=None):
     return ia.get_movie("1392211")
+
+
+def get_small_graph():
+    here = os.path.abspath(__file__)
+    dir = os.path.dirname(here)
+    path = os.path.join(dir, 'small_professional_graph.pkl')
+    with open(path, 'rb') as f:
+        return pickle.load(f)
