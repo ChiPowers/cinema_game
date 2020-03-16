@@ -1,10 +1,10 @@
 from datetime import datetime
 import uuid
-
+import networkx as nx
 import imdb
+import json
 
 from cinema.cinegraph.imdb_grapher import movie_actor_subgraph, s3_path_details
-from cinema.cinegraph.grapher import PersonNode
 from cinema.cinegraph.extractor import filmography_filter
 from cinema.cinegraph.grapher import PersonNode, WorkNode
 
@@ -94,7 +94,14 @@ class Game:
         return possible_works.intersection(known_works_from_people)
 
     def take_step(self, person0, person1, work):
-        start_time = datetime.utcnow()
+        game_data = {
+                "user": self.user,
+                "start_contributor": self.start_node,
+                "end_contributor": self.end_node,
+                "start_time": datetime.utcnow(),
+                "shortest_path": 3, # placeholder value; TODO: change to define the shortest path using the graph - or make happen offline
+                }
+
         possible_people = self.fetch_possible_people(person0)
         if len(self.moves) == 0:
             if self.start_node not in possible_people:
@@ -104,52 +111,63 @@ class Game:
             _, previous_people, _ = self.moves[-1]
             people0 = possible_people.intersection(previous_people)
             if len(people0) == 0:
-                end_time = datetime.utcnow()
-                self.store_game_info(self, person0, person1, start_time, end_time)
+                game_data['end_time'] = datetime.utcnow()
+                self.store_game_info(game_data)
                 return False, "incorrect continuation"
 
         works = self.interpret_work(work, people0)
         if len(works) == 0:
-            end_time = datetime.utcnow()
-            self.store_game_info(self, person0, person1, start_time, end_time)
+            game_data['end_time'] = datetime.utcnow()
+            self.store_game_info(game_data)
             return False, "person0 not in work"
 
         people1 = self.interpret_person(person1, works)
         if len(people1) == 0:
-            end_time = datetime.utcnow()
-            self.store_game_info(self, person0, person1, start_time, end_time)
+            game_data['end_time'] = datetime.utcnow()
+            self.store_game_info(game_data)
             return False, "person1 not in work"
 
         self.record(people0, people1, works)
 
         if self.end_node in people1:
-            end_time = datetime.utcnow()
-            is_solved=True
-            self.store_game_info(self, person0, person1, start_time, end_time, is_solved)
+            game_data['is_solved'] = True
+            game_data['end_time'] = datetime.utcnow()
+            self.store_game_info(game_data)
             return True, "you win"
         else:
             return True, "keep playing"
 
-    def store_game_info(self, person0, person1, start_time, end_time, is_solved=False):
+    def store_game_info(self, game_data=dict()):
         # filled in the shortest path value to a constant until I determine the best way to generate the shortest path
-        if Gameplay.objects.filter(user=self.user, start_contributor=person0, end_contributor=person1).exists():
-            if is_solved:
-                Gameplay.objects.filter(user=self.user, start_contributor=person0, end_contributor=person1).update(end_time=datetime.utcnow(), is_solved=is_solved, moves=self.moves)
+        game_to_store = Gameplay.objects.filter(
+            user=game_data['user'],
+            start_contributor=game_data['start_contributor'],
+            end_contributor=game_data['end_contributor'],
+            ) 
+        if game_to_store.exists():
+            if game_data['is_solved']:
+                moves_dict = self.convert_moves_to_dict()
+                game_to_store.update(
+                    end_time=game_data['end_time'],
+                    is_solved=game_data['is_solved'],
+                    moves=json.dumps(moves_dict)
+                    )
             else:
-                Gameplay.objects.filter(user=self.user, start_contributor=person0, end_contributor=person1).update(is_solved=is_solved, moves=self.moves)
+                moves_dict = self.convert_moves_to_dict()        
+                game_to_store.update(
+                    moves=json.dumps(moves_dict)
+                    )
         else:
-            game_data = {
-                "user" : self.user,
-                "start_contributor": person0,
-                "end_contributor": person1,
-                "start_time": start_time,
-                "end_time": datetime.utcnow(),
-                "shortest_path": 3,
-                "is_solved":is_solved,
-                "moves": self.moves,
-                }
-            Gameplay.objects.create(**game_data)
+                moves_dict = self.convert_moves_to_dict()
+                game_data['moves'] = json.dumps(moves_dict)
+                Gameplay.objects.create(**game_data)
         return
+    
+    def convert_moves_to_dict(self):
+        moves_dict = dict()
+        for i, item in enumerate(self.moves):
+            moves_dict[i] = str(item)
+        return moves_dict       
 
 
 

@@ -7,6 +7,7 @@ from .models import Gameplay
 from cinema.cinegame.game import GameGraphAndHTTP
 from cinema.cinegraph.imdb_grapher import movie_actor_subgraph
 from django.test import TestCase
+from cinema.tests import data4tests
 
 # Create your tests here.
 class GameplayTestCase(TestCase):
@@ -32,28 +33,29 @@ class GameplayTestCase(TestCase):
         self.assertEqual(gameplay_record.is_solved, False)
 
     def test_store_game_data_GraphandHTTP(self):
-        # load the graph TODO: make it efficient.
-        with open('professional_graph05.pkl', 'rb') as f:
-            g = pickle.load(f)
-
-        g = movie_actor_subgraph(g)
+        g = data4tests.get_small_graph()
 
         # load the imdb api
         ia = imdb.IMDb()   
 
         # play a game to make data that should be stored
         game = GameGraphAndHTTP(949, 147, g, ia)
-        print(game.take_step('Cate Blanchett', 'Julianne Moore', 'The Shipping News'))
-        
+        # take a step in the game
+        game.take_step('Cate Blanchett', 'Julianne Moore', 'The Shipping News')
 
-        # the details of the game should be stored while the game is being played
-        print(game.take_step('Julianne Moore', 'Colin Firth', 'A Single Man'))
+        # take the next game step
+        game.take_step('Julianne Moore', 'Colin Firth', 'A Single Man')
         game_details = Gameplay.objects.all()
-        print(game_details.values())
 
         # the details of the game should be updated and marked as complete when the game is solved
-        self.assertEqual(game_details.values_list('start_contributor'), 'Cate Blanchett')
-
+        self.assertEqual(game_details.values_list('start_contributor', flat=True)[0], '949')
+        self.assertEqual(game_details.values_list('end_contributor', flat=True)[0], '147')
+        self.assertEqual(game_details.values_list('start_time', flat=True)[0].day, 16)
+        self.assertEqual(game_details.values_list('end_time', flat=True)[0].day, 16)
+        self.assertEqual(game_details.values_list('shortest_path', flat=True)[0], 3)
+        self.assertEqual(game_details.values_list('is_solved', flat=True)[0], True)
+        self.assertEqual(game_details.values_list('moves', flat=True)[0],
+         '{"0": "({949}, {194}, {120824})", "1": "({194}, {147}, {1315981})"}' )
 
 
 
