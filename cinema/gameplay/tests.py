@@ -50,12 +50,10 @@ class GameplayTestCase(TestCase):
         # the details of the game should be updated and marked as complete when the game is solved
         self.assertEqual(game_details.values_list('start_contributor', flat=True)[0], '949')
         self.assertEqual(game_details.values_list('end_contributor', flat=True)[0], '147')
-        self.assertEqual(game_details.values_list('start_time', flat=True)[0].day, 16)
-        self.assertEqual(game_details.values_list('end_time', flat=True)[0].day, 16)
         self.assertEqual(game_details.values_list('shortest_path', flat=True)[0], 3)
         self.assertEqual(game_details.values_list('is_solved', flat=True)[0], True)
         self.assertEqual(game_details.values_list('moves', flat=True)[0],
-         '{"0": "({949}, {194}, {120824})", "1": "({194}, {147}, {1315981})"}' )
+        {'0': '({949}, {194}, {120824})', '1': '({194}, {147}, {1315981})'})
 
 
 
