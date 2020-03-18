@@ -32,10 +32,16 @@ class PersonNode(ProfessionalNode):
     def __init__(self, id):
         ProfessionalNode.__init__(self, id, True)
 
+    def __repr__(self):
+        return "PersonNode({})".format(self.id)
+
 
 class WorkNode(ProfessionalNode):
     def __init__(self, id):
         ProfessionalNode.__init__(self, id, False)
+
+    def __repr__(self):
+        return "WorkNode({})".format(self.id)
 
 
 def add_arc(g: nx.Graph, work, person, job=None):
