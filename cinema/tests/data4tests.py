@@ -1,6 +1,6 @@
 import pickle
 import os
-
+from cinema import directories
 
 class MockImdbObject(dict):
     __id = "000000"
@@ -42,8 +42,6 @@ def get_noise(ia=None):
 
 
 def get_small_graph():
-    here = os.path.abspath(__file__)
-    dir = os.path.dirname(here)
-    path = os.path.join(dir, 'small_professional_graph.pkl')
+    path = directories.test('small_professional_graph.pkl')
     with open(path, 'rb') as f:
         return pickle.load(f)
