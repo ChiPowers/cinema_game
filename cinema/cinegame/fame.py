@@ -5,11 +5,19 @@ def get_people(g):
     return [node for node in g.nodes if node.is_person]
 
 
+def get_works(g):
+    return [node for node in g.nodes if not node.is_person]
+
+
+def sort_by_fame(nodes_fame):
+    nodes_fame.sort(key=lambda node_fame: node_fame[1], reverse=True)
+
+
 def fame_by_number_of_works(g: nx.Graph, people=None):
     if people is None:
         people = get_people(g)
     people_degree = [(person, g.degree(person)) for person in people]
-    people_degree.sort(key=lambda person_degree: person_degree[1], reverse=True)
+    sort_by_fame(people_degree)
     return people_degree
 
 
@@ -19,5 +27,21 @@ def fame_by_pagerank(g: nx.Graph, people=None, pagerank=None):
     if pagerank is None:
         pagerank = nx.pagerank(g)
     people_pagerank = [(person, pagerank[person]) for person in people]
-    people_pagerank.sort(key=lambda person_pagerank: person_pagerank[1], reverse=True)
+    sort_by_fame(people_pagerank)
     return people_pagerank, pagerank
+
+
+def works_by_pagerank(g: nx.Graph, works=None, pagerank=None):
+    if works is None:
+        works = get_works(g)
+    if pagerank is None:
+        pagerank = nx.pagerank(g)
+    works_pagerank = [(work, pagerank[work]) for work in works]
+    sort_by_fame(works_pagerank)
+    return works_pagerank, pagerank
+
+
+def neighbor_features(g: nx.Graph, node, get_feature):
+    features = {neighbor: get_feature(neighbor) for neighbor in g.neighbors(node)}
+    return [feature for feature in features if feature is not None]
+
