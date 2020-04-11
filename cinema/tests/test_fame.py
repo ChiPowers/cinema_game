@@ -93,3 +93,16 @@ class TestFame(TestCase):
         self.assertAlmostEqual(4.699903862142268, ratings[WorkNode(160513)])
         self.assertAlmostEqual(7.70552832501407, ratings[WorkNode(1658801)])
         self.assertEqual(57, len(ratings))
+
+    def test_weight_by_cast_order(self):
+        g = data4tests.get_small_graph()
+        ia = data4tests.MockIMBD(g)
+        fame.weight_by_cast_order(g, ia)
+        for edge in g.edges:
+            self.assertIn('weight', g.edges[edge])
+        neighbors = list(g.neighbors((WorkNode(206634))))
+        self.assertEqual(4, len(neighbors))
+        neighbors.sort(key=lambda p: g.edges[(WorkNode(206634), p)]['weight'], reverse=True)
+        actual = [g.edges[(m, WorkNode(206634))]['weight'] for m in neighbors]
+        expected = fame.normalized_exponential_decay(4)
+        self.assertAlmostEqual(0, norm(actual - expected))

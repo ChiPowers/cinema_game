@@ -58,3 +58,22 @@ murdock_exponent = -0.77
 def normalized_exponential_decay(n, exponent=murdock_exponent):
     x = np.exp(exponent * np.array(range(n)))
     return x / x.sum()
+
+
+def weight_by_cast_order(g, ia_s3):
+    d = dict()
+
+    for node in get_works(g):
+        movie = ia_s3.get_movie(node.id)
+        cast = movie["cast"]
+        x = normalized_exponential_decay(len(cast))
+        for i, actor in enumerate(cast):
+            edge = (PersonNode(actor.getID()), node)
+            d[edge] = x[i]
+
+    for edge in g.edges:
+        g.edges[edge]["weight"] = 0
+
+    for edge, w in d.items():
+        g.edges[edge]["weight"] = w
+
