@@ -85,3 +85,11 @@ class TestFame(TestCase):
             ]
         )
         self.assertAlmostEqual(0, norm(actual - expected))
+
+    def test_neighbor_features(self):
+        g = data4tests.get_small_graph()
+        ia = data4tests.MockIMBD(g)
+        ratings = fame.neighbor_features(g, PersonNode(194), lambda m: ia.get_movie(m.id)['rating'])
+        self.assertAlmostEqual(4.699903862142268, ratings[WorkNode(160513)])
+        self.assertAlmostEqual(7.70552832501407, ratings[WorkNode(1658801)])
+        self.assertEqual(57, len(ratings))

@@ -45,8 +45,11 @@ def works_by_pagerank(g: nx.Graph, works=None, pagerank=None):
 
 
 def neighbor_features(g: nx.Graph, node, get_feature):
-    features = {neighbor: get_feature(neighbor) for neighbor in g.neighbors(node)}
-    return [feature for feature in features if feature is not None]
+    features = [(neighbor, get_feature(neighbor)) for neighbor in g.neighbors(node)]
+    return {
+        neighbor: feature for neighbor, feature in features if feature is not None
+    }
+
 
 
 murdock_exponent = -0.77
@@ -55,23 +58,3 @@ murdock_exponent = -0.77
 def normalized_exponential_decay(n, exponent=murdock_exponent):
     x = np.exp(exponent * np.array(range(n)))
     return x / x.sum()
-
-
-def weight_by_cast_order(g, ia_s3):
-    d = dict()
-
-    for node in g.nodes:
-        if node.is_person:
-            continue
-        movie = ia_s3.get_movie(node.id)
-        cast = movie["cast"]
-        x = normalized_exponential_decay(len(cast))
-        for i, actor in enumerate(cast):
-            edge = (PersonNode(actor.getID()), node)
-            d[edge] = x[i]
-
-    for edge in g.edges:
-        g.edges[edge]["weight"] = 0
-
-    for edge, w in d.items():
-        g.edges[edge]["weight"] = w

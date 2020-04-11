@@ -30,7 +30,6 @@ class TestFame(TestCase):
     def test_mock_imdb(self):
         g = data4tests.get_small_graph()
         ia = data4tests.MockIMBD(g)
-        person_node = PersonNode(194)
         p = ia.get_person(194)
         self.assertEqual('194', p['name'])
         expected = ['172396', '117791', '427968', '206634']
