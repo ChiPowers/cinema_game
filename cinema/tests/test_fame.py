@@ -89,7 +89,9 @@ class TestFame(TestCase):
     def test_neighbor_features(self):
         g = data4tests.get_small_graph()
         ia = data4tests.MockIMBD(g)
-        ratings = fame.neighbor_features(g, PersonNode(194), lambda m: ia.get_movie(m.id)['rating'])
+        ratings = fame.neighbor_features(
+            g, PersonNode(194), lambda m: ia.get_movie(m.id)["rating"]
+        )
         self.assertAlmostEqual(4.699903862142268, ratings[WorkNode(160513)])
         self.assertAlmostEqual(7.70552832501407, ratings[WorkNode(1658801)])
         self.assertEqual(57, len(ratings))
@@ -99,10 +101,77 @@ class TestFame(TestCase):
         ia = data4tests.MockIMBD(g)
         fame.weight_by_cast_order(g, ia)
         for edge in g.edges:
-            self.assertIn('weight', g.edges[edge])
+            self.assertIn("weight", g.edges[edge])
         neighbors = list(g.neighbors((WorkNode(206634))))
         self.assertEqual(4, len(neighbors))
-        neighbors.sort(key=lambda p: g.edges[(WorkNode(206634), p)]['weight'], reverse=True)
-        actual = [g.edges[(m, WorkNode(206634))]['weight'] for m in neighbors]
+        neighbors.sort(
+            key=lambda p: g.edges[(WorkNode(206634), p)]["weight"], reverse=True
+        )
+        actual = [g.edges[(m, WorkNode(206634))]["weight"] for m in neighbors]
         expected = fame.normalized_exponential_decay(4)
         self.assertAlmostEqual(0, norm(actual - expected))
+
+        # order of cast should be same as order of weights from highest to lowest
+        cast = ia.get_movie(206634)["cast"]
+        for i, actor in enumerate(cast):
+            self.assertEqual(actor.getID(), neighbors[i].id)
+
+    def test_weight_zero(self):
+        g = data4tests.get_small_graph()
+        fame.weight_zero(g)
+        for edge in g.edges:
+            self.assertEqual(0, g.edges[edge]["weight"])
+
+    def test_weight_by_rating(self):
+        g = data4tests.get_small_graph()
+        ia = data4tests.MockIMBD(g)
+        fame.weight_by_feature_order(
+            g,
+            nodes=fame.get_people(g),
+            get_feature=lambda m: ia.get_movie(m.id)["rating"],
+        )
+
+        for edge in g.edges:
+            self.assertIn("weight", g.edges[edge])
+        neighbors = list(g.neighbors((PersonNode(194))))
+        self.assertEqual(57, len(neighbors))
+        neighbors.sort(
+            key=lambda m: g.edges[(PersonNode(194), m)]["weight"], reverse=True
+        )
+        actual = [g.edges[(PersonNode(194), m)]["weight"] for m in neighbors]
+        expected = fame.normalized_exponential_decay(57)
+        self.assertAlmostEqual(0, norm(actual - expected))
+
+        # order of ratings should be same as order of weights from highest to lowest
+        for i in range(56):
+            self.assertTrue(
+                ia.get_movie(neighbors[i].id)["rating"]
+                >= ia.get_movie(neighbors[i + 1].id)["rating"]
+            )
+
+    def test_weight_by_votes(self):
+        g = data4tests.get_small_graph()
+        ia = data4tests.MockIMBD(g)
+        fame.weight_by_feature_order(
+            g,
+            nodes=fame.get_people(g),
+            get_feature=lambda m: ia.get_movie(m.id)["votes"],
+        )
+
+        for edge in g.edges:
+            self.assertIn("weight", g.edges[edge])
+        neighbors = list(g.neighbors((PersonNode(194))))
+        self.assertEqual(57, len(neighbors))
+        neighbors.sort(
+            key=lambda m: g.edges[(PersonNode(194), m)]["weight"], reverse=True
+        )
+        actual = [g.edges[(PersonNode(194), m)]["weight"] for m in neighbors]
+        expected = fame.normalized_exponential_decay(57)
+        self.assertAlmostEqual(0, norm(actual - expected))
+
+        # order of vote count should be same as order of weights from highest to lowest
+        for i in range(56):
+            self.assertTrue(
+                ia.get_movie(neighbors[i].id)["votes"]
+                >= ia.get_movie(neighbors[i + 1].id)["votes"]
+            )

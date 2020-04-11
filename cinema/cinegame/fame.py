@@ -37,7 +37,7 @@ def fame_by_pagerank(g: nx.Graph, people=None, pagerank=None):
 def works_by_pagerank(g: nx.Graph, works=None, pagerank=None):
     if works is None:
         works = get_works(g)
-    if pagerank is None:
+    if pagerank is None:    
         pagerank = nx.pagerank(g)
     works_pagerank = [(work, pagerank[work]) for work in works]
     sort_by_fame(works_pagerank)
@@ -46,10 +46,7 @@ def works_by_pagerank(g: nx.Graph, works=None, pagerank=None):
 
 def neighbor_features(g: nx.Graph, node, get_feature):
     features = [(neighbor, get_feature(neighbor)) for neighbor in g.neighbors(node)]
-    return {
-        neighbor: feature for neighbor, feature in features if feature is not None
-    }
-
+    return {neighbor: feature for neighbor, feature in features if feature is not None}
 
 
 murdock_exponent = -0.77
@@ -77,3 +74,24 @@ def weight_by_cast_order(g, ia_s3):
     for edge, w in d.items():
         g.edges[edge]["weight"] = w
 
+
+def weight_zero(g):
+    for edge in g.edges:
+        g.edges[edge]["weight"] = 0
+
+
+def weight_by_order(g, nodes, sort_nodes):
+    for node in nodes:
+        neighbors = list(g.neighbors(node))
+        sort_nodes(neighbors)
+        x = normalized_exponential_decay(len(neighbors))
+        for i, neighbor in enumerate(neighbors):
+            edge = (node, neighbor)
+            g.edges[edge]["weight"] = x[i]
+
+
+def weight_by_feature_order(g, nodes, get_feature):
+    def sort_by_feature(neighbors):
+        neighbors.sort(key=get_feature, reverse=True)
+
+    weight_by_order(g, nodes, sort_by_feature)
