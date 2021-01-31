@@ -21,9 +21,17 @@ to see how the results change.
 For some of us, playing this kind of game is actually much more fun than watching the movies themselves.
 
 ## To begin
-Install dependencies from `requirements.txt`. These instructions assume you have virtualenvwrapper installed.
+Install dependencies from `requirements.txt`. With Anaconda create an environment by
+
+    conda create -n cinema python=3
+    conda activate cinema 
+
+To create an environment with virtualenvwrapper
 
     mkvirtualenv -p python3 cinema
+
+Either way, continue with
+    
     pip install -r requirements.txt
     ./manage.py migrate
 
