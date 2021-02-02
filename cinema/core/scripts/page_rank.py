@@ -12,10 +12,10 @@ def full_graph_pr(g):
     return nx.pagerank(g)
 
 
-def show_person(g, rank, p):
+def show_person(g, rank, p, i):
     n = g.nodes[p]
-    s = "{:7.2e} {:>8} {:<25} birth {:>4} death {:>4} {}".format(
-        rank[p], p.id, n["name"], n["birth"], n["death"], n["professions"]
+    s = "{:>3} {:7.2e} {:>8} {:<25} birth {:>4} death {:>4}, {}".format(
+        i, rank[p], p.id, n["name"], n["birth"], n["death"], n["professions"]
     )
     print(s)
 
@@ -28,12 +28,12 @@ def run():
     t0 = time.time()
     print("Computing page rank of full graph. This may take a bit of time")
     rank = full_graph_pr(g)
-    print("PageRank computed in {:.2g} seconds.".format(time.time() - 10))
+    print("PageRank computed in {:.2g} seconds.".format(time.time() - t0))
     nodes = list(g.nodes)
     nodes.sort(key=lambda n: rank[n], reverse=True)
     people = [n for n in nodes if n.is_person]
-    for p in people[:100]:
-        show_person(g, rank, p)
+    for i, p in enumerate(people[:100]):
+        show_person(g, rank, p, i)
     print("Saving page rank dictionary.")
     with open(directories.data("full_graph_pagerank.pkl"), "wb") as f:
         pickle.dump(rank, f)
