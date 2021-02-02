@@ -3,6 +3,7 @@
 
 import networkx as nx
 import pickle
+import time
 
 from cinema import directories
 
@@ -20,14 +21,20 @@ def show_person(g, rank, p):
 
 
 def run():
+    print("Loading professional graph.")
     with open(directories.data("professional.pkl"), "rb") as f:
         g = pickle.load(f)
+
+    t0 = time.time()
+    print("Computing page rank of full graph. This may take a bit of time")
     rank = full_graph_pr(g)
+    print("PageRank computed in {:.2g} seconds.".format(time.time() - 10))
     nodes = list(g.nodes)
     nodes.sort(key=lambda n: rank[n], reverse=True)
     people = [n for n in nodes if n.is_person]
     for p in people[:100]:
         show_person(g, rank, p)
-
+    print("Saving page rank dictionary.")
     with open(directories.data("full_graph_pagerank.pkl"), "wb") as f:
         pickle.dump(rank, f)
+    print("Ending script.")
