@@ -45,3 +45,8 @@ vertices are people and movies. People are connected to movies and movies are co
 The edges are movie credits, that is an edge exists between a person and a movie if that person appeared in the credits
 for that movie. In this case, we consider only edges which correspond to contributing to a movie as an actor, actress, 
 writer, director or producer. The professional graph is the connected component which contains Fred Astaire.
+
+## PageRank experiments
+To compute the PageRank of the professional graph computed earlier
+
+    ./manage.py runscript page_rank

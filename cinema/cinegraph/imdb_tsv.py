@@ -97,3 +97,31 @@ def addContribution(g, row):
         g.edges[(person, work)]["contributions"].update(contributions)
     else:
         g.add_edge(person, work, contributions=contributions)
+
+
+def hasProfession(g, p, profession):
+    if p not in g.nodes:
+        return False
+    return profession in g.nodes[p]["professions"]
+
+
+def isActor(g, p):
+    return hasProfession(g, p, "actor")
+
+
+def isActress(g, p):
+    return hasProfession(g, p, "actress")
+
+
+def didActing(g, p):
+    return isActor(g, p) or isActress(g, p)
+
+
+def contributedAs(g, p, t, profession):
+    if (p, t) not in g.edges:
+        return False
+    return profession in g.edges[(p, t)]["contributions"].keys()
+
+
+def actedIn(g, p, t):
+    return contributedAs(g, p, t, "actor") or contributedAs(g, p, t, "actress")

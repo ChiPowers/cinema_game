@@ -1,0 +1,33 @@
+# scripts/page_rank.py
+# Compute PageRank of professional graph constructed by make_imdb_professional_graph
+
+import networkx as nx
+import pickle
+
+from cinema import directories
+
+
+def full_graph_pr(g):
+    return nx.pagerank(g)
+
+
+def show_person(g, rank, p):
+    n = g.nodes[p]
+    s = "{:7.2e} {:>8} {:<25} birth {:>4} death {:>4} {}".format(
+        rank[p], p.id, n["name"], n["birth"], n["death"], n["professions"]
+    )
+    print(s)
+
+
+def run():
+    with open(directories.data("professional.pkl"), "rb") as f:
+        g = pickle.load(f)
+    rank = full_graph_pr(g)
+    nodes = list(g.nodes)
+    nodes.sort(key=lambda n: rank[n], reverse=True)
+    people = [n for n in nodes if n.is_person]
+    for p in people[:100]:
+        show_person(g, rank, p)
+
+    with open(directories.data("full_graph_pagerank.pkl"), "wb") as f:
+        pickle.dump(rank, f)
