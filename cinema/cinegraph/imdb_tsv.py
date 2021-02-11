@@ -41,7 +41,7 @@ def load_principals():
     )
 
 
-def addPerson(g, row):
+def add_person(g, row):
     person = IMDbPersonNode(row["nconst"])
     try:
         known = {IMDbWorkNode(tt) for tt in row["knownForTitles"].split(",")}
@@ -61,7 +61,7 @@ def addPerson(g, row):
     )
 
 
-def addWork(g, row):
+def add_work(g, row):
     work = IMDbWorkNode(row["tconst"])
     try:
         genres = set(row["genres"].split(","))
@@ -78,7 +78,7 @@ def addWork(g, row):
     )
 
 
-def updateRating(g, row):
+def update_rating(g, row):
     work = IMDbWorkNode(row["tconst"])
     if work not in g:
         return
@@ -86,42 +86,87 @@ def updateRating(g, row):
     g.nodes[work].update(update)
 
 
-def addContribution(g, row):
+def add_contribution(g, row):
     person = IMDbPersonNode(row["nconst"])
     work = IMDbWorkNode(row["tconst"])
     if not (person in g.nodes and work in g.nodes):
         return
-    contribution = {"ordering": row["ordering"], "job": row["job"]}
+    contribution = {"job": row["job"]}
     contributions = {row["category"]: contribution}
     if (person, work) in g.edges:
         g.edges[(person, work)]["contributions"].update(contributions)
     else:
         g.add_edge(person, work, contributions=contributions)
+    g.edges[(person, work)]["ordering"] = row["ordering"]
 
 
-def hasProfession(g, p, profession):
-    if p not in g.nodes:
+def has_profession(n, profession):
+    return profession in n["professions"]
+
+
+def is_actor(n):
+    return has_profession(n, "actor")
+
+
+def is_actress(n):
+    return has_profession(n, "actress")
+
+
+def did_acting(n):
+    return is_actor(n) or is_actress(n)
+
+
+def contributed_as(e, profession):
+    return profession in e["contributions"].keys()
+
+
+def acted_in(e):
+    return contributed_as(e, "actor") or contributed_as(e, "actress")
+
+
+def get_order(e):
+    return e["ordering"]
+
+
+def get_rating(n):
+    return n["rating"]
+
+
+def get_votes(n):
+    return n["votes"]
+
+
+def apply_to_node_in_graph(g, n, f):
+    if n not in g.nodes:
         return False
-    return profession in g.nodes[p]["professions"]
+    return f(g.nodes[n])
 
 
-def isActor(g, p):
-    return hasProfession(g, p, "actor")
-
-
-def isActress(g, p):
-    return hasProfession(g, p, "actress")
-
-
-def didActing(g, p):
-    return isActor(g, p) or isActress(g, p)
-
-
-def contributedAs(g, p, t, profession):
-    if (p, t) not in g.edges:
+def apply_to_edge_in_graph(g, e, f):
+    if e not in g.edges:
         return False
-    return profession in g.edges[(p, t)]["contributions"].keys()
+    return f(g.edges[e])
 
 
-def actedIn(g, p, t):
-    return contributedAs(g, p, t, "actor") or contributedAs(g, p, t, "actress")
+def has_profession_in_graph(g, p, profession):
+    return apply_to_node_in_graph(g, p, lambda n: has_profession(n, profession))
+
+
+def is_actor_in_graph(g, p):
+    return apply_to_node_in_graph(g, p, is_actor)
+
+
+def is_actress_in_graph(g, p):
+    return apply_to_node_in_graph(g, p, is_actress)
+
+
+def did_acting_in_graph(g, p):
+    return apply_to_node_in_graph(g, p, did_acting)
+
+
+def contributed_as_in_graph(g, p, t, profession):
+    return apply_to_edge_in_graph(g, (p, t), lambda e: contributed_as(e, profession))
+
+
+def acted_in_in_graph(g, p, t):
+    return apply_to_edge_in_graph(g, (p, t), acted_in)

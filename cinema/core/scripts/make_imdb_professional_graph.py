@@ -33,23 +33,23 @@ def retrieve_imdb_data(filename):
     progress_bar.close()
 
 
-def filteredGraphUpdate(g, df, rowUpdate, predicate=None):
+def filtered_graph_update(g, df, row_update, predicate=None):
     if predicate is None:
         predicate = lambda row: True
     with tqdm(total=len(df)) as pbar:
         for _, row in df.iterrows():
             if predicate(row):
-                rowUpdate(g, row)
+                row_update(g, row)
             pbar.update(1)
 
 
-def populatePeople(g):
+def populate_people(g):
     relevant = set("actor,actress,writer,director,producer".split(","))
 
     def predicate(row):
-        primaryProfessions = row["primaryProfession"]
+        primary_professions = row["primaryProfession"]
         try:
-            professions = set(primaryProfessions.split(","))
+            professions = set(primary_professions.split(","))
         except:
             return False
         return not relevant.isdisjoint(professions)
@@ -57,39 +57,39 @@ def populatePeople(g):
     print("loading people data")
     df = imdb_tsv.load_names()
     print("data loaded")
-    filteredGraphUpdate(g, df, imdb_tsv.addPerson, predicate=predicate)
+    filtered_graph_update(g, df, imdb_tsv.add_person, predicate=predicate)
 
 
-def populateMovies(g):
+def populate_movies(g):
     print("loading work data")
     df = imdb_tsv.load_basics()
     print("data loaded")
     predicate = lambda row: row["titleType"] == "movie"
-    filteredGraphUpdate(g, df, imdb_tsv.addWork, predicate=predicate)
+    filtered_graph_update(g, df, imdb_tsv.add_work, predicate=predicate)
 
 
-def updateRatings(g):
+def update_ratings(g):
     print("loading rating data")
     df = imdb_tsv.load_ratings()
     print("data loaded")
-    filteredGraphUpdate(g, df, imdb_tsv.updateRating)
+    filtered_graph_update(g, df, imdb_tsv.update_rating)
 
 
-def makeEdges(g):
+def make_edges(g):
     print("loading credits data")
     df = imdb_tsv.load_principals()
     print("data loaded")
-    relevantJobs = "actor,actress,writer,director,producer".split(",")
-    predicate = lambda row: row["category"] in relevantJobs
-    filteredGraphUpdate(g, df, imdb_tsv.addContribution, predicate=predicate)
+    relevant_jobs = "actor,actress,writer,director,producer".split(",")
+    predicate = lambda row: row["category"] in relevant_jobs
+    filtered_graph_update(g, df, imdb_tsv.add_contribution, predicate=predicate)
 
 
-def makeProfessionalGraph():
+def make_professional_graph():
     g = nx.Graph()
-    populatePeople(g)
-    populateMovies(g)
-    updateRatings(g)
-    makeEdges(g)
+    populate_people(g)
+    populate_movies(g)
+    update_ratings(g)
+    make_edges(g)
     # we want the component with Fred Astaire who has ID 1
     return g.subgraph(nx.node_connected_component(g, PersonNode(1))).copy()
 
@@ -102,6 +102,6 @@ def run():
     retrieve_imdb_data("title.principals.tsv.gz")
 
     print("Creating graph")
-    g = makeProfessionalGraph()
+    g = make_professional_graph()
     with open(directories.data("professional.pkl"), "wb") as f:
         pickle.dump(g, f)

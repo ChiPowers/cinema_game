@@ -37,7 +37,7 @@ def fame_by_pagerank(g: nx.Graph, people=None, pagerank=None):
 def works_by_pagerank(g: nx.Graph, works=None, pagerank=None):
     if works is None:
         works = get_works(g)
-    if pagerank is None:    
+    if pagerank is None:
         pagerank = nx.pagerank(g)
     works_pagerank = [(work, pagerank[work]) for work in works]
     sort_by_fame(works_pagerank)
@@ -57,7 +57,12 @@ def normalized_exponential_decay(n, exponent=murdock_exponent):
     return x / x.sum()
 
 
-def weight_by_cast_order(g, ia_s3):
+def weight_zero(g, weight="weight"):
+    for edge in g.edges:
+        g.edges[edge][weight] = 0
+
+
+def weight_by_cast_order(g, ia_s3, weight="weight"):
     d = dict()
 
     for node in get_works(g):
@@ -68,16 +73,10 @@ def weight_by_cast_order(g, ia_s3):
             edge = (PersonNode(actor.getID()), node)
             d[edge] = x[i]
 
-    for edge in g.edges:
-        g.edges[edge]["weight"] = 0
+    weight_zero(g, weight=weight)
 
     for edge, w in d.items():
-        g.edges[edge]["weight"] = w
-
-
-def weight_zero(g):
-    for edge in g.edges:
-        g.edges[edge]["weight"] = 0
+        g.edges[edge][weight] = w
 
 
 def weight_by_order(g, nodes, sort_nodes):
@@ -95,3 +94,18 @@ def weight_by_feature_order(g, nodes, get_feature):
         neighbors.sort(key=get_feature, reverse=True)
 
     weight_by_order(g, nodes, sort_by_feature)
+
+
+def person_work(edge):
+    if edge[0].is_person:
+        p, w = edge
+    else:
+        w, p = edge
+    return p, w
+
+
+def weight_by_function(g, f, weight="weight"):
+    weight_zero(g, weight=weight)
+    for edge in g.edges:
+        p, w = person_work(edge)
+        g.edges[edge][weight] = f(p, w)

@@ -5,7 +5,7 @@ from numpy.linalg import norm
 
 from cinema.cinegraph.grapher import PersonNode, WorkNode
 from cinema.tests import data4tests
-from cinema.cinegame import fame
+from cinema.cinegraph import fame
 
 
 class TestFame(TestCase):
