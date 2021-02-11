@@ -134,3 +134,15 @@ class TestWeights(TestCase, FixtureIMDbTsv):
         self.assertAlmostEqual(
             0.69, g.edges[(PersonNode(861703), WorkNode(43044))][weight]
         )
+
+    def test_missing_weights(self):
+        g = self.make_graph()
+        del g.nodes[WorkNode(43044)]["rating"]
+        weight = "rating_weight"
+        weights.weight_by_rating(g, weight=weight)
+        self.assertAlmostEqual(0, g.edges[(PersonNode(1), WorkNode(43044))][weight])
+        self.assertAlmostEqual(0.70, g.edges[(PersonNode(1), WorkNode(50419))][weight])
+        self.assertAlmostEqual(0.66, g.edges[(PersonNode(2), WorkNode(117057))][weight])
+        self.assertAlmostEqual(
+            0, g.edges[(PersonNode(861703), WorkNode(43044))][weight]
+        )

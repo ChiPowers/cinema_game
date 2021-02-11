@@ -125,14 +125,20 @@ def acted_in(e):
 
 
 def get_order(e):
-    return e["ordering"]
+    if "ordering" not in e:
+        return 10
+    return min(10, e["ordering"])
 
 
 def get_rating(n):
+    if "rating" not in n:
+        return 0
     return n["rating"]
 
 
 def get_votes(n):
+    if "votes" not in n:
+        return 0
     return n["votes"]
 
 
