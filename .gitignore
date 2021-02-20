@@ -116,3 +116,6 @@ Thumbs.db
 secrets.py
 db.sqlite3
 data/*.gz
+data/professional.pkl
+data/*_pagerank.pkl
+

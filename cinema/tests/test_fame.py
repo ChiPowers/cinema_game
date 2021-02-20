@@ -5,7 +5,7 @@ from numpy.linalg import norm
 
 from cinema.cinegraph.grapher import PersonNode, WorkNode
 from cinema.tests import data4tests
-from cinema.cinegame import fame
+from cinema.cinegraph import fame
 
 
 class TestFame(TestCase):
@@ -47,7 +47,7 @@ class TestFame(TestCase):
         expected = [57, 56, 50, 46]
         self.assertEqual(expected, actual)
 
-    def test_fame_by_pageranks(self):
+    def test_fame_by_pagerank(self):
         g = data4tests.get_small_graph()
         people_rank, _ = fame.fame_by_pagerank(g)
         actual = [p for p, _ in people_rank[:4]]
