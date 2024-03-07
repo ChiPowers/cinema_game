@@ -1,6 +1,6 @@
-from imdb import IMDb
+from imdb import Cinemagoer
 
-ia = IMDb()
+ia = Cinemagoer()
 
 try:
     from .secrets import get_ia
