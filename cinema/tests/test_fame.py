@@ -68,12 +68,7 @@ class TestFame(TestCase):
         g = data4tests.get_small_graph()
         works_rank, _ = fame.works_by_pagerank(g)
         actual = [w for w, _ in works_rank[:4]]
-        expected = [
-            WorkNode(3154822),
-            WorkNode(118901),
-            WorkNode(1233192),
-            WorkNode(98638),
-        ]
+        expected = [WorkNode(3154822), WorkNode(118901), WorkNode(98638), WorkNode(82348)]
         self.assertEqual(expected, actual)
         actual = [r for _, r in works_rank[:4]]
         expected = np.array(

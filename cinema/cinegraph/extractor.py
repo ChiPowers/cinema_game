@@ -9,10 +9,11 @@ def filmography_filter(person, roles=None, kind=None):
             roles = {roles}
         else:
             roles = set(roles)
-        filmography = [d for d in filmography if not set(d.keys()).isdisjoint(roles)]
+    else:
+        roles = set(filmography.keys())
     works = []
-    for d in filmography:
-        works += list(d.values())[0]
+    for role in roles:
+        works += filmography[role]
     if kind is not None:
         works = kind_filter(works, kind=kind)
     return works
