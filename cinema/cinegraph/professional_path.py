@@ -1,7 +1,7 @@
 import networkx as nx
 
 
-def professional_subgraph(g : nx.Graph, jobs):
+def professional_subgraph(g: nx.Graph, jobs):
     """
     Get edge subgraph containing where work nodes are connected only by collaborators with particular jobs.
     For example, if the professional graph is one where words are movies and collaborators are actors, directors and
@@ -11,7 +11,7 @@ def professional_subgraph(g : nx.Graph, jobs):
     :return: an edge subgraph of g
     """
     jobs = set(jobs)
-    edges = [edge for edge in g.edges if not jobs.isdisjoint(g.edges[edge]['job'])]
+    edges = [edge for edge in g.edges if not jobs.isdisjoint(g.edges[edge]["job"])]
     return g.edge_subgraph(edges)
 
 

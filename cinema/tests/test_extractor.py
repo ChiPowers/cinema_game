@@ -16,7 +16,7 @@ class TestExtractor(TestCase):
         # Kevin Bacon
         bacon = data4tests.get_bacon(ia)
         self.assertEqual("0000102", bacon.getID())
-        films = extractor.filmography_filter(bacon, roles='actor')
+        films = extractor.filmography_filter(bacon, roles="actor")
         ids = {film.getID() for film in films}
         # Kevin Bacon was an actor in The Air I Breathe
         self.assertIn("0485851", ids)
@@ -25,7 +25,7 @@ class TestExtractor(TestCase):
         # Sarah Michelle Gellar
         sarah = data4tests.get_sarah(ia)
         self.assertEqual("0001264", sarah.getID())
-        films = extractor.filmography_filter(sarah, roles=('actress', 'self'))
+        films = extractor.filmography_filter(sarah, roles=("actress", "self"))
         ids = {film.getID() for film in films}
         # Sarah Michelle Gellar was an actress in The Air I Breathe
         self.assertIn("0485851", ids)
@@ -45,9 +45,9 @@ class TestExtractor(TestCase):
     def test_work_intersection(self):
         # Kevin Bacon and Sarah Michelle Geller were both in The Air I Breathe
         bacon = data4tests.get_bacon(ia)
-        bacon_films = extractor.filmography_filter(bacon, roles='actor')
+        bacon_films = extractor.filmography_filter(bacon, roles="actor")
         sarah = data4tests.get_sarah(ia)
-        sarah_films = extractor.filmography_filter(sarah, roles='actress')
+        sarah_films = extractor.filmography_filter(sarah, roles="actress")
         common_works = extractor.work_intersection(bacon_films, sarah_films)
         ids = {film.getID() for film in common_works}
         self.assertIn("0485851", ids)

@@ -27,16 +27,16 @@ class S3GraphMaker(GraphMaker):
 
         if "cast" in work:
             cast = interpret_objects(work["cast"], self.ia.get_person)
-            append(cast, 'actor')
+            append(cast, "actor")
         if "writer" in work:
             writers = interpret_objects(work["writer"], self.ia.get_person)
-            append(writers, 'writer')
+            append(writers, "writer")
         if "director" in work:
             directors = interpret_objects(work["director"], self.ia.get_person)
-            append(directors, 'director')
+            append(directors, "director")
         if "producer" in work:
             producers = interpret_objects(work["producer"], self.ia.get_person)
-            append(producers, 'producer')
+            append(producers, "producer")
         return people_jobs
 
     def works_from_person(self, person):
@@ -80,6 +80,8 @@ def is_movie(g, node):
 
 
 def movie_actor_subgraph(g):
-    movies_and_people = [node for node in g.nodes if node.is_person or is_movie(g, node)]
+    movies_and_people = [
+        node for node in g.nodes if node.is_person or is_movie(g, node)
+    ]
     movie_graph = g.subgraph(movies_and_people)
-    return professional_subgraph(movie_graph, ['actor'])
+    return professional_subgraph(movie_graph, ["actor"])
