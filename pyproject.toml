@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "cinema"
+version = "0.2.0"
+description = "Game of the cinema graph"
+authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
+license = "mit"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.18"
+pandas = "^1.2"
+networkx = "^3.2"
+cinemagoer = "^2023.5.1"
+Django = "2.2.22"
+djangorestframework = "3.11.2"
+django-jsonfield = "1.4.0"
+django-extensions = "3.1.0"
+gensim = "^4.3.2"
+tqdm = "^4.56"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
