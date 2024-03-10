@@ -3,7 +3,7 @@ def kind_filter(works, kind="movie"):
 
 
 def filmography_filter(person, roles=None, kind=None):
-    filmography = person['filmography']
+    filmography = person["filmography"]
     if roles is not None:
         if type(roles) == str:
             roles = {roles}

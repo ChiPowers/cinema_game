@@ -81,9 +81,9 @@ class TestGrapher(TestCase):
         )
         self.assertEqual(
             {"self"},
-            g.edges[
-                (WorkNode("A Powerful Noise Live"), PersonNode("Natalie Portman"))
-            ]["job"],
+            g.edges[(WorkNode("A Powerful Noise Live"), PersonNode("Natalie Portman"))][
+                "job"
+            ],
         )
 
     def test_professional_node_in_graph(self):

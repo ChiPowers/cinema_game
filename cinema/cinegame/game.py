@@ -1,10 +1,6 @@
 from datetime import datetime
 import uuid
-import networkx as nx
-import imdb
-import pickle
 
-from cinema.cinegraph.imdb_grapher import movie_actor_subgraph, s3_path_details
 from cinema.cinegraph.extractor import filmography_filter
 from cinema.cinegraph.grapher import PersonNode, WorkNode
 from cinema.gameplay.models import Gameplay

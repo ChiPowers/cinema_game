@@ -8,22 +8,38 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Gameplay',
+            name="Gameplay",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.CharField(default='test_user', max_length=200)),
-                ('start_contributor', models.CharField(max_length=200)),
-                ('end_contributor', models.CharField(max_length=200)),
-                ('start_time', models.DateTimeField(null=True, verbose_name='game start time')),
-                ('end_time', models.DateTimeField(null=True, verbose_name='game end time')),
-                ('shortest_path', models.IntegerField()),
-                ('is_solved', models.BooleanField(default=False)),
-                ('moves', jsonfield.fields.JSONField(blank=True, default={}, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("user", models.CharField(default="test_user", max_length=200)),
+                ("start_contributor", models.CharField(max_length=200)),
+                ("end_contributor", models.CharField(max_length=200)),
+                (
+                    "start_time",
+                    models.DateTimeField(null=True, verbose_name="game start time"),
+                ),
+                (
+                    "end_time",
+                    models.DateTimeField(null=True, verbose_name="game end time"),
+                ),
+                ("shortest_path", models.IntegerField()),
+                ("is_solved", models.BooleanField(default=False)),
+                (
+                    "moves",
+                    jsonfield.fields.JSONField(blank=True, default={}, null=True),
+                ),
             ],
         ),
     ]
