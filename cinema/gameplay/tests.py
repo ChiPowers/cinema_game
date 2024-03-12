@@ -62,6 +62,6 @@ class GameplayTestCase(TestCase):
         self.assertEqual(game_details.values_list("shortest_path", flat=True)[0], 3)
         self.assertEqual(game_details.values_list("is_solved", flat=True)[0], True)
         self.assertEqual(
-            game_details.values_list("moves", flat=True)[0],
-            {"0": "({949}, {194}, {120824})", "1": "({194}, {147}, {1315981})"},
+            game_details.values_list("moves_json", flat=True)[0],
+            '{"0": "({949}, {194}, {120824})", "1": "({194}, {147}, {1315981})"}',
         )

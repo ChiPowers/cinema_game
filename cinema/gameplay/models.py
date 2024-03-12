@@ -1,9 +1,12 @@
 from django.db import models
 
-import jsonfield
+
+import json
 
 
 class Gameplay(models.Model):
+    id = models.AutoField(primary_key=True)
+
     # account id of person playing the game - will be foreign key
     user = models.CharField(max_length=200, default="test_user")
 
@@ -25,8 +28,16 @@ class Gameplay(models.Model):
     # indicates whether this game is solved
     is_solved = models.BooleanField(default=False)
 
+    moves_json = models.TextField(default="{}", null=True, blank=True)
+
     # moves stored as dict in jsonfield
-    moves = jsonfield.JSONField(default=dict(), null=True, blank=True)
+    @property
+    def moves(self) -> dict:
+        return json.loads(self.moves_json)
+
+    @moves.setter
+    def moves(self, value: dict):
+        self.moves_json = json.dumps(value)
 
     class Meta:
         app_label = "gameplay"
