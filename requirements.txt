@@ -2,10 +2,9 @@ numpy>=1.18
 pandas>=1.2
 networkx>=3.2
 cinemagoer>=2023.5.1
-Django==2.2.22
-djangorestframework==3.11.2
-django-jsonfield==1.4.0
-django-extensions==3.1.0
+Django==5.0.3
+djangorestframework==3.14.0
+django-extensions==3.2.3
 gensim==4.3.2
-tqdm==4.56.0
-requests==2.25.1
+tqdm==4.66.2
+requests==2.31.0

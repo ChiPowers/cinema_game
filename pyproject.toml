@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cinema"
-version = "0.2.0"
+version = "0.2.1"
 description = "Game of the cinema graph"
 authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
 license = "mit"
@@ -12,13 +12,12 @@ numpy = "^1.18"
 pandas = "^1.2"
 networkx = "^3.2"
 cinemagoer = "^2023.5.1"
-Django = "2.2.22"
-djangorestframework = "3.11.2"
-django-jsonfield = "1.4.0"
-django-extensions = "3.1.0"
-gensim = "^4.3.2"
+Django = "^5.0"
+djangorestframework = "^3.14"
+django-extensions = "^3.2"
+gensim = "^4.3"
 tqdm = "^4.56"
-requests = "^2.31.0"
+requests = "^2.31"
 black = "^24.2.0"
 
 

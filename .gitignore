@@ -115,6 +115,7 @@ Thumbs.db
 # project specific
 secrets.py
 db.sqlite3
+cinema.core/migrations/
 data/*.gz
 data/professional.pkl
 data/*_pagerank.pkl
