@@ -2,7 +2,7 @@ from datetime import datetime
 import uuid
 
 from cinema.cinegraph.extractor import filmography_filter
-from cinema.cinegraph.grapher import PersonNode, WorkNode
+from cinema.cinegraph.node_types import PersonNode, WorkNode
 from cinema.gameplay.models import Gameplay
 
 

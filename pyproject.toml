@@ -19,6 +19,7 @@ gensim = "^4.3"
 tqdm = "^4.56"
 requests = "^2.31"
 black = "^24.2.0"
+ruff = "^0.4.1"
 
 
 [build-system]

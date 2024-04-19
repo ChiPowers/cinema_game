@@ -1,7 +1,7 @@
 import pandas as pd
 
 from cinema import directories
-from cinema.cinegraph.grapher import PersonNode, WorkNode
+from cinema.cinegraph.node_types import PersonNode, WorkNode
 
 
 class IMDbPersonNode(PersonNode):

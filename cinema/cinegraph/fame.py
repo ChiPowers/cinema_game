@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-from cinema.cinegraph.grapher import PersonNode
+from cinema.cinegraph.node_types import PersonNode
 
 
 def get_people(g):

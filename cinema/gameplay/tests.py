@@ -1,17 +1,13 @@
-import uuid
-from datetime import datetime, date
+from datetime import datetime
 import imdb
-import pickle
 
-from .models import Gameplay
+from cinema.gameplay.models import Gameplay
 from cinema.cinegame.game import GameGraphAndHTTP
-from cinema.cinegraph.imdb_grapher import movie_actor_subgraph
 from django.test import TestCase
 from cinema.tests import data4tests
 
 
-# Create your tests here.
-class GameplayTestCase(TestCase):
+class TestGameplay(TestCase):
     def test_game_data_stored_properly(self):
 
         game_data = {

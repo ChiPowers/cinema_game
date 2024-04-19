@@ -1,5 +1,6 @@
 import networkx as nx
 
+from cinema.cinegraph.node_types import PersonNode, WorkNode
 
 verbose = False
 
@@ -7,41 +8,6 @@ verbose = False
 def blurt(s):
     if verbose:
         print(s)
-
-
-class ProfessionalNode:
-    def __init__(self, id, is_person):
-        self.id = id
-        self.is_person = is_person
-
-    def __hash__(self):
-        return hash(self.id) + hash(self.is_person)
-
-    def __eq__(self, other):
-        return self.id == other.id and self.is_person == other.is_person
-
-    @property
-    def description_str(self):
-        return "person" if self.is_person else "work"
-
-    def __str__(self):
-        return "<{} {}>".format(self.description_str, self.id)
-
-
-class PersonNode(ProfessionalNode):
-    def __init__(self, id):
-        ProfessionalNode.__init__(self, id, True)
-
-    def __repr__(self):
-        return "PersonNode({})".format(self.id)
-
-
-class WorkNode(ProfessionalNode):
-    def __init__(self, id):
-        ProfessionalNode.__init__(self, id, False)
-
-    def __repr__(self):
-        return "WorkNode({})".format(self.id)
 
 
 def add_arc(g: nx.Graph, work, person, job=None):
