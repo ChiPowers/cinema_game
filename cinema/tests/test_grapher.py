@@ -1,6 +1,6 @@
 import networkx as nx
 from cinema.cinegraph import grapher
-from cinema.cinegraph.grapher import ProfessionalNode, PersonNode, WorkNode
+from cinema.cinegraph.node_types import ProfessionalNode, PersonNode, WorkNode
 
 from django.test import TestCase
 
@@ -11,37 +11,6 @@ class TestGrapher(TestCase):
 
     def tearDown(self):
         pass
-
-    def test_professional_node(self):
-        n0 = ProfessionalNode(42, False)
-        n1 = ProfessionalNode(42, False)
-        n2 = ProfessionalNode(41, False)
-        n3 = ProfessionalNode(42, True)
-
-        self.assertEqual(n0, n1)
-        self.assertEqual(hash(n0), hash(n1))
-
-        self.assertNotEqual(n0, n2)
-        self.assertNotEqual(hash(n0), hash(n2))
-
-        self.assertNotEqual(n0, n3)
-        self.assertNotEqual(hash(n0), hash(n3))
-
-    def test_person_node(self):
-        n0 = ProfessionalNode(42, True)
-        n1 = PersonNode(42)
-
-        self.assertTrue(n1.is_person)
-        self.assertEqual(n0, n1)
-        self.assertEqual(hash(n0), hash(n1))
-
-    def test_movie_node(self):
-        n0 = ProfessionalNode(42, False)
-        n1 = WorkNode(42)
-
-        self.assertFalse(n1.is_person)
-        self.assertEqual(n0, n1)
-        self.assertEqual(hash(n0), hash(n1))
 
     def test_add_arc(self):
         g = nx.Graph()

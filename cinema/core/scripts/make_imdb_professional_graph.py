@@ -11,7 +11,7 @@ import pickle
 
 from cinema import directories
 from cinema.cinegraph import imdb_tsv
-from cinema.cinegraph.grapher import PersonNode
+from cinema.cinegraph.node_types import PersonNode
 
 
 def retrieve_imdb_data(filename):

@@ -3,7 +3,7 @@ from django.test import TestCase
 import numpy as np
 from numpy.linalg import norm
 
-from cinema.cinegraph.grapher import PersonNode, WorkNode
+from cinema.cinegraph.node_types import PersonNode, WorkNode
 from cinema.tests import data4tests
 from cinema.cinegraph import fame
 

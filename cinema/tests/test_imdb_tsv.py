@@ -3,7 +3,7 @@ from django.test import TestCase
 import networkx as nx
 
 from cinema.tests.fixture_imbd_tsv import FixtureIMDbTsv
-from cinema.cinegraph.grapher import PersonNode, WorkNode
+from cinema.cinegraph.node_types import PersonNode, WorkNode
 from cinema.cinegraph import imdb_tsv
 
 

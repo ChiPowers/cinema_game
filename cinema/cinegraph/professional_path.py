@@ -4,7 +4,7 @@ import networkx as nx
 def professional_subgraph(g: nx.Graph, jobs):
     """
     Get edge subgraph containing where work nodes are connected only by collaborators with particular jobs.
-    For example, if the professional graph is one where words are movies and collaborators are actors, directors and
+    For example, if the professional graph is one where works are movies and collaborators are actors, directors and
     writers, this function can be used to find the subgraph connected by actors.
     :param g: professional bipartite graph
     :param jobs: those jobs we want in the subgraph
