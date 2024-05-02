@@ -18,7 +18,7 @@ django-extensions = "^3.2"
 gensim = "^4.3"
 tqdm = "^4.56"
 requests = "^2.31"
-black = "^24.2.0"
+black = "^24.3.0"
 ruff = "^0.4.1"
 
 
