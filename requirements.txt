@@ -2,7 +2,7 @@ numpy>=1.18
 pandas>=1.2
 networkx>=3.2
 cinemagoer>=2023.5.1
-Django==5.0.3
+Django==5.0.7
 djangorestframework==3.14.0
 django-extensions==3.2.3
 gensim==4.3.2
