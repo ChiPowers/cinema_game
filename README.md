@@ -10,7 +10,7 @@ The distance between two actors can only decrease, but at the time we first aske
 of length 2 between Brad Pitt and Colin Firth. Brad Pitt and Michael Fassbender were both in 12 Years a Slave. Michael 
 Fassbender and Nicholas Hoult were both in X-Men: Apocalypse. Nicholas Hoult and Colin Firth were both in A Single Man.  
 
-The code here is capable of building a professional graph from the data base which IMDb has courteously provided for 
+The code here is capable of building a professional graph from the database which IMDb has courteously provided for 
 educators and researchers. With small modification, it can also produce a graph from similar databases such as citation 
 data for scholarly research papers or musical discographies.
 
@@ -23,16 +23,9 @@ For some of us, playing this kind of game is actually much more fun than watchin
 ## To begin
 Install dependencies from `requirements.txt`. With Anaconda create an environment by
 
-    conda create -n cinema python=3
+    conda create -n cinema python=3.10
     conda activate cinema 
-
-To create an environment with virtualenvwrapper
-
-    mkvirtualenv -p python3 cinema
-
-Either way, continue with
-    
-    pip install -r requirements.txt
+    pip install -e .
     ./manage.py migrate
 
 That much will set up the Django project. Downloading data and constructing a professional graph will probably require 
