@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Actor Chain Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+        .container { background: white; padding: 20px; border-radius: 8px; max-width: 500px; margin: auto; }
+        button { margin-top: 10px; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .movie-btn { background-color: #007bff; color: white; }
+        .actor-btn { background-color: #28a745; color: white; }
+        input { width: 100%; padding: 10px; margin-top: 5px; }
+        #chain-preview { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🎬 Actor Chain Game</h2>
+    <p><strong>Start Actor:</strong> <span id="start-actor"></span></p>
+    <p><strong>End Actor:</strong> <span id="end-actor"></span></p>
+
+    <div id="chain-builder"></div>
+    <div id="chain-preview"></div>
+
+    <button id="submit-chain" style="display:none; background-color:#ff9800; color:white;">
+        ✅ Submit Chain
+    </button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+let startActor = "";
+let endActor = "";
+let chain = [];
+
+// Load game start data
+$.get("/start/", function(data){
+    startActor = data.start_name;
+    endActor = data.end_name;
+    chain.push(startActor);
+    $("#start-actor").text(startActor);
+    $("#end-actor").text(endActor);
+
+    // Start the chain builder
+    addMovieButton();
+});
+
+// Add "Was in this movie" button
+function addMovieButton(){
+    $("#chain-builder").append('<button class="movie-btn">🎬 Was in this movie</button>');
+    $(".movie-btn").last().click(function(){
+        $(this).remove();
+        $("#chain-builder").append('<input type="text" class="movie-input" placeholder="Enter movie name...">');
+        $(".movie-input").last().keypress(function(e){
+            if(e.which === 13){
+                let movie = $(this).val().trim();
+                if(movie){
+                    chain.push(movie);
+                    updatePreview();
+                    $(this).remove();
+                    addActorButton();
+                }
+            }
+        });
+    });
+}
+
+// Add "With this actor" button
+function addActorButton(){
+    $("#chain-builder").append('<button class="actor-btn">👤 With this actor</button>');
+    $(".actor-btn").last().click(function(){
+        $(this).remove();
+        $("#chain-builder").append('<input type="text" class="actor-input" placeholder="Enter actor name...">');
+        $(".actor-input").last().keypress(function(e){
+            if(e.which === 13){
+                let actor = $(this).val().trim();
+                if(actor){
+                    chain.push(actor);
+                    updatePreview();
+                    $(this).remove();
+
+                    if(actor.toLowerCase() === endActor.toLowerCase()){
+                        $("#submit-chain").show();
+                    } else {
+                        addMovieButton();
+                    }
+                }
+            }
+        });
+    });
+}
+
+// Update chain preview
+function updatePreview(){
+    $("#chain-preview").text(chain.join(" → "));
+}
+
+// Submit chain for validation
+$("#submit-chain").click(function(){
+    $.ajax({
+        url: "/validate/",
+        type: "POST",
+        data: JSON.stringify({
+            chain: chain,
+            start_name: startActor,
+            end_name: endActor
+        }),
+        contentType: "application/json",
+        success: function(response){
+            $("#result").text(response.valid ? "✅ " + response.reason : "❌ " + response.reason);
+        }
+    });
+});
+</script>
+</body>
+</html>

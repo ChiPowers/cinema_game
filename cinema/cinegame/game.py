@@ -98,8 +98,7 @@ class Game:
 
         possible_people = self.fetch_possible_people(person0)
         if len(self.moves) == 0:
-            if self.start_node not in possible_people:
-                return False, "incorrect start"
+    # Force the game to start with the known starting contributor
             people0 = {self.start_node}
         else:
             _, previous_people, _ = self.moves[-1]

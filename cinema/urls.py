@@ -21,7 +21,7 @@ from cinema.core import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("gameplay/", include("cinema.gameplay.urls"), name="gameplay"),
     path("cinema/", views.HelloView.as_view(), name="cinema"),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
+    path('', include('cinema.gameplay.urls'), name="gameplay"),
 ]
