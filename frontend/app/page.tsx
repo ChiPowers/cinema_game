@@ -9,9 +9,9 @@ export const runtime = "edge";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const DIFFICULTY_DESCRIPTIONS = {
-  easy: "1 connection",
-  medium: "2 connections",
-  hard: "3 connections",
+  easy: "2 hops",
+  medium: "3–5 hops",
+  hard: "6+ hops",
 };
 
 export default function Home() {

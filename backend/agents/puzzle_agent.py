@@ -20,27 +20,45 @@ async def _pick_popular_actor(min_popularity: float) -> dict:
     return random.choice(eligible)
 
 
-async def _random_walk(start_actor: dict, hops: int, min_popularity: float) -> list[dict] | None:
+async def _random_walk(
+    start_actor: dict,
+    hops: int,
+    min_popularity: float,
+    no_repeat_movies: bool = False,
+) -> list[dict] | None:
     """
     Build a path of length `hops` via random walk:
       actor → movie → actor → movie → actor ...
 
-    Returns an ordered list of step dicts, or None if the walk fails.
-    Each step: {"type": "actor"|"movie", "name"|"title": ..., "id": ..., ...}
+    Returns an ordered list of step dicts, or None if the walk dead-ends.
+    Each step: {"type": "actor"|"movie", ...}
+
+    When no_repeat_movies=True, the same movie cannot appear twice in the path.
     """
-    path = [{"type": "actor", "name": start_actor["name"], "id": start_actor["id"],
-             "profile_url": start_actor.get("profile_url")}]
+    path = [{
+        "type": "actor",
+        "name": start_actor["name"],
+        "id": start_actor["id"],
+        "profile_url": start_actor.get("profile_url"),
+    }]
     current_actor_id = start_actor["id"]
+    used_movie_ids: set[int] = set()
 
     for hop in range(hops):
-        # Get movies for current actor (top 20 by popularity)
+        # Get movies for current actor, sorted by popularity
         movies = await tmdb.get_person_movies(current_actor_id, limit=20)
-        # Filter to movies with some popularity to keep puzzle recognizable
         movies = [m for m in movies if m.get("popularity", 0) > 5] or movies
+
+        # Exclude already-used movies when required
+        if no_repeat_movies:
+            movies = [m for m in movies if m["id"] not in used_movie_ids]
+
         if not movies:
             return None
 
         movie = random.choice(movies[:10])
+        used_movie_ids.add(movie["id"])
+
         path.append({
             "type": "movie",
             "title": movie["title"],
@@ -50,9 +68,7 @@ async def _random_walk(start_actor: dict, hops: int, min_popularity: float) -> l
             "backdrop_url": movie.get("backdrop_url"),
         })
 
-        # Get cast and pick a recognisable co-star
-        # We need their popularity, so look each candidate up individually for the last hop;
-        # for intermediate hops a billing-order proxy is fine.
+        # Get cast, excluding current actor
         cast = await tmdb.get_movie_cast(movie["id"])
         cast = [c for c in cast if c["id"] != current_actor_id]
         if not cast:
@@ -60,9 +76,7 @@ async def _random_walk(start_actor: dict, hops: int, min_popularity: float) -> l
 
         is_last_hop = (hop == hops - 1)
         if is_last_hop:
-            # For the end actor, prefer someone above the popularity floor.
-            # Check top-billed candidates; fall back to the most popular available
-            # rather than returning None and retrying the whole walk.
+            # Prefer end actor above the popularity floor; fall back to most popular available.
             scored = []
             for candidate in cast[:20]:
                 person = await tmdb.get_person_details(candidate["id"])
@@ -75,12 +89,11 @@ async def _random_walk(start_actor: dict, hops: int, min_popularity: float) -> l
             if eligible:
                 next_actor = random.choice(eligible)
             elif scored:
-                # Fallback: pick the most popular person found, even below the floor
                 next_actor = max(scored, key=lambda c: c["popularity"])
             else:
-                return None  # cast was empty after filtering — genuine dead end
+                return None
         else:
-            # Intermediate actors: top-billing is a good enough popularity proxy
+            # Intermediate hops: top billing is a good popularity proxy
             next_actor = random.choice(cast[:15])
 
         path.append({
@@ -98,18 +111,24 @@ async def generate_puzzle(difficulty: str = "medium") -> dict:
     """
     Generate a puzzle for the given difficulty tier.
     Returns: start_actor, end_actor, difficulty, min_moves, known_solution.
-    """
-    hops = DIFFICULTY_HOPS.get(difficulty, 2)
-    min_pop = MIN_ACTOR_POPULARITY.get(difficulty, 20)
 
-    # Retry up to 5 times in case a walk dead-ends
-    for attempt in range(5):
+    Hop counts:
+      easy:   exactly 2 hops, no movie repeated
+      medium: 3–5 hops (random)
+      hard:   6–8 hops (random)
+    """
+    hop_range = DIFFICULTY_HOPS.get(difficulty, (3, 5))
+    hops = random.randint(*hop_range)
+    min_pop = MIN_ACTOR_POPULARITY.get(difficulty, 4)
+    no_repeat = (difficulty == "easy")
+
+    for _ in range(10):
         start_actor = await _pick_popular_actor(min_pop)
-        path = await _random_walk(start_actor, hops, min_pop)
+        path = await _random_walk(start_actor, hops, min_pop, no_repeat_movies=no_repeat)
         if path and len(path) >= 3:
             break
     else:
-        raise RuntimeError("Failed to generate a valid puzzle after 5 attempts.")
+        raise RuntimeError(f"Failed to generate a valid {difficulty} puzzle after 10 attempts.")
 
     start = path[0]
     end = path[-1]
