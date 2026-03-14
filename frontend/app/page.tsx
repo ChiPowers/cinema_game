@@ -49,18 +49,6 @@ export default function Home() {
         transition={{ duration: 0.9, ease: "easeOut" }}
         className="text-center w-full max-w-sm"
       >
-        {/* Badge */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-cinema-gold text-xs tracking-[0.4em] uppercase mb-6 flex items-center justify-center gap-2"
-        >
-          <span className="inline-block w-8 h-px bg-cinema-gold/50" />
-          A Film by You
-          <span className="inline-block w-8 h-px bg-cinema-gold/50" />
-        </motion.p>
-
         {/* Title */}
         <h1 className="text-6xl font-bold tracking-tighter mb-1 leading-none">
           CINEMA
