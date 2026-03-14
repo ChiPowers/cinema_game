@@ -120,3 +120,9 @@ data/*.gz
 data/professional.pkl
 data/*_pagerank.pkl
 
+# agentic rewrite
+backend/.env
+backend/cinema_game.db
+frontend/node_modules/
+frontend/.next/
+
