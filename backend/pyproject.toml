@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "cinema-game-backend"
 version = "2.0.0"
 description = "Cinema Game — connect actors through shared movies"
@@ -18,6 +19,10 @@ pydantic = "^2.7.0"
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
 ruff = "^0.4.1"
+pytest = "^8.0"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [build-system]
 requires = ["poetry-core"]

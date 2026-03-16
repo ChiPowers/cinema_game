@@ -39,6 +39,20 @@ cd backend
 poetry install
 ```
 
+To also install dev tools (ruff, black, pytest):
+
+```bash
+poetry install --with dev
+```
+
+This enables:
+
+```bash
+poetry run pytest           # run tests
+poetry run ruff check .     # lint
+poetry run black --check .  # check formatting
+```
+
 Copy `.env.example` to `.env` and fill in your keys:
 
 ```
