@@ -1,1 +1,0 @@
-Directory for the data used to create models
