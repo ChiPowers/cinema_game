@@ -1,0 +1,29 @@
+[tool.poetry]
+package-mode = false
+name = "cinema-game-backend"
+version = "2.0.0"
+description = "Cinema Game — connect actors through shared movies"
+authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
+license = "mit"
+readme = "../README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+fastapi = "^0.115.0"
+uvicorn = "^0.30.0"
+anthropic = "^0.40.0"
+httpx = "^0.27.0"
+python-dotenv = "^1.0.0"
+pydantic = "^2.7.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+ruff = "^0.4.1"
+pytest = "^8.0"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
