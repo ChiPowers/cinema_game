@@ -32,10 +32,11 @@ An AI agent (Claude) proposes a puzzle: a start actor, an end actor, and a guara
 
 ### Backend
 
+Requires Python >=3.10, <3.13 (pydantic 2.7 is not yet compatible with Python 3.13).
+
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+poetry install
 ```
 
 Copy `.env.example` to `.env` and fill in your keys:
@@ -48,7 +49,7 @@ ANTHROPIC_API_KEY=...
 Then run:
 
 ```bash
-uvicorn main:app --reload
+poetry run uvicorn main:app --reload
 ```
 
 API runs at `http://localhost:8000`.
