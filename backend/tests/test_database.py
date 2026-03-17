@@ -53,6 +53,7 @@ def use_in_memory_db():
 class TestInitDb:
     def test_creates_games_table(self):
         from database import get_db
+
         conn = get_db()
         cursor = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='games'"
@@ -100,7 +101,13 @@ class TestUpdateGame:
         game = _make_game()
         save_game(game)
 
-        new_moves = [{"from_actor": "Brad Pitt", "movie": "12 Years a Slave", "to_actor": "Michael Fassbender"}]
+        new_moves = [
+            {
+                "from_actor": "Brad Pitt",
+                "movie": "12 Years a Slave",
+                "to_actor": "Michael Fassbender",
+            }
+        ]
         new_actor = {"name": "Michael Fassbender", "id": 17288}
         update_game("test-123", new_moves, new_actor, "in_progress")
 

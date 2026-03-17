@@ -9,35 +9,51 @@ from routes.game import _reached_end
 
 # --- Pure logic: _reached_end ---
 
+
 class TestReachedEnd:
     def test_match_by_id(self):
-        assert _reached_end(1891, "Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        assert (
+            _reached_end(1891, "Colin Firth", {"name": "Colin Firth", "id": 1891})
+            is True
+        )
 
     def test_match_by_name_fallback(self):
-        assert _reached_end(0, "Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        assert (
+            _reached_end(0, "Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        )
 
     def test_case_insensitive_name(self):
         assert _reached_end(0, "colin firth", {"name": "Colin Firth", "id": 0}) is True
 
     def test_whitespace_stripped(self):
-        assert _reached_end(0, "  Colin Firth  ", {"name": "Colin Firth", "id": 0}) is True
+        assert (
+            _reached_end(0, "  Colin Firth  ", {"name": "Colin Firth", "id": 0}) is True
+        )
 
     def test_no_match(self):
-        assert _reached_end(287, "Brad Pitt", {"name": "Colin Firth", "id": 1891}) is False
+        assert (
+            _reached_end(287, "Brad Pitt", {"name": "Colin Firth", "id": 1891}) is False
+        )
 
     def test_id_zero_falls_through_to_name(self):
         assert _reached_end(0, "Brad Pitt", {"name": "Colin Firth", "id": 0}) is False
 
     def test_different_id_same_name(self):
         """Name match wins even if IDs differ (one is 0)."""
-        assert _reached_end(0, "Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        assert (
+            _reached_end(0, "Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        )
 
     def test_same_id_different_name(self):
         """ID match wins regardless of name."""
-        assert _reached_end(1891, "Sir Colin Firth", {"name": "Colin Firth", "id": 1891}) is True
+        assert (
+            _reached_end(1891, "Sir Colin Firth", {"name": "Colin Firth", "id": 1891})
+            is True
+        )
 
 
 # --- FastAPI integration tests ---
+
 
 class _NoCloseConnection:
     def __init__(self, conn):
@@ -70,7 +86,9 @@ def _mock_puzzle():
 
 @pytest.fixture(autouse=True)
 def use_in_memory_db():
-    conn = sqlite3.connect("file::memory:?cache=shared", uri=True, check_same_thread=False)
+    conn = sqlite3.connect(
+        "file::memory:?cache=shared", uri=True, check_same_thread=False
+    )
     conn.row_factory = sqlite3.Row
 
     def make_wrapper():
@@ -89,7 +107,11 @@ def client():
 
 class TestNewGame:
     def test_creates_game(self, client):
-        with patch("routes.game.generate_puzzle", new_callable=AsyncMock, return_value=_mock_puzzle()):
+        with patch(
+            "routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value=_mock_puzzle(),
+        ):
             res = client.post("/game/new?difficulty=medium")
 
         assert res.status_code == 200
@@ -105,7 +127,11 @@ class TestNewGame:
         assert res.status_code == 400
 
     def test_default_difficulty(self, client):
-        with patch("routes.game.generate_puzzle", new_callable=AsyncMock, return_value=_mock_puzzle()):
+        with patch(
+            "routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value=_mock_puzzle(),
+        ):
             res = client.post("/game/new")
 
         assert res.status_code == 200
@@ -114,7 +140,11 @@ class TestNewGame:
 
 class TestGetGame:
     def test_get_existing_game(self, client):
-        with patch("routes.game.generate_puzzle", new_callable=AsyncMock, return_value=_mock_puzzle()):
+        with patch(
+            "routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value=_mock_puzzle(),
+        ):
             create_res = client.post("/game/new?difficulty=medium")
         game_id = create_res.json()["game_id"]
 
@@ -133,7 +163,11 @@ class TestGetGame:
 
 class TestMakeMove:
     def _create_game(self, client):
-        with patch("routes.game.generate_puzzle", new_callable=AsyncMock, return_value=_mock_puzzle()):
+        with patch(
+            "routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value=_mock_puzzle(),
+        ):
             res = client.post("/game/new?difficulty=medium")
         return res.json()["game_id"]
 
@@ -152,8 +186,16 @@ class TestMakeMove:
         mock_person = {"name": "Michael Fassbender", "id": 17288, "profile_url": None}
 
         with (
-            patch("routes.game.validate_move", new_callable=AsyncMock, return_value=mock_validation),
-            patch("routes.game.tmdb.search_person", new_callable=AsyncMock, return_value=mock_person),
+            patch(
+                "routes.game.validate_move",
+                new_callable=AsyncMock,
+                return_value=mock_validation,
+            ),
+            patch(
+                "routes.game.tmdb.search_person",
+                new_callable=AsyncMock,
+                return_value=mock_person,
+            ),
         ):
             res = client.post(
                 f"/game/{game_id}/move",
@@ -175,7 +217,11 @@ class TestMakeMove:
             "explanation": "Actor not found in cast.",
         }
 
-        with patch("routes.game.validate_move", new_callable=AsyncMock, return_value=mock_validation):
+        with patch(
+            "routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
+        ):
             res = client.post(
                 f"/game/{game_id}/move",
                 json={"movie": "The Matrix", "next_actor": "Brad Pitt"},
@@ -202,8 +248,16 @@ class TestMakeMove:
         mock_person = {"name": "Colin Firth", "id": 1891, "profile_url": None}
 
         with (
-            patch("routes.game.validate_move", new_callable=AsyncMock, return_value=mock_validation),
-            patch("routes.game.tmdb.search_person", new_callable=AsyncMock, return_value=mock_person),
+            patch(
+                "routes.game.validate_move",
+                new_callable=AsyncMock,
+                return_value=mock_validation,
+            ),
+            patch(
+                "routes.game.tmdb.search_person",
+                new_callable=AsyncMock,
+                return_value=mock_person,
+            ),
         ):
             res = client.post(
                 f"/game/{game_id}/move",
@@ -226,17 +280,38 @@ class TestMakeMove:
         game_id = self._create_game(client)
 
         # Win the game first
-        mock_validation = {"valid": True, "explanation": "Correct!", "movie_id": 1, "movie_title": "T", "movie_year": "2000", "poster_url": None, "backdrop_url": None}
+        mock_validation = {
+            "valid": True,
+            "explanation": "Correct!",
+            "movie_id": 1,
+            "movie_title": "T",
+            "movie_year": "2000",
+            "poster_url": None,
+            "backdrop_url": None,
+        }
         mock_person = {"name": "Colin Firth", "id": 1891, "profile_url": None}
 
         with (
-            patch("routes.game.validate_move", new_callable=AsyncMock, return_value=mock_validation),
-            patch("routes.game.tmdb.search_person", new_callable=AsyncMock, return_value=mock_person),
+            patch(
+                "routes.game.validate_move",
+                new_callable=AsyncMock,
+                return_value=mock_validation,
+            ),
+            patch(
+                "routes.game.tmdb.search_person",
+                new_callable=AsyncMock,
+                return_value=mock_person,
+            ),
         ):
-            client.post(f"/game/{game_id}/move", json={"movie": "X", "next_actor": "Colin Firth"})
+            client.post(
+                f"/game/{game_id}/move",
+                json={"movie": "X", "next_actor": "Colin Firth"},
+            )
 
         # Try another move
-        res = client.post(f"/game/{game_id}/move", json={"movie": "Y", "next_actor": "Z"})
+        res = client.post(
+            f"/game/{game_id}/move", json={"movie": "Y", "next_actor": "Z"}
+        )
         assert res.status_code == 400
 
     def test_move_missing_fields(self, client):

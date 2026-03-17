@@ -35,7 +35,9 @@ async def execute_tool(name: str, tool_input: dict) -> str:
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
-async def run_agent(system: str, user_message: str, tools: list, max_iterations: int = 10) -> str:
+async def run_agent(
+    system: str, user_message: str, tools: list, max_iterations: int = 10
+) -> str:
     """
     Async agentic loop. Runs Claude with tools until stop_reason == 'end_turn'.
     Returns the final text response from the model.
@@ -71,11 +73,13 @@ async def run_agent(system: str, user_message: str, tools: list, max_iterations:
                 if block.name == "web_search":
                     continue
                 result = await execute_tool(block.name, block.input)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": result,
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": result,
+                    }
+                )
 
             if tool_results:
                 messages.append({"role": "user", "content": tool_results})

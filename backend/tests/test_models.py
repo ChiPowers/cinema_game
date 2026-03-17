@@ -14,6 +14,7 @@ from models.game import (
 
 # --- Actor ---
 
+
 class TestActor:
     def test_basic(self):
         a = Actor(name="Brad Pitt", id=287)
@@ -22,7 +23,11 @@ class TestActor:
         assert a.profile_url is None
 
     def test_with_profile_url(self):
-        a = Actor(name="Brad Pitt", id=287, profile_url="https://image.tmdb.org/t/p/w500/abc.jpg")
+        a = Actor(
+            name="Brad Pitt",
+            id=287,
+            profile_url="https://image.tmdb.org/t/p/w500/abc.jpg",
+        )
         assert a.profile_url == "https://image.tmdb.org/t/p/w500/abc.jpg"
 
     def test_missing_required_field(self):
@@ -40,6 +45,7 @@ class TestActor:
 
 
 # --- MovieStep ---
+
 
 class TestMovieStep:
     def test_basic(self):
@@ -73,6 +79,7 @@ class TestMovieStep:
 
 # --- ActorStep ---
 
+
 class TestActorStep:
     def test_basic(self):
         a = ActorStep(type="actor", name="Michael Fassbender", id=17288)
@@ -90,9 +97,14 @@ class TestActorStep:
 
 # --- Move ---
 
+
 class TestMove:
     def test_minimal(self):
-        m = Move(from_actor="Brad Pitt", movie="12 Years a Slave", to_actor="Michael Fassbender")
+        m = Move(
+            from_actor="Brad Pitt",
+            movie="12 Years a Slave",
+            to_actor="Michael Fassbender",
+        )
         assert m.movie_id is None
         assert m.movie_title is None
         assert m.movie_year is None
@@ -113,11 +125,19 @@ class TestMove:
         assert m.movie_id == 76203
 
     def test_round_trip(self):
-        m = Move(from_actor="A", movie="B", to_actor="C", movie_id=1, movie_title="B", movie_year="2020")
+        m = Move(
+            from_actor="A",
+            movie="B",
+            to_actor="C",
+            movie_id=1,
+            movie_title="B",
+            movie_year="2020",
+        )
         assert Move(**m.model_dump()) == m
 
 
 # --- MoveRequest ---
+
 
 class TestMoveRequest:
     def test_basic(self):
@@ -131,6 +151,7 @@ class TestMoveRequest:
 
 
 # --- MoveResponse ---
+
 
 class TestMoveResponse:
     def test_valid_move(self):
@@ -177,6 +198,7 @@ class TestMoveResponse:
 
 # --- NewGameResponse ---
 
+
 class TestNewGameResponse:
     def test_basic(self):
         r = NewGameResponse(
@@ -192,6 +214,7 @@ class TestNewGameResponse:
 
 
 # --- GameState ---
+
 
 class TestGameState:
     def test_empty_game(self):
@@ -210,7 +233,11 @@ class TestGameState:
         assert g.created_at is None
 
     def test_with_moves(self):
-        move = Move(from_actor="Brad Pitt", movie="12 Years a Slave", to_actor="Michael Fassbender")
+        move = Move(
+            from_actor="Brad Pitt",
+            movie="12 Years a Slave",
+            to_actor="Michael Fassbender",
+        )
         g = GameState(
             id="abc-123",
             start_actor=Actor(name="Brad Pitt", id=287),
@@ -238,7 +265,11 @@ class TestGameState:
             )
 
     def test_round_trip(self):
-        move = Move(from_actor="Brad Pitt", movie="12 Years a Slave", to_actor="Michael Fassbender")
+        move = Move(
+            from_actor="Brad Pitt",
+            movie="12 Years a Slave",
+            to_actor="Michael Fassbender",
+        )
         g = GameState(
             id="abc-123",
             start_actor=Actor(name="Brad Pitt", id=287),
