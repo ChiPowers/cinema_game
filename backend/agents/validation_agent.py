@@ -1,6 +1,9 @@
 """
 Validation Agent: verifies that two actors both appeared in a named movie.
 Uses Claude with TMDb tools + web search to handle name variations and ambiguity.
+
+TODO: Abstract the LLM provider behind a testable interface (e.g. langchain)
+so we can substitute other providers or run locally with Ollama.
 """
 
 import json

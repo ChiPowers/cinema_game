@@ -1,6 +1,9 @@
 """
 Agentic loop base: runs Claude with tool use until it reaches a final answer.
 Handles both custom TMDb tools and Claude's built-in web_search tool.
+
+TODO: Abstract the LLM provider behind a testable interface (e.g. langchain)
+so we can substitute other providers or run locally with Ollama.
 """
 
 import json
