@@ -115,6 +115,4 @@ Thumbs.db
 # agentic rewrite
 backend/.env
 backend/cinema_game.db
-frontend/node_modules/
-frontend/.next/
 

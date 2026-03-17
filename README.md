@@ -25,8 +25,7 @@ An AI agent (Claude) proposes a puzzle: a start actor, an end actor, and a guara
 | Agent | Claude claude-sonnet-4-6 via Anthropic SDK |
 | Movie data | TMDb API + Claude web search |
 | Database | SQLite |
-| Frontend | Next.js, Tailwind CSS, Framer Motion |
-| Frontend hosting | Cloudflare Pages |
+| Frontend | Next.js, Tailwind CSS, Framer Motion ([separate repo](https://github.com/ChiPowers/cinema-frontend)) |
 
 ## Getting started
 
@@ -70,15 +69,7 @@ API runs at `http://localhost:8000`.
 
 ### Frontend
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-UI runs at `http://localhost:3000` (or next available port).
-
-Set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` if your backend is on a different port or host.
+See the [frontend repo](https://github.com/ChiPowers/cinema-frontend).
 
 ## API
 
