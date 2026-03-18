@@ -14,7 +14,10 @@ TMDB_TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "Full name of the actor to search for"},
+                "name": {
+                    "type": "string",
+                    "description": "Full name of the actor to search for",
+                },
             },
             "required": ["name"],
         },
@@ -30,7 +33,10 @@ TMDB_TOOLS = [
             "type": "object",
             "properties": {
                 "title": {"type": "string", "description": "Title of the movie"},
-                "year": {"type": "integer", "description": "Optional release year to narrow results"},
+                "year": {
+                    "type": "integer",
+                    "description": "Optional release year to narrow results",
+                },
             },
             "required": ["title"],
         },

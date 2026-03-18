@@ -1,6 +1,13 @@
 import uuid
 from fastapi import APIRouter, HTTPException
-from models.game import NewGameResponse, MoveRequest, MoveResponse, GameState, Actor, Move
+from models.game import (
+    NewGameResponse,
+    MoveRequest,
+    MoveResponse,
+    GameState,
+    Actor,
+    Move,
+)
 from agents.puzzle_agent import generate_puzzle
 from agents.validation_agent import validate_move
 from tools.tmdb import tmdb
@@ -13,7 +20,11 @@ async def _resolve_actor(name: str, fallback_id: int = 0) -> dict:
     """Look up an actor by name and return their TMDb ID + canonical name."""
     person = await tmdb.search_person(name)
     if person:
-        return {"name": person["name"], "id": person["id"], "profile_url": person.get("profile_url")}
+        return {
+            "name": person["name"],
+            "id": person["id"],
+            "profile_url": person.get("profile_url"),
+        }
     return {"name": name, "id": fallback_id, "profile_url": None}
 
 
@@ -32,7 +43,9 @@ def _reached_end(next_actor_id: int, next_actor_name: str, end_actor: dict) -> b
 @router.post("/new", response_model=NewGameResponse)
 async def new_game(difficulty: str = "medium"):
     if difficulty not in ("easy", "medium", "hard"):
-        raise HTTPException(status_code=400, detail="difficulty must be easy, medium, or hard")
+        raise HTTPException(
+            status_code=400, detail="difficulty must be easy, medium, or hard"
+        )
 
     puzzle = await generate_puzzle(difficulty)
 

@@ -31,7 +31,9 @@ class TMDbClient:
             "name": p["name"],
             "popularity": p.get("popularity", 0),
             "profile_url": self._img(p.get("profile_path")),
-            "known_for": [m.get("title", m.get("name", "")) for m in p.get("known_for", [])],
+            "known_for": [
+                m.get("title", m.get("name", "")) for m in p.get("known_for", [])
+            ],
         }
 
     async def get_person_movies(self, person_id: int, limit: int = 20) -> list[dict]:
@@ -100,7 +102,9 @@ class TMDbClient:
                 "name": p["name"],
                 "popularity": p.get("popularity", 0),
                 "profile_url": self._img(p.get("profile_path")),
-                "known_for": [m.get("title", m.get("name", "")) for m in p.get("known_for", [])],
+                "known_for": [
+                    m.get("title", m.get("name", "")) for m in p.get("known_for", [])
+                ],
             }
             for p in data.get("results", [])
         ]
