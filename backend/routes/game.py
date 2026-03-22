@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, HTTPException
+from langsmith import traceable
 from models.game import (
     NewGameResponse,
     MoveRequest,
@@ -41,6 +42,7 @@ def _reached_end(next_actor_id: int, next_actor_name: str, end_actor: dict) -> b
 
 
 @router.post("/new", response_model=NewGameResponse)
+@traceable(run_type="chain", name="new_game")
 async def new_game(difficulty: str = "medium"):
     if difficulty not in ("easy", "medium", "hard"):
         raise HTTPException(
@@ -72,6 +74,7 @@ async def new_game(difficulty: str = "medium"):
 
 
 @router.post("/{game_id}/move", response_model=MoveResponse)
+@traceable(run_type="chain", name="make_move")
 async def make_move(game_id: str, body: MoveRequest):
     game = load_game(game_id)
     if not game:

@@ -8,13 +8,16 @@ so we can substitute other providers or run locally with Ollama.
 
 import json
 import anthropic
+from langsmith import traceable
+from langsmith.wrappers import wrap_anthropic
 from tools.tmdb import tmdb
 from config import MODEL, ANTHROPIC_API_KEY
 
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = wrap_anthropic(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY))
 
 
+@traceable(run_type="tool", name="tmdb_tool")
 async def execute_tool(name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
@@ -35,6 +38,7 @@ async def execute_tool(name: str, tool_input: dict) -> str:
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
+@traceable(run_type="chain", name="agentic_loop")
 async def run_agent(
     system: str, user_message: str, tools: list, max_iterations: int = 10
 ) -> str:
@@ -47,7 +51,7 @@ async def run_agent(
     """
     messages = [{"role": "user", "content": user_message}]
 
-    for _ in range(max_iterations):
+    for iteration in range(max_iterations):
         response = client.messages.create(
             model=MODEL,
             max_tokens=2048,

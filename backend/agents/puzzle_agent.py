@@ -6,6 +6,7 @@ No LLM needed here — pure TMDb API calls.
 
 import random
 import asyncio
+from langsmith import traceable
 from tools.tmdb import tmdb
 from config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
 
@@ -113,6 +114,7 @@ async def _random_walk(
     return path
 
 
+@traceable(run_type="chain", name="generate_puzzle")
 async def generate_puzzle(difficulty: str = "medium") -> dict:
     """
     Generate a puzzle for the given difficulty tier.

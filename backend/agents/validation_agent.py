@@ -8,6 +8,7 @@ so we can substitute other providers or run locally with Ollama.
 
 import json
 import re
+from langsmith import traceable
 from agents.base import run_agent
 from tools.definitions import ALL_TOOLS
 
@@ -49,6 +50,7 @@ def _extract_json(text: str) -> dict | None:
     return None
 
 
+@traceable(run_type="chain", name="validate_move")
 async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> dict:
     """
     Verify that from_actor and to_actor both appeared in movie_title.
