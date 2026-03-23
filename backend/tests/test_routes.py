@@ -4,6 +4,8 @@ from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 from main import app
 from database import init_db
+from models.game import ValidationResult
+from models.tmdb import TmdbPerson
 from routes.game import _reached_end
 
 
@@ -174,16 +176,14 @@ class TestMakeMove:
     def test_valid_move(self, client):
         game_id = self._create_game(client)
 
-        mock_validation = {
-            "valid": True,
-            "explanation": "Both actors appear in 12 Years a Slave.",
-            "movie_id": 76203,
-            "movie_title": "12 Years a Slave",
-            "movie_year": "2013",
-            "poster_url": None,
-            "backdrop_url": None,
-        }
-        mock_person = {"name": "Michael Fassbender", "id": 17288, "profile_url": None}
+        mock_validation = ValidationResult(
+            valid=True,
+            explanation="Both actors appear in 12 Years a Slave.",
+            movie_id=76203,
+            movie_title="12 Years a Slave",
+            movie_year="2013",
+        )
+        mock_person = TmdbPerson(name="Michael Fassbender", id=17288)
 
         with (
             patch(
@@ -212,10 +212,10 @@ class TestMakeMove:
     def test_invalid_move(self, client):
         game_id = self._create_game(client)
 
-        mock_validation = {
-            "valid": False,
-            "explanation": "Actor not found in cast.",
-        }
+        mock_validation = ValidationResult(
+            valid=False,
+            explanation="Actor not found in cast.",
+        )
 
         with patch(
             "routes.game.validate_move",
@@ -236,16 +236,14 @@ class TestMakeMove:
     def test_winning_move(self, client):
         game_id = self._create_game(client)
 
-        mock_validation = {
-            "valid": True,
-            "explanation": "Correct!",
-            "movie_id": 24420,
-            "movie_title": "A Single Man",
-            "movie_year": "2009",
-            "poster_url": None,
-            "backdrop_url": None,
-        }
-        mock_person = {"name": "Colin Firth", "id": 1891, "profile_url": None}
+        mock_validation = ValidationResult(
+            valid=True,
+            explanation="Correct!",
+            movie_id=24420,
+            movie_title="A Single Man",
+            movie_year="2009",
+        )
+        mock_person = TmdbPerson(name="Colin Firth", id=1891)
 
         with (
             patch(
@@ -280,16 +278,14 @@ class TestMakeMove:
         game_id = self._create_game(client)
 
         # Win the game first
-        mock_validation = {
-            "valid": True,
-            "explanation": "Correct!",
-            "movie_id": 1,
-            "movie_title": "T",
-            "movie_year": "2000",
-            "poster_url": None,
-            "backdrop_url": None,
-        }
-        mock_person = {"name": "Colin Firth", "id": 1891, "profile_url": None}
+        mock_validation = ValidationResult(
+            valid=True,
+            explanation="Correct!",
+            movie_id=1,
+            movie_title="T",
+            movie_year="2000",
+        )
+        mock_person = TmdbPerson(name="Colin Firth", id=1891)
 
         with (
             patch(

@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, HTTPException
-from langsmith import traceable
+from langsmith import traceable, get_current_run_tree
 from models.game import (
     NewGameResponse,
     MoveRequest,
@@ -21,11 +21,7 @@ async def _resolve_actor(name: str, fallback_id: int = 0) -> dict:
     """Look up an actor by name and return their TMDb ID + canonical name."""
     person = await tmdb.search_person(name)
     if person:
-        return {
-            "name": person["name"],
-            "id": person["id"],
-            "profile_url": person.get("profile_url"),
-        }
+        return {"name": person.name, "id": person.id, "profile_url": person.profile_url}
     return {"name": name, "id": fallback_id, "profile_url": None}
 
 
@@ -52,6 +48,10 @@ async def new_game(difficulty: str = "medium"):
     puzzle = await generate_puzzle(difficulty)
 
     game_id = str(uuid.uuid4())
+    rt = get_current_run_tree()
+    if rt:
+        rt.metadata.update({"game_id": game_id, "difficulty": difficulty})
+
     game = {
         "id": game_id,
         "start_actor": puzzle["start_actor"],
@@ -84,12 +84,25 @@ async def make_move(game_id: str, body: MoveRequest):
 
     from_actor = game["current_actor"]["name"]
 
-    result = await validate_move(from_actor, body.movie, body.next_actor)
+    rt = get_current_run_tree()
+    if rt:
+        rt.metadata.update({
+            "game_id": game_id,
+            "difficulty": game["difficulty"],
+            "from_actor": from_actor,
+        })
 
-    if not result.get("valid"):
+    result = await validate_move(
+        from_actor,
+        body.movie,
+        body.next_actor,
+        langsmith_extra={"metadata": {"game_id": game_id}},
+    )
+
+    if not result.valid:
         return MoveResponse(
             valid=False,
-            explanation=result.get("explanation", "Invalid move."),
+            explanation=result.explanation,
             game_status="in_progress",
             current_actor=Actor(**game["current_actor"]),
         )
@@ -102,11 +115,11 @@ async def make_move(game_id: str, body: MoveRequest):
         from_actor=from_actor,
         movie=body.movie,
         to_actor=new_actor["name"],
-        movie_id=result.get("movie_id"),
-        movie_title=result.get("movie_title"),
-        movie_year=result.get("movie_year"),
-        poster_url=result.get("poster_url"),
-        backdrop_url=result.get("backdrop_url"),
+        movie_id=result.movie_id,
+        movie_title=result.movie_title,
+        movie_year=result.movie_year,
+        poster_url=result.poster_url,
+        backdrop_url=result.backdrop_url,
     )
     game["moves"].append(move.model_dump())
 
@@ -118,12 +131,12 @@ async def make_move(game_id: str, body: MoveRequest):
 
     return MoveResponse(
         valid=True,
-        explanation=result.get("explanation", "Correct!"),
-        movie_id=result.get("movie_id"),
-        movie_title=result.get("movie_title"),
-        movie_year=result.get("movie_year"),
-        poster_url=result.get("poster_url"),
-        backdrop_url=result.get("backdrop_url"),
+        explanation=result.explanation,
+        movie_id=result.movie_id,
+        movie_title=result.movie_title,
+        movie_year=result.movie_year,
+        poster_url=result.poster_url,
+        backdrop_url=result.backdrop_url,
         game_status=new_status,
         current_actor=Actor(**new_actor),
     )

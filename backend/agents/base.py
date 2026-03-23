@@ -22,18 +22,18 @@ async def execute_tool(name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
         result = await tmdb.search_person(tool_input["name"])
-        return json.dumps(result or {"error": "Actor not found"})
+        return json.dumps(result.model_dump() if result else {"error": "Actor not found"})
 
     if name == "search_movie":
         result = await tmdb.search_movie(
             tool_input["title"],
             year=tool_input.get("year"),
         )
-        return json.dumps(result or {"error": "Movie not found"})
+        return json.dumps(result.model_dump() if result else {"error": "Movie not found"})
 
     if name == "get_movie_cast":
         result = await tmdb.get_movie_cast(tool_input["movie_id"])
-        return json.dumps(result)
+        return json.dumps([c.model_dump() for c in result])
 
     return json.dumps({"error": f"Unknown tool: {name}"})
 
