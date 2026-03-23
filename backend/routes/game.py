@@ -113,7 +113,7 @@ async def make_move(game_id: str, body: MoveRequest):
     # Record the move with the canonical TMDb title
     move = Move(
         from_actor=from_actor,
-        movie=body.movie,
+        movie=result.movie_title or body.movie,
         to_actor=new_actor["name"],
         movie_id=result.movie_id,
         movie_title=result.movie_title,
