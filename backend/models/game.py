@@ -2,6 +2,18 @@ from pydantic import BaseModel
 from typing import Literal
 
 
+class ValidationResult(BaseModel):
+    valid: bool
+    explanation: str
+    movie_id: int | None = None
+    movie_title: str | None = None
+    movie_year: str | None = None
+    poster_url: str | None = None
+    backdrop_url: str | None = None
+    from_actor_found: bool = False
+    to_actor_found: bool = False
+
+
 class Actor(BaseModel):
     name: str
     id: int

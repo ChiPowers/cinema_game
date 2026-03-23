@@ -1,11 +1,18 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 from routes.game import router as game_router
 
-app = FastAPI(title="Cinema Game API", version="2.0.0")
 
-import os
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Cinema Game API", version="2.0.0", lifespan=lifespan)
 
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -21,12 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def startup():
-    init_db()
-
 
 app.include_router(game_router)
 

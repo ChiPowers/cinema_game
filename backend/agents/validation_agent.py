@@ -7,9 +7,14 @@ so we can substitute other providers or run locally with Ollama.
 """
 
 import json
+import logging
 import re
+from langsmith import traceable
 from agents.base import run_agent
+from models.game import ValidationResult
 from tools.definitions import ALL_TOOLS
+
+logger = logging.getLogger(__name__)
 
 
 SYSTEM_PROMPT = """You are a movie trivia validator for a cinema connections game.
@@ -49,7 +54,8 @@ def _extract_json(text: str) -> dict | None:
     return None
 
 
-async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> dict:
+@traceable(run_type="chain", name="validate_move")
+async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> ValidationResult:
     """
     Verify that from_actor and to_actor both appeared in movie_title.
     Tolerates typos and misspellings — the agent uses TMDb search + web search to resolve them.
@@ -75,16 +81,13 @@ async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> dic
 
     parsed = _extract_json(raw)
     if parsed:
-        return parsed
+        try:
+            return ValidationResult.model_validate(parsed)
+        except Exception:
+            logger.warning("ValidationResult failed schema validation. Parsed: %r", parsed)
 
-    return {
-        "valid": False,
-        "explanation": "Could not parse validation result. Please try again.",
-        "movie_id": None,
-        "movie_title": None,
-        "movie_year": None,
-        "poster_url": None,
-        "backdrop_url": None,
-        "from_actor_found": False,
-        "to_actor_found": False,
-    }
+    logger.warning("Could not parse validation result. Raw agent response: %r", raw)
+    return ValidationResult(
+        valid=False,
+        explanation="Could not parse validation result. Please try again.",
+    )

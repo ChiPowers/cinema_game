@@ -33,11 +33,11 @@ class TestSearchPerson:
         ):
             result = await client.search_person("Brad Pitt")
 
-        assert result["id"] == 287
-        assert result["name"] == "Brad Pitt"
-        assert result["popularity"] == 25.3
-        assert result["profile_url"].endswith("/abc.jpg")
-        assert "Fight Club" in result["known_for"]
+        assert result.id == 287
+        assert result.name == "Brad Pitt"
+        assert result.popularity == 25.3
+        assert result.profile_url.endswith("/abc.jpg")
+        assert "Fight Club" in result.known_for
 
     @pytest.mark.asyncio
     async def test_returns_none_when_no_results(self, client):
@@ -56,7 +56,7 @@ class TestSearchPerson:
         ):
             result = await client.search_person("Test")
 
-        assert result["profile_url"] is None
+        assert result.profile_url is None
 
     @pytest.mark.asyncio
     async def test_known_for_with_tv_shows(self, client):
@@ -77,7 +77,7 @@ class TestSearchPerson:
         ):
             result = await client.search_person("Test")
 
-        assert result["known_for"] == ["A Movie", "A TV Show"]
+        assert result.known_for == ["A Movie", "A TV Show"]
 
 
 # --- get_person_movies ---
@@ -107,8 +107,8 @@ class TestGetPersonMovies:
         ):
             result = await client.get_person_movies(287)
 
-        assert result[0]["title"] == "Popular"
-        assert result[1]["title"] == "Unpopular"
+        assert result[0].title == "Popular"
+        assert result[1].title == "Unpopular"
 
     @pytest.mark.asyncio
     async def test_respects_limit(self, client):
@@ -141,7 +141,7 @@ class TestGetPersonMovies:
         ):
             result = await client.get_person_movies(287)
 
-        assert result[0]["year"] == "2013"
+        assert result[0].year == "2013"
 
     @pytest.mark.asyncio
     async def test_missing_release_date(self, client):
@@ -151,7 +151,7 @@ class TestGetPersonMovies:
         ):
             result = await client.get_person_movies(287)
 
-        assert result[0]["year"] is None
+        assert result[0].year is None
 
     @pytest.mark.asyncio
     async def test_empty_release_date(self, client):
@@ -163,7 +163,7 @@ class TestGetPersonMovies:
         ):
             result = await client.get_person_movies(287)
 
-        assert result[0]["year"] is None
+        assert result[0].year is None
 
     @pytest.mark.asyncio
     async def test_image_urls(self, client):
@@ -183,8 +183,8 @@ class TestGetPersonMovies:
         ):
             result = await client.get_person_movies(287)
 
-        assert "w500" in result[0]["poster_url"]
-        assert "w1280" in result[0]["backdrop_url"]
+        assert "w500" in result[0].poster_url
+        assert "w1280" in result[0].backdrop_url
 
 
 # --- search_movie ---
@@ -209,9 +209,9 @@ class TestSearchMovie:
         ):
             result = await client.search_movie("12 Years a Slave")
 
-        assert result["id"] == 76203
-        assert result["title"] == "12 Years a Slave"
-        assert result["year"] == "2013"
+        assert result.id == 76203
+        assert result.title == "12 Years a Slave"
+        assert result.year == "2013"
 
     @pytest.mark.asyncio
     async def test_returns_none_when_no_results(self, client):
@@ -265,11 +265,11 @@ class TestGetMovieCast:
             result = await client.get_movie_cast(76203)
 
         assert len(result) == 2
-        assert result[0]["name"] == "Brad Pitt"
-        assert result[0]["character"] == "Edwin Epps"
-        assert result[0]["order"] == 0
-        assert result[0]["profile_url"].endswith("/brad.jpg")
-        assert result[1]["profile_url"] is None
+        assert result[0].name == "Brad Pitt"
+        assert result[0].character == "Edwin Epps"
+        assert result[0].order == 0
+        assert result[0].profile_url.endswith("/brad.jpg")
+        assert result[1].profile_url is None
 
     @pytest.mark.asyncio
     async def test_empty_cast(self, client):
@@ -288,8 +288,8 @@ class TestGetMovieCast:
         ):
             result = await client.get_movie_cast(1)
 
-        assert result[0]["character"] == ""
-        assert result[0]["order"] == 999
+        assert result[0].character == ""
+        assert result[0].order == 999
 
 
 # --- get_person_details ---
@@ -309,9 +309,9 @@ class TestGetPersonDetails:
         ):
             result = await client.get_person_details(287)
 
-        assert result["id"] == 287
-        assert result["name"] == "Brad Pitt"
-        assert result["popularity"] == 25.3
+        assert result.id == 287
+        assert result.name == "Brad Pitt"
+        assert result.popularity == 25.3
 
     @pytest.mark.asyncio
     async def test_returns_none_on_error(self, client):
@@ -353,8 +353,8 @@ class TestGetPopularPeople:
             result = await client.get_popular_people(page=1)
 
         assert len(result) == 2
-        assert result[0]["name"] == "Brad Pitt"
-        assert result[1]["known_for"] == ["The Crown"]
+        assert result[0].name == "Brad Pitt"
+        assert result[1].known_for == ["The Crown"]
 
     @pytest.mark.asyncio
     async def test_empty_results(self, client):

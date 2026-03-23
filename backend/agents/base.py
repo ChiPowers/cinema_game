@@ -8,33 +8,37 @@ so we can substitute other providers or run locally with Ollama.
 
 import json
 import anthropic
+from langsmith import traceable
+from langsmith.wrappers import wrap_anthropic
 from tools.tmdb import tmdb
 from config import MODEL, ANTHROPIC_API_KEY
 
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = wrap_anthropic(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY))
 
 
+@traceable(run_type="tool", name="tmdb_tool")
 async def execute_tool(name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
         result = await tmdb.search_person(tool_input["name"])
-        return json.dumps(result or {"error": "Actor not found"})
+        return json.dumps(result.model_dump() if result else {"error": "Actor not found"})
 
     if name == "search_movie":
         result = await tmdb.search_movie(
             tool_input["title"],
             year=tool_input.get("year"),
         )
-        return json.dumps(result or {"error": "Movie not found"})
+        return json.dumps(result.model_dump() if result else {"error": "Movie not found"})
 
     if name == "get_movie_cast":
         result = await tmdb.get_movie_cast(tool_input["movie_id"])
-        return json.dumps(result)
+        return json.dumps([c.model_dump() for c in result])
 
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
+@traceable(run_type="chain", name="agentic_loop")
 async def run_agent(
     system: str, user_message: str, tools: list, max_iterations: int = 10
 ) -> str:
@@ -47,7 +51,7 @@ async def run_agent(
     """
     messages = [{"role": "user", "content": user_message}]
 
-    for _ in range(max_iterations):
+    for iteration in range(max_iterations):
         response = client.messages.create(
             model=MODEL,
             max_tokens=2048,
