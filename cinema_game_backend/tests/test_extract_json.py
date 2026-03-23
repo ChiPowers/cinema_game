@@ -1,4 +1,4 @@
-from agents.validation_agent import _extract_json
+from cinema_game_backend.agents.validation_agent import _extract_json
 
 
 class TestRawJson:

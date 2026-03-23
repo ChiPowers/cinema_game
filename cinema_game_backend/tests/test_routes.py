@@ -2,11 +2,11 @@ import sqlite3
 import pytest
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
-from main import app
-from database import init_db
-from models.game import ValidationResult
-from models.tmdb import TmdbPerson
-from routes.game import _reached_end
+from cinema_game_backend.main import app
+from cinema_game_backend.database import init_db
+from cinema_game_backend.models.game import ValidationResult
+from cinema_game_backend.models.tmdb import TmdbPerson
+from cinema_game_backend.routes.game import _reached_end
 
 
 # --- Pure logic: _reached_end ---
@@ -96,7 +96,7 @@ def use_in_memory_db():
     def make_wrapper():
         return _NoCloseConnection(conn)
 
-    with patch("database.get_db", side_effect=make_wrapper):
+    with patch("cinema_game_backend.database.get_db", side_effect=make_wrapper):
         init_db()
         yield
     conn.close()
@@ -110,7 +110,7 @@ def client():
 class TestNewGame:
     def test_creates_game(self, client):
         with patch(
-            "routes.game.generate_puzzle",
+            "cinema_game_backend.routes.game.generate_puzzle",
             new_callable=AsyncMock,
             return_value=_mock_puzzle(),
         ):
@@ -130,7 +130,7 @@ class TestNewGame:
 
     def test_default_difficulty(self, client):
         with patch(
-            "routes.game.generate_puzzle",
+            "cinema_game_backend.routes.game.generate_puzzle",
             new_callable=AsyncMock,
             return_value=_mock_puzzle(),
         ):
@@ -143,7 +143,7 @@ class TestNewGame:
 class TestGetGame:
     def test_get_existing_game(self, client):
         with patch(
-            "routes.game.generate_puzzle",
+            "cinema_game_backend.routes.game.generate_puzzle",
             new_callable=AsyncMock,
             return_value=_mock_puzzle(),
         ):
@@ -166,7 +166,7 @@ class TestGetGame:
 class TestMakeMove:
     def _create_game(self, client):
         with patch(
-            "routes.game.generate_puzzle",
+            "cinema_game_backend.routes.game.generate_puzzle",
             new_callable=AsyncMock,
             return_value=_mock_puzzle(),
         ):
@@ -187,12 +187,12 @@ class TestMakeMove:
 
         with (
             patch(
-                "routes.game.validate_move",
+                "cinema_game_backend.routes.game.validate_move",
                 new_callable=AsyncMock,
                 return_value=mock_validation,
             ),
             patch(
-                "routes.game.tmdb.search_person",
+                "cinema_game_backend.routes.game.tmdb.search_person",
                 new_callable=AsyncMock,
                 return_value=mock_person,
             ),
@@ -218,7 +218,7 @@ class TestMakeMove:
         )
 
         with patch(
-            "routes.game.validate_move",
+            "cinema_game_backend.routes.game.validate_move",
             new_callable=AsyncMock,
             return_value=mock_validation,
         ):
@@ -247,12 +247,12 @@ class TestMakeMove:
 
         with (
             patch(
-                "routes.game.validate_move",
+                "cinema_game_backend.routes.game.validate_move",
                 new_callable=AsyncMock,
                 return_value=mock_validation,
             ),
             patch(
-                "routes.game.tmdb.search_person",
+                "cinema_game_backend.routes.game.tmdb.search_person",
                 new_callable=AsyncMock,
                 return_value=mock_person,
             ),
@@ -289,12 +289,12 @@ class TestMakeMove:
 
         with (
             patch(
-                "routes.game.validate_move",
+                "cinema_game_backend.routes.game.validate_move",
                 new_callable=AsyncMock,
                 return_value=mock_validation,
             ),
             patch(
-                "routes.game.tmdb.search_person",
+                "cinema_game_backend.routes.game.tmdb.search_person",
                 new_callable=AsyncMock,
                 return_value=mock_person,
             ),

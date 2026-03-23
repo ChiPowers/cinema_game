@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, HTTPException
 from langsmith import traceable, get_current_run_tree
-from models.game import (
+from ..models.game import (
     NewGameResponse,
     MoveRequest,
     MoveResponse,
@@ -9,10 +9,10 @@ from models.game import (
     Actor,
     Move,
 )
-from agents.puzzle_agent import generate_puzzle
-from agents.validation_agent import validate_move
-from tools.tmdb import tmdb
-from database import save_game, load_game, update_game
+from ..agents.puzzle_agent import generate_puzzle
+from ..agents.validation_agent import validate_move
+from ..tools.tmdb import tmdb
+from ..database import save_game, load_game, update_game
 
 router = APIRouter(prefix="/game", tags=["game"])
 

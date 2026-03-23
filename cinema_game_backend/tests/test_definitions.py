@@ -1,4 +1,4 @@
-from tools.definitions import TMDB_TOOLS, WEB_SEARCH_TOOL, ALL_TOOLS
+from cinema_game_backend.tools.definitions import TMDB_TOOLS, WEB_SEARCH_TOOL, ALL_TOOLS
 
 
 class TestTmdbTools:

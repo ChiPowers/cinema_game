@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from config import DB_PATH
+from .config import DB_PATH
 
 
 def get_db() -> sqlite3.Connection:

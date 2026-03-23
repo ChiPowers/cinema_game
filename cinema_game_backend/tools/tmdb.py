@@ -1,6 +1,6 @@
 import httpx
-from config import TMDB_API_KEY, TMDB_BASE_URL, TMDB_IMAGE_BASE, TMDB_BACKDROP_BASE
-from models.tmdb import TmdbCastMember, TmdbMovie, TmdbPerson
+from ..config import TMDB_API_KEY, TMDB_BASE_URL, TMDB_IMAGE_BASE, TMDB_BACKDROP_BASE
+from ..models.tmdb import TmdbCastMember, TmdbMovie, TmdbPerson
 
 
 class TMDbClient:

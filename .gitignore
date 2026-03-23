@@ -50,22 +50,8 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Logs
 *.log
-local_settings.py
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -113,6 +99,6 @@ Thumbs.db
 .idea
 
 # agentic rewrite
-backend/.env
-backend/cinema_game.db
+cinema_game_backend/.env
+cinema_game_backend/cinema_game.db
 

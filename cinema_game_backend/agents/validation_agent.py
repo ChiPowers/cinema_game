@@ -10,9 +10,9 @@ import json
 import logging
 import re
 from langsmith import traceable
-from agents.base import run_agent
-from models.game import ValidationResult
-from tools.definitions import ALL_TOOLS
+from .base import run_agent
+from ..models.game import ValidationResult
+from ..tools.definitions import ALL_TOOLS
 
 logger = logging.getLogger(__name__)
 

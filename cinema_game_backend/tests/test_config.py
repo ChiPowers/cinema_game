@@ -1,4 +1,4 @@
-from config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
+from cinema_game_backend.config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
 
 
 class TestDifficultyHops:
