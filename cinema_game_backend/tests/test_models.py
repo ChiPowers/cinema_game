@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from models.game import (
+from cinema_game_backend.models.game import (
     Actor,
     MovieStep,
     ActorStep,

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from tools.tmdb import TMDbClient
+from cinema_game_backend.tools.tmdb import TMDbClient
 
 
 @pytest.fixture

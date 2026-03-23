@@ -34,7 +34,6 @@ An AI agent (Claude) proposes a puzzle: a start actor, an end actor, and a guara
 Requires Python >=3.10, <3.13 (pydantic 2.7 is not yet compatible with Python 3.13).
 
 ```bash
-cd backend
 poetry install
 ```
 
@@ -47,12 +46,13 @@ poetry install --with dev
 This enables:
 
 ```bash
-poetry run pytest           # run tests
-poetry run ruff check .     # lint
-poetry run black --check .  # check formatting
+make test     # run tests
+make lint     # lint with ruff
+make format   # format with black
+make check    # format + lint + test
 ```
 
-Copy `.env.example` to `.env` and fill in your keys:
+Copy `cinema_game_backend/.env.example` to `cinema_game_backend/.env` and fill in your keys:
 
 ```
 TMDB_API_KEY=...
@@ -62,7 +62,7 @@ ANTHROPIC_API_KEY=...
 Then run:
 
 ```bash
-poetry run uvicorn main:app --reload
+poetry run uvicorn cinema_game_backend.main:app --reload
 ```
 
 API runs at `http://localhost:8000`.

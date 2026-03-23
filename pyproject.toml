@@ -1,11 +1,11 @@
 [tool.poetry]
-package-mode = false
 name = "cinema-game-backend"
 version = "2.0.0"
 description = "Cinema Game — connect actors through shared movies"
 authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
 license = "mit"
-readme = "../README.md"
+readme = "README.md"
+packages = [{include = "cinema_game_backend"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
@@ -21,10 +21,9 @@ langsmith = "^0.2.0"
 black = "^26.3.1"
 ruff = "^0.15.6"
 pytest = "^9.0.2"
-pytest-asyncio = "^0.25.0"
+pytest-asyncio = "^1.3.0"
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
 asyncio_mode = "auto"
 filterwarnings = [
     "ignore:langsmith.wrappers._openai_agents is deprecated:DeprecationWarning",

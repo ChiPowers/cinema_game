@@ -7,8 +7,8 @@ No LLM needed here — pure TMDb API calls.
 import random
 import asyncio
 from langsmith import traceable
-from tools.tmdb import tmdb
-from config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
+from ..tools.tmdb import tmdb
+from ..config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
 
 
 async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:

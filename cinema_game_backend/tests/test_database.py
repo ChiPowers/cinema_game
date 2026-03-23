@@ -1,7 +1,7 @@
 import sqlite3
 import pytest
 from unittest.mock import patch
-from database import init_db, save_game, load_game, update_game
+from cinema_game_backend.database import init_db, save_game, load_game, update_game
 
 
 def _make_game(game_id="test-123"):
@@ -44,7 +44,7 @@ def use_in_memory_db():
         wrapper = _NoCloseConnection(conn)
         return wrapper
 
-    with patch("database.get_db", side_effect=make_wrapper):
+    with patch("cinema_game_backend.database.get_db", side_effect=make_wrapper):
         init_db()
         yield
     conn.close()
@@ -52,7 +52,7 @@ def use_in_memory_db():
 
 class TestInitDb:
     def test_creates_games_table(self):
-        from database import get_db
+        from cinema_game_backend.database import get_db
 
         conn = get_db()
         cursor = conn.execute(

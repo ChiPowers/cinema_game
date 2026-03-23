@@ -9,12 +9,11 @@ so we can substitute other providers or run locally with Ollama.
 import json
 import anthropic
 from langsmith import traceable
-from langsmith.wrappers import wrap_anthropic
-from tools.tmdb import tmdb
-from config import MODEL, ANTHROPIC_API_KEY
+from ..tools.tmdb import tmdb
+from ..config import MODEL, ANTHROPIC_API_KEY
 
 
-client = wrap_anthropic(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY))
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 @traceable(run_type="tool", name="tmdb_tool")
