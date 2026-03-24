@@ -31,7 +31,7 @@ An AI agent (Claude) proposes a puzzle: a start actor, an end actor, and a guara
 
 ### Backend
 
-Requires Python >=3.10, <3.13 (pydantic 2.7 is not yet compatible with Python 3.13).
+Requires Python >=3.10, <3.15.
 
 ```bash
 poetry install
