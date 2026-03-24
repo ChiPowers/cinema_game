@@ -32,10 +32,14 @@ class TMDbClient:
             name=p["name"],
             popularity=p.get("popularity", 0),
             profile_url=self._img(p.get("profile_path")),
-            known_for=[m.get("title", m.get("name", "")) for m in p.get("known_for", [])],
+            known_for=[
+                m.get("title", m.get("name", "")) for m in p.get("known_for", [])
+            ],
         )
 
-    async def get_person_movies(self, person_id: int, limit: int = 20) -> list[TmdbMovie]:
+    async def get_person_movies(
+        self, person_id: int, limit: int = 20
+    ) -> list[TmdbMovie]:
         data = await self._get(f"/person/{person_id}/movie_credits")
         cast = data.get("cast", [])
         cast.sort(key=lambda x: x.get("popularity", 0), reverse=True)
@@ -51,7 +55,9 @@ class TMDbClient:
             for m in cast[:limit]
         ]
 
-    async def search_movie(self, title: str, year: int | None = None) -> TmdbMovie | None:
+    async def search_movie(
+        self, title: str, year: int | None = None
+    ) -> TmdbMovie | None:
         params = {"query": title}
         if year:
             params["year"] = year
@@ -101,7 +107,9 @@ class TMDbClient:
                 name=p["name"],
                 popularity=p.get("popularity", 0),
                 profile_url=self._img(p.get("profile_path")),
-                known_for=[m.get("title", m.get("name", "")) for m in p.get("known_for", [])],
+                known_for=[
+                    m.get("title", m.get("name", "")) for m in p.get("known_for", [])
+                ],
             )
             for p in data.get("results", [])
         ]

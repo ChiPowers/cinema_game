@@ -8,7 +8,6 @@ from cinema_game_backend.models.game import ValidationResult
 from cinema_game_backend.models.tmdb import TmdbPerson
 from cinema_game_backend.routes.game import _reached_end
 
-
 # --- Pure logic: _reached_end ---
 
 

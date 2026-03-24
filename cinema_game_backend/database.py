@@ -11,8 +11,7 @@ def get_db() -> sqlite3.Connection:
 
 def init_db():
     conn = get_db()
-    conn.execute(
-        """
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS games (
             id TEXT PRIMARY KEY,
             start_actor_name TEXT NOT NULL,
@@ -28,8 +27,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
     conn.commit()
     conn.close()
 

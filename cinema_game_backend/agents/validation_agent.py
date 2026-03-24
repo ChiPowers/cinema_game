@@ -55,7 +55,9 @@ def _extract_json(text: str) -> dict | None:
 
 
 @traceable(run_type="chain", name="validate_move")
-async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> ValidationResult:
+async def validate_move(
+    from_actor: str, movie_title: str, to_actor: str
+) -> ValidationResult:
     """
     Verify that from_actor and to_actor both appeared in movie_title.
     Tolerates typos and misspellings — the agent uses TMDb search + web search to resolve them.
@@ -84,7 +86,9 @@ async def validate_move(from_actor: str, movie_title: str, to_actor: str) -> Val
         try:
             return ValidationResult.model_validate(parsed)
         except Exception:
-            logger.warning("ValidationResult failed schema validation. Parsed: %r", parsed)
+            logger.warning(
+                "ValidationResult failed schema validation. Parsed: %r", parsed
+            )
 
     logger.warning("Could not parse validation result. Raw agent response: %r", raw)
     return ValidationResult(

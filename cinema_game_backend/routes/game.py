@@ -86,11 +86,13 @@ async def make_move(game_id: str, body: MoveRequest):
 
     rt = get_current_run_tree()
     if rt:
-        rt.metadata.update({
-            "game_id": game_id,
-            "difficulty": game["difficulty"],
-            "from_actor": from_actor,
-        })
+        rt.metadata.update(
+            {
+                "game_id": game_id,
+                "difficulty": game["difficulty"],
+                "from_actor": from_actor,
+            }
+        )
 
     result = await validate_move(
         from_actor,
