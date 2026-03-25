@@ -19,13 +19,13 @@ An AI agent (Claude) proposes a puzzle: a start actor, an end actor, and a guara
 
 ## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | FastAPI (Python) |
-| Agent | Claude claude-sonnet-4-6 via Anthropic SDK |
-| Movie data | TMDb API + Claude web search |
-| Database | SQLite |
-| Frontend | Next.js, Tailwind CSS, Framer Motion ([separate repo](https://github.com/ChiPowers/cinema-frontend)) |
+| Layer      | Technology                                                                                           |
+|------------|------------------------------------------------------------------------------------------------------|
+| Backend    | FastAPI (Python)                                                                                     |
+| Agent      | Claude claude-sonnet-4-6 via Anthropic SDK                                                           |
+| Movie data | TMDb API + Claude web search                                                                         |
+| Database   | SQLite                                                                                               |
+| Frontend   | Next.js, Tailwind CSS, Framer Motion ([separate repo](https://github.com/ChiPowers/cinema-frontend)) |
 
 ## Getting started
 
@@ -43,14 +43,18 @@ To also install dev tools (ruff, black, pytest):
 poetry install --with dev
 ```
 
-This enables:
+### Development with Make
 
-```bash
-make test     # run tests
-make lint     # lint with ruff
-make format   # format with black
-make check    # format + lint + test
-```
+A `Makefile` provides standard development commands:
+
+| Target | Description |
+|--------|-------------|
+| `make test` | Run the test suite |
+| `make lint` | Lint with ruff |
+| `make format` | Format with black |
+| `make check` | Format + lint + test |
+| `make coverage` | Run tests with coverage enforcement (50% minimum) |
+| `make coverage-html` | Generate an HTML coverage report at `htmlcov/` |
 
 Copy `cinema_game_backend/.env.example` to `cinema_game_backend/.env` and fill in your keys:
 
@@ -73,11 +77,11 @@ See the [frontend repo](https://github.com/ChiPowers/cinema-frontend).
 
 ## API
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| `POST` | `/game/new?difficulty=easy\|medium\|hard` | Generate a new puzzle |
-| `POST` | `/game/{id}/move` | Submit a move `{ movie, next_actor }` |
-| `GET`  | `/game/{id}` | Get current game state |
+| Method | Route                                     | Description                           |
+|--------|-------------------------------------------|---------------------------------------|
+| `POST` | `/game/new?difficulty=easy\|medium\|hard` | Generate a new puzzle                 |
+| `POST` | `/game/{id}/move`                         | Submit a move `{ movie, next_actor }` |
+| `GET`  | `/game/{id}`                              | Get current game state                |
 
 ## Attribution
 
