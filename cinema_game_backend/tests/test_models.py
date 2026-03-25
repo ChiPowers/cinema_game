@@ -11,7 +11,6 @@ from cinema_game_backend.models.game import (
     MoveResponse,
 )
 
-
 # --- Actor ---
 
 

@@ -43,9 +43,7 @@ async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:
         asyncio.gather(*[tmdb.get_movie_cast(mid) for mid in top_end]),
     )
 
-    start_costars = {
-        c.id for cast in start_casts for c in cast if c.id != start_id
-    }
+    start_costars = {c.id for cast in start_casts for c in cast if c.id != start_id}
 
     for cast in end_casts:
         for c in cast:
