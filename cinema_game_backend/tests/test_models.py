@@ -190,7 +190,7 @@ class TestMoveResponse:
             MoveResponse(
                 valid=True,
                 explanation="Correct!",
-                game_status="lost",
+                game_status="abandoned",
                 current_actor=Actor(name="Brad Pitt", id=287),
             )
 
@@ -260,7 +260,7 @@ class TestGameState:
                 min_moves=3,
                 current_actor=Actor(name="Brad Pitt", id=287),
                 moves=[],
-                status="lost",
+                status="abandoned",
             )
 
     def test_round_trip(self):
