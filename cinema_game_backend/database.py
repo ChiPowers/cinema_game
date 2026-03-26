@@ -24,10 +24,17 @@ def init_db():
             current_actor_name TEXT NOT NULL,
             current_actor_id INTEGER NOT NULL,
             status TEXT NOT NULL DEFAULT 'in_progress',
+            strikes INTEGER NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Migration: add strikes column to existing databases
+    try:
+        conn.execute("ALTER TABLE games ADD COLUMN strikes INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
@@ -40,8 +47,8 @@ def save_game(game: dict):
             id, start_actor_name, start_actor_id,
             end_actor_name, end_actor_id, difficulty,
             known_solution, moves, current_actor_name,
-            current_actor_id, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            current_actor_id, status, strikes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             game["id"],
@@ -55,6 +62,7 @@ def save_game(game: dict):
             game["current_actor"]["name"],
             game["current_actor"]["id"],
             game["status"],
+            game.get("strikes", 0),
         ),
     )
     conn.commit()
@@ -70,13 +78,13 @@ def load_game(game_id: str) -> dict | None:
     return _row_to_game(row)
 
 
-def update_game(game_id: str, moves: list, current_actor: dict, status: str):
+def update_game(game_id: str, moves: list, current_actor: dict, status: str, strikes: int = 0):
     conn = get_db()
     conn.execute(
         """
         UPDATE games
         SET moves = ?, current_actor_name = ?, current_actor_id = ?,
-            status = ?, updated_at = CURRENT_TIMESTAMP
+            status = ?, strikes = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
     """,
         (
@@ -84,6 +92,7 @@ def update_game(game_id: str, moves: list, current_actor: dict, status: str):
             current_actor["name"],
             current_actor["id"],
             status,
+            strikes,
             game_id,
         ),
     )
@@ -104,5 +113,6 @@ def _row_to_game(row: sqlite3.Row) -> dict:
             "id": row["current_actor_id"],
         },
         "status": row["status"],
+        "strikes": row["strikes"] if "strikes" in row.keys() else 0,
         "created_at": row["created_at"],
     }

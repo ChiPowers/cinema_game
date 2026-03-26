@@ -5,6 +5,7 @@ from ..models.game import (
     NewGameResponse,
     MoveRequest,
     MoveResponse,
+    UndoResponse,
     GameState,
     Actor,
     Move,
@@ -61,6 +62,7 @@ async def new_game(difficulty: str = "medium"):
         "moves": [],
         "current_actor": puzzle["start_actor"],
         "status": "in_progress",
+        "strikes": 0,
     }
     save_game(game)
 
@@ -102,11 +104,15 @@ async def make_move(game_id: str, body: MoveRequest):
     )
 
     if not result.valid:
+        strikes = game.get("strikes", 0) + 1
+        new_status = "lost" if strikes >= 3 else "in_progress"
+        update_game(game_id, game["moves"], game["current_actor"], new_status, strikes)
         return MoveResponse(
             valid=False,
             explanation=result.explanation,
-            game_status="in_progress",
+            game_status=new_status,
             current_actor=Actor(**game["current_actor"]),
+            strikes=strikes,
         )
 
     # Resolve the next actor's TMDb ID for accurate win detection
@@ -129,7 +135,8 @@ async def make_move(game_id: str, body: MoveRequest):
     reached = _reached_end(new_actor["id"], new_actor["name"], game["end_actor"])
     new_status = "won" if reached else "in_progress"
 
-    update_game(game_id, game["moves"], new_actor, new_status)
+    strikes = game.get("strikes", 0)
+    update_game(game_id, game["moves"], new_actor, new_status, strikes)
 
     return MoveResponse(
         valid=True,
@@ -141,6 +148,35 @@ async def make_move(game_id: str, body: MoveRequest):
         backdrop_url=result.backdrop_url,
         game_status=new_status,
         current_actor=Actor(**new_actor),
+        strikes=strikes,
+    )
+
+
+@router.delete("/{game_id}/move", response_model=UndoResponse)
+async def undo_move(game_id: str):
+    game = load_game(game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if game["status"] != "in_progress":
+        raise HTTPException(status_code=400, detail="Game is already over")
+    if not game["moves"]:
+        raise HTTPException(status_code=400, detail="No moves to undo")
+
+    last_move = game["moves"].pop()
+    restored_actor = await _resolve_actor(
+        last_move["from_actor"],
+        fallback_id=game["start_actor"]["id"]
+        if not game["moves"]
+        else 0,
+    )
+    strikes = game.get("strikes", 0)
+    update_game(game_id, game["moves"], restored_actor, "in_progress", strikes)
+
+    return UndoResponse(
+        current_actor=Actor(**restored_actor),
+        moves=[Move(**m) for m in game["moves"]],
+        strikes=strikes,
+        game_status="in_progress",
     )
 
 
@@ -159,5 +195,6 @@ async def get_game(game_id: str):
         current_actor=Actor(**game["current_actor"]),
         moves=[Move(**m) for m in game["moves"]],
         status=game["status"],
+        strikes=game.get("strikes", 0),
         created_at=game.get("created_at"),
     )

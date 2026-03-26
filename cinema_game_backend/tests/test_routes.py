@@ -314,6 +314,157 @@ class TestMakeMove:
         res = client.post(f"/game/{game_id}/move", json={"movie": "Test"})
         assert res.status_code == 422
 
+    def test_invalid_move_increments_strikes(self, client):
+        game_id = self._create_game(client)
+
+        mock_validation = ValidationResult(valid=False, explanation="Not in cast.")
+
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
+        ):
+            res = client.post(
+                f"/game/{game_id}/move",
+                json={"movie": "Bad Movie", "next_actor": "Nobody"},
+            )
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["valid"] is False
+        assert data["strikes"] == 1
+        assert data["game_status"] == "in_progress"
+
+    def test_three_strikes_loses_game(self, client):
+        game_id = self._create_game(client)
+
+        mock_validation = ValidationResult(valid=False, explanation="Not in cast.")
+
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
+        ):
+            for _ in range(3):
+                res = client.post(
+                    f"/game/{game_id}/move",
+                    json={"movie": "Bad Movie", "next_actor": "Nobody"},
+                )
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["strikes"] == 3
+        assert data["game_status"] == "lost"
+
+    def test_move_rejected_after_loss(self, client):
+        game_id = self._create_game(client)
+
+        mock_validation = ValidationResult(valid=False, explanation="Nope.")
+
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
+        ):
+            for _ in range(3):
+                client.post(
+                    f"/game/{game_id}/move",
+                    json={"movie": "Bad Movie", "next_actor": "Nobody"},
+                )
+
+        res = client.post(
+            f"/game/{game_id}/move", json={"movie": "X", "next_actor": "Y"}
+        )
+        assert res.status_code == 400
+
+
+class TestUndoMove:
+    def _create_game_with_move(self, client):
+        with patch(
+            "cinema_game_backend.routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value={
+                "start_actor": {"name": "Brad Pitt", "id": 287, "profile_url": None},
+                "end_actor": {"name": "Colin Firth", "id": 1891, "profile_url": None},
+                "difficulty": "medium",
+                "min_moves": 3,
+                "known_solution": [
+                    {"type": "actor", "name": "Brad Pitt", "id": 287},
+                    {"type": "movie", "title": "12 Years a Slave", "id": 76203},
+                    {"type": "actor", "name": "Michael Fassbender", "id": 17288},
+                ],
+            },
+        ):
+            res = client.post("/game/new?difficulty=medium")
+        game_id = res.json()["game_id"]
+
+        mock_validation = ValidationResult(
+            valid=True,
+            explanation="Both appear in 12 Years a Slave.",
+            movie_id=76203,
+            movie_title="12 Years a Slave",
+            movie_year="2013",
+        )
+        mock_person = TmdbPerson(name="Michael Fassbender", id=17288)
+
+        with (
+            patch(
+                "cinema_game_backend.routes.game.validate_move",
+                new_callable=AsyncMock,
+                return_value=mock_validation,
+            ),
+            patch(
+                "cinema_game_backend.routes.game.tmdb.search_person",
+                new_callable=AsyncMock,
+                return_value=mock_person,
+            ),
+        ):
+            client.post(
+                f"/game/{game_id}/move",
+                json={"movie": "12 Years a Slave", "next_actor": "Michael Fassbender"},
+            )
+
+        return game_id
+
+    def test_undo_removes_last_move(self, client):
+        game_id = self._create_game_with_move(client)
+        mock_person = TmdbPerson(name="Brad Pitt", id=287)
+
+        with patch(
+            "cinema_game_backend.routes.game.tmdb.search_person",
+            new_callable=AsyncMock,
+            return_value=mock_person,
+        ):
+            res = client.delete(f"/game/{game_id}/move")
+
+        assert res.status_code == 200
+        data = res.json()
+        assert data["moves"] == []
+        assert data["current_actor"]["name"] == "Brad Pitt"
+        assert data["game_status"] == "in_progress"
+
+    def test_undo_no_moves_returns_400(self, client):
+        with patch(
+            "cinema_game_backend.routes.game.generate_puzzle",
+            new_callable=AsyncMock,
+            return_value={
+                "start_actor": {"name": "Brad Pitt", "id": 287, "profile_url": None},
+                "end_actor": {"name": "Colin Firth", "id": 1891, "profile_url": None},
+                "difficulty": "medium",
+                "min_moves": 3,
+                "known_solution": [{"type": "actor", "name": "Brad Pitt", "id": 287}],
+            },
+        ):
+            res = client.post("/game/new?difficulty=medium")
+        game_id = res.json()["game_id"]
+
+        res = client.delete(f"/game/{game_id}/move")
+        assert res.status_code == 400
+
+    def test_undo_nonexistent_game(self, client):
+        res = client.delete("/game/does-not-exist/move")
+        assert res.status_code == 404
+
 
 class TestHealthEndpoint:
     def test_health(self, client):

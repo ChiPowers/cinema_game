@@ -55,7 +55,8 @@ class GameState(BaseModel):
     min_moves: int
     current_actor: Actor
     moves: list[Move]
-    status: Literal["in_progress", "won"]
+    status: Literal["in_progress", "won", "lost"]
+    strikes: int = 0
     created_at: str | None = None
 
 
@@ -80,5 +81,13 @@ class MoveResponse(BaseModel):
     movie_year: str | None = None
     poster_url: str | None = None
     backdrop_url: str | None = None
-    game_status: Literal["in_progress", "won"]
+    game_status: Literal["in_progress", "won", "lost"]
     current_actor: Actor
+    strikes: int = 0
+
+
+class UndoResponse(BaseModel):
+    current_actor: Actor
+    moves: list[Move]
+    strikes: int
+    game_status: Literal["in_progress", "won", "lost"]
