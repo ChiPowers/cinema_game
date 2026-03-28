@@ -1,0 +1,14 @@
+services:
+  # FastAPI backend — free Web Service (spins down after 15 min idle)
+  - type: web
+    name: cinema-game-backend
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install poetry && poetry install --only main
+    startCommand: uvicorn cinema_game_backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false  # you'll set this manually in the Render dashboard
+      - key: FRONTEND_URL
+        sync: false  # set to your frontend's Render URL after deploying it
