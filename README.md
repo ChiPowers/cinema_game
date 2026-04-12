@@ -56,12 +56,14 @@ A `Makefile` provides standard development commands:
 | `make coverage` | Run tests with coverage enforcement (50% minimum) |
 | `make coverage-html` | Generate an HTML coverage report at `htmlcov/` |
 
-Copy `cinema_game_backend/.env.example` to `cinema_game_backend/.env` and fill in your keys:
+Copy `secrets/.env.example` to `secrets/.env` and fill in your keys:
 
 ```
 TMDB_API_KEY=...
 ANTHROPIC_API_KEY=...
 ```
+
+See `secrets/README.md` for setup instructions.
 
 Then run:
 

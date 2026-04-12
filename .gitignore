@@ -98,7 +98,6 @@ Thumbs.db
 # .idea files
 .idea
 
-# agentic rewrite
-cinema_game_backend/.env
+# Database
 cinema_game_backend/cinema_game.db
 
