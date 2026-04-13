@@ -11,9 +11,6 @@ These tests are slow (hitting the real Anthropic API) and require valid
 credentials. They should not run in CI.
 """
 
-import pytest
-
-
 class TestRunAgentLoop:
     """Test the agentic loop mechanics."""
 
@@ -39,9 +36,6 @@ class TestRunAgentLoop:
         # Should contain relevant information
         assert "Paris" in result or "capital" in result.lower()
 
-    @pytest.mark.xfail(
-        reason="web_search_tool_result blocks have text=None; code returns None instead of actual text response"
-    )
     async def test_single_tmdb_tool_call(self, run_agentic_loop, tmdb_tools):
         """Test that a single tool call is dispatched and result is returned.
 
@@ -65,9 +59,6 @@ search for it using the search_movie tool and report what you find."""
         # Should contain information about the movie
         assert "Matrix" in result or "movie" in result.lower()
 
-    @pytest.mark.xfail(
-        reason="web_search_tool_result blocks have text=None; code returns None instead of actual text response"
-    )
     async def test_multi_hop_tmdb_chain(self, run_agentic_loop, tmdb_tools):
         """Test that the agent handles multiple tool calls across iterations.
 
@@ -120,9 +111,6 @@ movies, search for both using search_movie and report similarities/differences."
         # Should return empty string or a partial answer, not crash
         assert isinstance(result, str)
 
-    @pytest.mark.xfail(
-        reason="web_search_tool_result blocks have text=None; code returns None instead of actual text response"
-    )
     async def test_web_search_tool_skipped_client_side(
         self, run_agentic_loop, tmdb_tools
     ):
