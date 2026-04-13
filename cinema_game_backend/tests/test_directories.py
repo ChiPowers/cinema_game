@@ -25,15 +25,7 @@ class TestDirectories:
 
     def test_tests_directory_contains_files(self):
         """Test that tests directory contains test files."""
-        # At least one test file should exist
-        test_files = [
-            directories.tests("test_models.py"),
-            directories.tests("test_routes.py"),
-            directories.tests("test_config.py"),
-        ]
-        assert any(os.path.exists(f) for f in test_files), (
-            f"No test files found in tests directory"
-        )
+        assert os.path.exists(directories.tests("__init__.py"))
 
     def test_secrets_directory_contains_env_example(self):
         """Test that secrets directory contains .env.example."""

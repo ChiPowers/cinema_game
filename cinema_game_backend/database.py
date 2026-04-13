@@ -78,7 +78,9 @@ def load_game(game_id: str) -> dict | None:
     return _row_to_game(row)
 
 
-def update_game(game_id: str, moves: list, current_actor: dict, status: str, strikes: int = 0):
+def update_game(
+    game_id: str, moves: list, current_actor: dict, status: str, strikes: int = 0
+):
     conn = get_db()
     conn.execute(
         """

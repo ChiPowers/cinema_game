@@ -10,8 +10,6 @@ Test cases establish the contract:
 - The response schema is correct
 """
 
-import pytest
-
 
 class TestValidationAgentFunctional:
     """Test the validation agent end-to-end."""

@@ -165,9 +165,7 @@ async def undo_move(game_id: str):
     last_move = game["moves"].pop()
     restored_actor = await _resolve_actor(
         last_move["from_actor"],
-        fallback_id=game["start_actor"]["id"]
-        if not game["moves"]
-        else 0,
+        fallback_id=game["start_actor"]["id"] if not game["moves"] else 0,
     )
     strikes = game.get("strikes", 0)
     update_game(game_id, game["moves"], restored_actor, "in_progress", strikes)

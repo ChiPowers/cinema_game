@@ -10,10 +10,9 @@ and external service access.
 
 import pytest
 from cinema_game_backend.env import load_cinema_game_env
-from cinema_game_backend.agents.base import run_agent, execute_tool
+from cinema_game_backend.agents.base import run_agent
 from cinema_game_backend.agents.validation_agent import validate_move
 from cinema_game_backend.tools.definitions import ALL_TOOLS
-
 
 # Load credentials from secrets/.env
 load_cinema_game_env()

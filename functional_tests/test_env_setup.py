@@ -42,6 +42,7 @@ class TestEnvironmentSetup:
     def test_model_config(self):
         """Test that the model configuration can be imported."""
         from cinema_game_backend.config import MODEL
+
         assert MODEL is not None
         assert len(MODEL) > 0
         assert isinstance(MODEL, str)
