@@ -66,7 +66,7 @@ async def run_agent(
 
         if response.stop_reason == "end_turn":
             for block in response.content:
-                if hasattr(block, "text"):
+                if block.type == "text":
                     return block.text
             return ""
 
