@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
+from .env import load_cinema_game_env
 
-load_dotenv()
+load_cinema_game_env()
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
