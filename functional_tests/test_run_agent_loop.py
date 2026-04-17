@@ -11,6 +11,7 @@ These tests are slow (hitting the real Anthropic API) and require valid
 credentials. They should not run in CI.
 """
 
+
 class TestRunAgentLoop:
     """Test the agentic loop mechanics."""
 
