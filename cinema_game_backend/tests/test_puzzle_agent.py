@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from cinema_game_backend.models.tmdb import TmdbPerson, TmdbMovie, TmdbCastMember
 from cinema_game_backend.agents.puzzle_agent import (
     _has_short_path,
