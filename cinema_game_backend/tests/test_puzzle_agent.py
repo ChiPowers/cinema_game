@@ -1,6 +1,7 @@
 import pytest
+from datetime import date
 from unittest.mock import AsyncMock, patch
-from cinema_game_backend.models.tmdb import TmdbPerson, TmdbMovie, TmdbCastMember
+from art_graph.cinema_data_providers.tmdb_models import Person, MovieCreditRole, CastMember
 from cinema_game_backend.agents.puzzle_agent import (
     _has_short_path,
     _pick_popular_actor,
@@ -9,20 +10,16 @@ from cinema_game_backend.agents.puzzle_agent import (
 )
 
 
-def make_person(id=1, name="Test", popularity=10.0, profile_url=None):
-    return TmdbPerson(
-        id=id, name=name, popularity=popularity, profile_url=profile_url
-    )
+def make_person(id=1, name="Test", popularity=10.0, profile_path=None):
+    return Person(id=id, name=name, popularity=popularity, profile_path=profile_path)
 
 
-def make_movie(id=1, title="Movie", year="2020", popularity=10.0):
-    return TmdbMovie(id=id, title=title, year=year, popularity=popularity)
+def make_movie(id=1, title="Movie", release_date=date(2020, 1, 1), popularity=10.0):
+    return MovieCreditRole(id=id, title=title, release_date=release_date, popularity=popularity)
 
 
-def make_cast(id=1, name="Actor", character="Role", order=0, profile_url=None):
-    return TmdbCastMember(
-        id=id, name=name, character=character, order=order, profile_url=profile_url
-    )
+def make_cast(id=1, name="Actor", character="Role", order=0, profile_path=None):
+    return CastMember(id=id, name=name, character=character, order=order, profile_path=profile_path)
 
 
 # --- _has_short_path ---
@@ -146,8 +143,8 @@ class TestPickPopularActor:
 class TestRandomWalk:
     async def test_single_hop_produces_three_steps(self):
         start = make_person(id=1, name="Start", popularity=10.0)
-        movie = make_movie(id=100, title="The Movie", year="2020", popularity=10.0)
-        end_cast = make_cast(id=2, name="End", profile_url="/end.jpg")
+        movie = make_movie(id=100, title="The Movie", release_date=date(2020, 1, 1), popularity=10.0)
+        end_cast = make_cast(id=2, name="End", profile_path="/end.jpg")
 
         with patch(
             "cinema_game_backend.agents.puzzle_agent.tmdb"
@@ -294,10 +291,8 @@ class TestRandomWalk:
     async def test_movie_step_includes_metadata(self):
         start = make_person(id=1, name="Start")
         movie = make_movie(
-            id=100, title="Cool Movie", year="2023", popularity=15.0
+            id=100, title="Cool Movie", release_date=date(2023, 6, 15), popularity=15.0
         )
-        movie.poster_url = "/poster.jpg"
-        movie.backdrop_url = "/backdrop.jpg"
         end_cast = make_cast(id=2, name="End")
 
         with patch(

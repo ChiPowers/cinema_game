@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from cinema_game_backend.main import app
 from cinema_game_backend.database import init_db
 from cinema_game_backend.models.game import ValidationResult
-from cinema_game_backend.models.tmdb import TmdbPerson
+from art_graph.cinema_data_providers.tmdb_models import Person
 from cinema_game_backend.routes.game import _reached_end
 
 # --- Pure logic: _reached_end ---
@@ -182,7 +182,7 @@ class TestMakeMove:
             movie_title="12 Years a Slave",
             movie_year="2013",
         )
-        mock_person = TmdbPerson(name="Michael Fassbender", id=17288)
+        mock_person = Person(name="Michael Fassbender", id=17288)
 
         with (
             patch(
@@ -242,7 +242,7 @@ class TestMakeMove:
             movie_title="A Single Man",
             movie_year="2009",
         )
-        mock_person = TmdbPerson(name="Colin Firth", id=1891)
+        mock_person = Person(name="Colin Firth", id=1891)
 
         with (
             patch(
@@ -284,7 +284,7 @@ class TestMakeMove:
             movie_title="T",
             movie_year="2000",
         )
-        mock_person = TmdbPerson(name="Colin Firth", id=1891)
+        mock_person = Person(name="Colin Firth", id=1891)
 
         with (
             patch(
@@ -405,7 +405,7 @@ class TestUndoMove:
             movie_title="12 Years a Slave",
             movie_year="2013",
         )
-        mock_person = TmdbPerson(name="Michael Fassbender", id=17288)
+        mock_person = Person(name="Michael Fassbender", id=17288)
 
         with (
             patch(
@@ -428,7 +428,7 @@ class TestUndoMove:
 
     def test_undo_removes_last_move(self, client):
         game_id = self._create_game_with_move(client)
-        mock_person = TmdbPerson(name="Brad Pitt", id=287)
+        mock_person = Person(name="Brad Pitt", id=287)
 
         with patch(
             "cinema_game_backend.routes.game.tmdb.search_person",
