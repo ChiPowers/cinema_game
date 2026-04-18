@@ -1,7 +1,11 @@
 import pytest
 from datetime import date
 from unittest.mock import AsyncMock, patch
-from art_graph.cinema_data_providers.tmdb_models import Person, MovieCreditRole, CastMember
+from art_graph.cinema_data_providers.tmdb_models import (
+    Person,
+    MovieCreditRole,
+    CastMember,
+)
 from cinema_game_backend.agents.puzzle_agent import (
     _has_short_path,
     _pick_popular_actor,
@@ -15,11 +19,15 @@ def make_person(id=1, name="Test", popularity=10.0, profile_path=None):
 
 
 def make_movie(id=1, title="Movie", release_date=date(2020, 1, 1), popularity=10.0):
-    return MovieCreditRole(id=id, title=title, release_date=release_date, popularity=popularity)
+    return MovieCreditRole(
+        id=id, title=title, release_date=release_date, popularity=popularity
+    )
 
 
 def make_cast(id=1, name="Actor", character="Role", order=0, profile_path=None):
-    return CastMember(id=id, name=name, character=character, order=order, profile_path=profile_path)
+    return CastMember(
+        id=id, name=name, character=character, order=order, profile_path=profile_path
+    )
 
 
 # --- _has_short_path ---
@@ -28,9 +36,7 @@ def make_cast(id=1, name="Actor", character="Role", order=0, profile_path=None):
 class TestHasShortPath:
     async def test_shared_movie_is_one_hop(self):
         shared = make_movie(id=100)
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(
                 side_effect=lambda pid, limit=15: {
                     1: [shared, make_movie(id=101)],
@@ -40,9 +46,7 @@ class TestHasShortPath:
             assert await _has_short_path(1, 2, max_hops=1) is True
 
     async def test_no_shared_movie_no_shortcut(self):
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(
                 side_effect=lambda pid, limit=15: {
                     1: [make_movie(id=101)],
@@ -53,9 +57,7 @@ class TestHasShortPath:
             assert await _has_short_path(1, 2, max_hops=2) is False
 
     async def test_max_hops_zero_skips_two_hop_check(self):
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(
                 side_effect=lambda pid, limit=15: {
                     1: [make_movie(id=101)],
@@ -65,9 +67,7 @@ class TestHasShortPath:
             assert await _has_short_path(1, 2, max_hops=0) is False
 
     async def test_two_hop_via_shared_costar(self):
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(
                 side_effect=lambda pid, limit=15: {
                     1: [make_movie(id=101)],
@@ -84,9 +84,7 @@ class TestHasShortPath:
             assert await _has_short_path(1, 2, max_hops=2) is True
 
     async def test_two_hop_excludes_start_and_end_actors(self):
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(
                 side_effect=lambda pid, limit=15: {
                     1: [make_movie(id=101)],
@@ -111,9 +109,7 @@ class TestPickPopularActor:
             make_person(id=1, name="Famous", popularity=20.0),
             make_person(id=2, name="Unknown", popularity=1.0),
         ]
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=people)
             with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
                 mock_random.randint.return_value = 1
@@ -125,9 +121,7 @@ class TestPickPopularActor:
 
     async def test_falls_back_to_all_when_none_eligible(self):
         people = [make_person(id=1, name="Low", popularity=1.0)]
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=people)
             with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
                 mock_random.randint.return_value = 1
@@ -143,12 +137,12 @@ class TestPickPopularActor:
 class TestRandomWalk:
     async def test_single_hop_produces_three_steps(self):
         start = make_person(id=1, name="Start", popularity=10.0)
-        movie = make_movie(id=100, title="The Movie", release_date=date(2020, 1, 1), popularity=10.0)
+        movie = make_movie(
+            id=100, title="The Movie", release_date=date(2020, 1, 1), popularity=10.0
+        )
         end_cast = make_cast(id=2, name="End", profile_path="/end.jpg")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
             mock_tmdb.get_movie_cast = AsyncMock(return_value=[end_cast])
             mock_tmdb.get_person_details = AsyncMock(
@@ -171,9 +165,7 @@ class TestRandomWalk:
     async def test_returns_none_when_no_movies(self):
         start = make_person(id=1, name="Start")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[])
 
             path = await _random_walk(start, hops=1, min_popularity=5.0)
@@ -184,9 +176,7 @@ class TestRandomWalk:
         start = make_person(id=1, name="Start")
         movie = make_movie(id=100)
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
             mock_tmdb.get_movie_cast = AsyncMock(
                 return_value=[make_cast(id=1, name="Start")]
@@ -214,9 +204,7 @@ class TestRandomWalk:
                 return [movie1, movie2]
             return [movie1, movie2]
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(side_effect=mock_get_movies)
             mock_tmdb.get_movie_cast = AsyncMock(
                 side_effect=lambda mid: {
@@ -244,13 +232,9 @@ class TestRandomWalk:
         popular = make_cast(id=2, name="Popular")
         unpopular = make_cast(id=3, name="Unpopular")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(
-                return_value=[popular, unpopular]
-            )
+            mock_tmdb.get_movie_cast = AsyncMock(return_value=[popular, unpopular])
             mock_tmdb.get_person_details = AsyncMock(
                 side_effect=lambda pid: {
                     2: make_person(id=2, name="Popular", popularity=20.0),
@@ -271,9 +255,7 @@ class TestRandomWalk:
         cast_a = make_cast(id=2, name="Less Unpopular")
         cast_b = make_cast(id=3, name="More Unpopular")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
             mock_tmdb.get_movie_cast = AsyncMock(return_value=[cast_a, cast_b])
             mock_tmdb.get_person_details = AsyncMock(
@@ -295,9 +277,7 @@ class TestRandomWalk:
         )
         end_cast = make_cast(id=2, name="End")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
             mock_tmdb.get_movie_cast = AsyncMock(return_value=[end_cast])
             mock_tmdb.get_person_details = AsyncMock(
@@ -332,9 +312,7 @@ class TestGeneratePuzzle:
             call_count += 1
             return [movie1, movie2]
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
             mock_tmdb.get_person_movies = AsyncMock(side_effect=mock_get_movies)
             mock_tmdb.get_movie_cast = AsyncMock(
@@ -378,9 +356,7 @@ class TestGeneratePuzzle:
             call_idx += 1
             return result
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
             mock_tmdb.get_person_movies = AsyncMock(return_value=[movie1, movie2])
             mock_tmdb.get_movie_cast = AsyncMock(
@@ -405,9 +381,7 @@ class TestGeneratePuzzle:
     async def test_raises_after_max_retries(self):
         start = make_person(id=1, name="Start", popularity=10.0)
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
             mock_tmdb.get_person_movies = AsyncMock(return_value=[])
             with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
@@ -424,9 +398,7 @@ class TestGeneratePuzzle:
         mid_cast = make_cast(id=2, name="Mid")
         end_cast = make_cast(id=3, name="End")
 
-        with patch(
-            "cinema_game_backend.agents.puzzle_agent.tmdb"
-        ) as mock_tmdb:
+        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
             mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
             call_count = 0
 
@@ -452,7 +424,5 @@ class TestGeneratePuzzle:
                 ):
                     result = await generate_puzzle("easy")
 
-        movie_ids = [
-            s["id"] for s in result["known_solution"] if s["type"] == "movie"
-        ]
+        movie_ids = [s["id"] for s in result["known_solution"] if s["type"] == "movie"]
         assert len(movie_ids) == len(set(movie_ids))
