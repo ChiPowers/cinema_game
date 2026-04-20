@@ -70,7 +70,7 @@ trio = ["trio (>=0.31.0) ; python_version < \"3.10\"", "trio (>=0.32.0) ; python
 
 [[package]]
 name = "art-graph"
-version = "0.2.1"
+version = "0.2.2"
 description = "Tools for creating and analyzing art graphs"
 optional = false
 python-versions = "^3.11"
@@ -91,8 +91,8 @@ tqdm = "^4.66.4"
 [package.source]
 type = "git"
 url = "https://github.com/newexo/artist-graph.git"
-reference = "v0.1.2"
-resolved_reference = "a9de9538253ca4a550d3a581f42e406dc6e03766"
+reference = "v0.2.2"
+resolved_reference = "140611007030ddbf62159756394df7bc1a646b73"
 
 [[package]]
 name = "certifi"
@@ -1501,4 +1501,4 @@ standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.5.0)
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "8d9fade712219b32e482fbf3144bd5311800b21b41ed109e0e7ba7fbbc9ffe55"
+content-hash = "7d0f13bd3c18400baf28a01d191caa81dae09b3143443fb03676767724a4fa9f"
