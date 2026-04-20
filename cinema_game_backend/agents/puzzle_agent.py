@@ -171,9 +171,10 @@ async def generate_puzzle(difficulty: str = "medium") -> dict:
     hops = random.randint(*hop_range)
     min_pop = MIN_ACTOR_POPULARITY.get(difficulty, 4)
     no_repeat = difficulty == "easy"
-    # Reject puzzles where a shortcut shorter than the intended minimum exists.
-    # We check up to 2 hops regardless of difficulty (API cost limit).
-    shortcut_threshold = min(hop_range[0] - 1, 2)
+    # Reject only trivially easy puzzles where the two actors share a direct movie.
+    # The 2-hop check was too aggressive — popular actors are almost always 2 hops
+    # apart, causing medium/hard generation to exhaust all retries.
+    shortcut_threshold = 1
 
     for _ in range(15):
         start_actor = await _pick_popular_actor(min_pop)
