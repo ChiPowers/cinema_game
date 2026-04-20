@@ -21,7 +21,7 @@ async def execute_tool(name: str, tool_input: dict) -> str:
     if name == "search_actor":
         result = await tmdb.search_person(tool_input["name"])
         return json.dumps(
-            result.model_dump() if result else {"error": "Actor not found"}
+            result.model_dump(mode="json") if result else {"error": "Actor not found"}
         )
 
     if name == "search_movie":
@@ -30,12 +30,12 @@ async def execute_tool(name: str, tool_input: dict) -> str:
             year=tool_input.get("year"),
         )
         return json.dumps(
-            result.model_dump() if result else {"error": "Movie not found"}
+            result.model_dump(mode="json") if result else {"error": "Movie not found"}
         )
 
     if name == "get_movie_cast":
         result = await tmdb.get_movie_cast(tool_input["movie_id"])
-        return json.dumps([c.model_dump() for c in result])
+        return json.dumps([c.model_dump(mode="json") for c in result])
 
     return json.dumps({"error": f"Unknown tool: {name}"})
 

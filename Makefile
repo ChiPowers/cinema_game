@@ -1,9 +1,12 @@
+# Package name, read from pyproject.toml so this Makefile is reusable across projects
+PACKAGE := $(shell awk -F'"' '/^name = / {print $$2; exit}' pyproject.toml)
+
 # Minimum coverage percentage required for tests to pass
 COVERAGE_FAIL = 50
 
 # Run the unit test suite (excludes functional tests)
 test:
-	poetry run pytest cinema_game_backend/tests/
+	poetry run pytest $(PACKAGE)/tests/
 
 # Run functional tests (requires API credentials in secrets/.env)
 test-functional:
@@ -11,13 +14,13 @@ test-functional:
 
 # Run all tests (unit + functional)
 test-all:
-	poetry run pytest cinema_game_backend/tests/ functional_tests/
+	poetry run pytest $(PACKAGE)/tests/ functional_tests/
 
-# Format the code using Black
+# Format the code using Ruff
 format:
-	poetry run black .
+	poetry run ruff format .
 
-# Lint the code using Ruff
+# Lint the code using Ruff (configured in pyproject.toml [tool.ruff])
 lint:
 	poetry run ruff check .
 
@@ -25,19 +28,26 @@ lint:
 check: format lint test
 
 # Run unit tests with coverage enforcement (terminal output only)
+# Omit patterns are configured in pyproject.toml [tool.coverage.run].
 coverage:
-	poetry run pytest cinema_game_backend/tests/ --cov=cinema_game_backend --cov-report=term --cov-fail-under=$(COVERAGE_FAIL)
+	poetry run coverage run --source=$(PACKAGE) -m pytest $(PACKAGE)/tests/
+	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
 
 # Run unit tests with coverage and produce an HTML report
 coverage-html:
-	poetry run pytest cinema_game_backend/tests/ --cov=cinema_game_backend --cov-report=html --cov-fail-under=$(COVERAGE_FAIL)
+	poetry run coverage run --source=$(PACKAGE) -m pytest $(PACKAGE)/tests/
+	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
+	poetry run coverage html
 	@echo "HTML coverage report generated at htmlcov/index.html"
 
 # Run all tests (unit + functional) with coverage enforcement
 coverage-all:
-	poetry run pytest cinema_game_backend/tests/ functional_tests/ --cov=cinema_game_backend --cov-report=term --cov-fail-under=$(COVERAGE_FAIL)
+	poetry run coverage run --source=$(PACKAGE) -m pytest $(PACKAGE)/tests/ functional_tests/
+	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
 
 # Run all tests with coverage and produce an HTML report
 coverage-all-html:
-	poetry run pytest cinema_game_backend/tests/ functional_tests/ --cov=cinema_game_backend --cov-report=html --cov-fail-under=$(COVERAGE_FAIL)
+	poetry run coverage run --source=$(PACKAGE) -m pytest $(PACKAGE)/tests/ functional_tests/
+	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
+	poetry run coverage html
 	@echo "HTML coverage report generated at htmlcov/index.html"

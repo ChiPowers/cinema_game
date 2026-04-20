@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "cinema-game-backend"
-version = "2.1.0"
+name = "cinema_game_backend"
+version = "2.2.0"
 description = "Cinema Game — connect actors through shared movies"
 authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
 license = "mit"
@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "cinema_game_backend"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.15"
+python = "^3.11"
 fastapi = "^0.135.2"
 uvicorn = "^0.30.0"
 anthropic = "^0.40.0"
@@ -16,13 +16,13 @@ httpx = "^0.27.0"
 python-dotenv = "^1.0.0"
 pydantic = "^2.12.5"
 langsmith = "^0.2.0"
+art-graph = {git = "https://github.com/newexo/artist-graph.git", rev = "v0.2.2"}
 
 [tool.poetry.group.dev.dependencies]
-black = "^26.3.1"
 ruff = "^0.15.6"
 pytest = "^9.0.2"
 pytest-asyncio = "^1.3.0"
-pytest-cov = "^7.0.0"
+coverage = "^7.12.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -30,6 +30,13 @@ filterwarnings = [
     "ignore:langsmith.wrappers._openai_agents is deprecated:DeprecationWarning",
     "ignore:Please use `import python_multipart`:PendingDeprecationWarning",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"_version.py" = ["F841"]
 
 [tool.coverage.run]
 omit = [
