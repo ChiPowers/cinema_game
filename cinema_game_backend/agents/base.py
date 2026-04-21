@@ -15,29 +15,52 @@ from ..config import MODEL, ANTHROPIC_API_KEY
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
-@traceable(run_type="tool", name="tmdb_tool")
+@traceable(run_type="tool", name="tmdb_search_actor")
+async def _tool_search_actor(tool_input: dict) -> str:
+    result = await tmdb.search_person(tool_input["name"])
+    return json.dumps(
+        result.model_dump(mode="json") if result else {"error": "Actor not found"}
+    )
+
+
+@traceable(run_type="tool", name="tmdb_search_movie")
+async def _tool_search_movie(tool_input: dict) -> str:
+    result = await tmdb.search_movie(
+        tool_input["title"],
+        year=tool_input.get("year"),
+    )
+    return json.dumps(
+        result.model_dump(mode="json") if result else {"error": "Movie not found"}
+    )
+
+
+@traceable(run_type="tool", name="tmdb_get_movie_cast")
+async def _tool_get_movie_cast(tool_input: dict) -> str:
+    result = await tmdb.get_movie_cast(tool_input["movie_id"])
+    return json.dumps([c.model_dump(mode="json") for c in result])
+
+
 async def execute_tool(name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
-        result = await tmdb.search_person(tool_input["name"])
-        return json.dumps(
-            result.model_dump(mode="json") if result else {"error": "Actor not found"}
-        )
-
+        return await _tool_search_actor(tool_input)
     if name == "search_movie":
-        result = await tmdb.search_movie(
-            tool_input["title"],
-            year=tool_input.get("year"),
-        )
-        return json.dumps(
-            result.model_dump(mode="json") if result else {"error": "Movie not found"}
-        )
-
+        return await _tool_search_movie(tool_input)
     if name == "get_movie_cast":
-        result = await tmdb.get_movie_cast(tool_input["movie_id"])
-        return json.dumps([c.model_dump(mode="json") for c in result])
-
+        return await _tool_get_movie_cast(tool_input)
     return json.dumps({"error": f"Unknown tool: {name}"})
+
+
+@traceable(run_type="llm", name="claude_call")
+def _call_llm(messages: list, system: str, tools: list):
+    """Single traced LLM call — appears as an individual span in LangSmith."""
+    return client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        system=system,
+        tools=tools,
+        messages=messages,
+    )
 
 
 @traceable(run_type="chain", name="agentic_loop")
@@ -54,13 +77,7 @@ async def run_agent(
     messages = [{"role": "user", "content": user_message}]
 
     for iteration in range(max_iterations):
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=2048,
-            system=system,
-            tools=tools,
-            messages=messages,
-        )
+        response = _call_llm(messages, system, tools)
 
         messages.append({"role": "assistant", "content": response.content})
 

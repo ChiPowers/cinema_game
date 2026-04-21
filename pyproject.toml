@@ -15,7 +15,7 @@ anthropic = "^0.40.0"
 httpx = "^0.27.0"
 python-dotenv = "^1.0.0"
 pydantic = "^2.12.5"
-langsmith = "^0.2.0"
+langsmith = "^0.7.31"
 art-graph = {git = "https://github.com/newexo/artist-graph.git", rev = "v0.2.2"}
 
 [tool.poetry.group.dev.dependencies]

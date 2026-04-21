@@ -11,6 +11,7 @@ from ..tools.tmdb import tmdb
 from ..config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
 
 
+@traceable(run_type="tool", name="shortcut_check")
 async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:
     """
     Returns True if a path of <= max_hops exists between start and end actors.
@@ -53,6 +54,7 @@ async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:
     return False
 
 
+@traceable(run_type="tool", name="pick_start_actor")
 async def _pick_popular_actor(min_popularity: float):
     """Pick a random actor from TMDb's popular people list above a popularity threshold."""
     page = random.randint(1, 5)
@@ -63,6 +65,7 @@ async def _pick_popular_actor(min_popularity: float):
     return random.choice(eligible)
 
 
+@traceable(run_type="chain", name="random_walk")
 async def _random_walk(
     start_actor: dict,
     hops: int,

@@ -153,6 +153,7 @@ async def make_move(game_id: str, body: MoveRequest):
 
 
 @router.delete("/{game_id}/move", response_model=UndoResponse)
+@traceable(run_type="chain", name="undo_move")
 async def undo_move(game_id: str):
     game = load_game(game_id)
     if not game:
