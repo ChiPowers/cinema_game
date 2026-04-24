@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from langsmith import traceable, get_current_run_tree
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..models.game import (
