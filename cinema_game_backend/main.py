@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from .config import create_tmdb_client
 from .database import init_db
 from .routes.game import router as game_router
 
@@ -9,6 +10,7 @@ from .routes.game import router as game_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    app.state.tmdb = create_tmdb_client()
     yield
 
 

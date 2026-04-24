@@ -1,6 +1,7 @@
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from langsmith import traceable, get_current_run_tree
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..models.game import (
     NewGameResponse,
     MoveRequest,
@@ -12,13 +13,13 @@ from ..models.game import (
 )
 from ..agents.puzzle_agent import generate_puzzle
 from ..agents.validation_agent import validate_move
-from ..tools.tmdb import tmdb
+from ..dependencies import get_tmdb
 from ..database import save_game, load_game, update_game
 
 router = APIRouter(prefix="/game", tags=["game"])
 
 
-async def _resolve_actor(name: str, fallback_id: int = 0) -> dict:
+async def _resolve_actor(tmdb: TMDbClient, name: str, fallback_id: int = 0) -> dict:
     """Look up an actor by name and return their TMDb ID + canonical name."""
     person = await tmdb.search_person(name)
     if person:
@@ -40,13 +41,13 @@ def _reached_end(next_actor_id: int, next_actor_name: str, end_actor: dict) -> b
 
 @router.post("/new", response_model=NewGameResponse)
 @traceable(run_type="chain", name="new_game")
-async def new_game(difficulty: str = "medium"):
+async def new_game(difficulty: str = "medium", tmdb: TMDbClient = Depends(get_tmdb)):
     if difficulty not in ("easy", "medium", "hard"):
         raise HTTPException(
             status_code=400, detail="difficulty must be easy, medium, or hard"
         )
 
-    puzzle = await generate_puzzle(difficulty)
+    puzzle = await generate_puzzle(tmdb, difficulty)
 
     game_id = str(uuid.uuid4())
     rt = get_current_run_tree()
@@ -77,7 +78,7 @@ async def new_game(difficulty: str = "medium"):
 
 @router.post("/{game_id}/move", response_model=MoveResponse)
 @traceable(run_type="chain", name="make_move")
-async def make_move(game_id: str, body: MoveRequest):
+async def make_move(game_id: str, body: MoveRequest, tmdb: TMDbClient = Depends(get_tmdb)):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -97,6 +98,7 @@ async def make_move(game_id: str, body: MoveRequest):
         )
 
     result = await validate_move(
+        tmdb,
         from_actor,
         body.movie,
         body.next_actor,
@@ -116,7 +118,7 @@ async def make_move(game_id: str, body: MoveRequest):
         )
 
     # Resolve the next actor's TMDb ID for accurate win detection
-    new_actor = await _resolve_actor(body.next_actor)
+    new_actor = await _resolve_actor(tmdb, body.next_actor)
 
     # Record the move with the canonical TMDb title
     move = Move(
@@ -154,7 +156,7 @@ async def make_move(game_id: str, body: MoveRequest):
 
 @router.delete("/{game_id}/move", response_model=UndoResponse)
 @traceable(run_type="chain", name="undo_move")
-async def undo_move(game_id: str):
+async def undo_move(game_id: str, tmdb: TMDbClient = Depends(get_tmdb)):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -165,7 +167,7 @@ async def undo_move(game_id: str):
 
     last_move = game["moves"].pop()
     restored_actor = await _resolve_actor(
-        last_move["from_actor"],
+        tmdb, last_move["from_actor"],
         fallback_id=game["start_actor"]["id"] if not game["moves"] else 0,
     )
     strikes = game.get("strikes", 0)

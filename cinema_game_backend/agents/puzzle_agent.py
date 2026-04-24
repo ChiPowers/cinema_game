@@ -7,12 +7,14 @@ No LLM needed here — pure TMDb API calls.
 import random
 import asyncio
 from langsmith import traceable
-from ..tools.tmdb import tmdb
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY
 
 
 @traceable(run_type="tool", name="shortcut_check")
-async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:
+async def _has_short_path(
+    tmdb: TMDbClient, start_id: int, end_id: int, max_hops: int
+) -> bool:
     """
     Returns True if a path of <= max_hops exists between start and end actors.
     Checks up to 2 hops (practical API-cost limit).
@@ -55,7 +57,7 @@ async def _has_short_path(start_id: int, end_id: int, max_hops: int) -> bool:
 
 
 @traceable(run_type="tool", name="pick_start_actor")
-async def _pick_popular_actor(min_popularity: float):
+async def _pick_popular_actor(tmdb: TMDbClient, min_popularity: float):
     """Pick a random actor from TMDb's popular people list above a popularity threshold."""
     page = random.randint(1, 5)
     people = await tmdb.get_popular_people(page=page)
@@ -67,6 +69,7 @@ async def _pick_popular_actor(min_popularity: float):
 
 @traceable(run_type="chain", name="random_walk")
 async def _random_walk(
+    tmdb: TMDbClient,
     start_actor: dict,
     hops: int,
     min_popularity: float,
@@ -74,7 +77,7 @@ async def _random_walk(
 ) -> list[dict] | None:
     """
     Build a path of length `hops` via random walk:
-      actor → movie → actor → movie → actor ...
+      actor -> movie -> actor -> movie -> actor ...
 
     Returns an ordered list of step dicts, or None if the walk dead-ends.
     Each step: {"type": "actor"|"movie", ...}
@@ -160,15 +163,15 @@ async def _random_walk(
 
 
 @traceable(run_type="chain", name="generate_puzzle")
-async def generate_puzzle(difficulty: str = "medium") -> dict:
+async def generate_puzzle(tmdb: TMDbClient, difficulty: str = "medium") -> dict:
     """
     Generate a puzzle for the given difficulty tier.
     Returns: start_actor, end_actor, difficulty, min_moves, known_solution.
 
     Hop counts:
       easy:   exactly 2 hops, no movie repeated
-      medium: 3–5 hops (random)
-      hard:   6–8 hops (random)
+      medium: 3-5 hops (random)
+      hard:   6-8 hops (random)
     """
     hop_range = DIFFICULTY_HOPS.get(difficulty, (3, 5))
     hops = random.randint(*hop_range)
@@ -180,13 +183,13 @@ async def generate_puzzle(difficulty: str = "medium") -> dict:
     shortcut_threshold = 1
 
     for _ in range(15):
-        start_actor = await _pick_popular_actor(min_pop)
+        start_actor = await _pick_popular_actor(tmdb, min_pop)
         path = await _random_walk(
-            start_actor, hops, min_pop, no_repeat_movies=no_repeat
+            tmdb, start_actor, hops, min_pop, no_repeat_movies=no_repeat
         )
         if not path or len(path) < 3:
             continue
-        if await _has_short_path(path[0]["id"], path[-1]["id"], shortcut_threshold):
+        if await _has_short_path(tmdb, path[0]["id"], path[-1]["id"], shortcut_threshold):
             continue
         break
     else:

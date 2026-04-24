@@ -1,9 +1,10 @@
 import sqlite3
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 from cinema_game_backend.main import app
 from cinema_game_backend.database import init_db
+from cinema_game_backend.dependencies import get_tmdb
 from cinema_game_backend.models.game import ValidationResult
 from art_graph.cinema_data_providers.tmdb_models import Person
 from cinema_game_backend.routes.game import _reached_end
@@ -102,7 +103,15 @@ def use_in_memory_db():
 
 
 @pytest.fixture
-def client():
+def mock_tmdb():
+    mock = MagicMock()
+    app.dependency_overrides[get_tmdb] = lambda: mock
+    yield mock
+    app.dependency_overrides.pop(get_tmdb, None)
+
+
+@pytest.fixture
+def client(mock_tmdb):
     return TestClient(app)
 
 
@@ -172,7 +181,7 @@ class TestMakeMove:
             res = client.post("/game/new?difficulty=medium")
         return res.json()["game_id"]
 
-    def test_valid_move(self, client):
+    def test_valid_move(self, client, mock_tmdb):
         game_id = self._create_game(client)
 
         mock_validation = ValidationResult(
@@ -182,19 +191,14 @@ class TestMakeMove:
             movie_title="12 Years a Slave",
             movie_year="2013",
         )
-        mock_person = Person(name="Michael Fassbender", id=17288)
+        mock_tmdb.search_person = AsyncMock(
+            return_value=Person(name="Michael Fassbender", id=17288)
+        )
 
-        with (
-            patch(
-                "cinema_game_backend.routes.game.validate_move",
-                new_callable=AsyncMock,
-                return_value=mock_validation,
-            ),
-            patch(
-                "cinema_game_backend.routes.game.tmdb.search_person",
-                new_callable=AsyncMock,
-                return_value=mock_person,
-            ),
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
         ):
             res = client.post(
                 f"/game/{game_id}/move",
@@ -232,7 +236,7 @@ class TestMakeMove:
         assert data["game_status"] == "in_progress"
         assert data["current_actor"]["name"] == "Brad Pitt"  # unchanged
 
-    def test_winning_move(self, client):
+    def test_winning_move(self, client, mock_tmdb):
         game_id = self._create_game(client)
 
         mock_validation = ValidationResult(
@@ -242,19 +246,14 @@ class TestMakeMove:
             movie_title="A Single Man",
             movie_year="2009",
         )
-        mock_person = Person(name="Colin Firth", id=1891)
+        mock_tmdb.search_person = AsyncMock(
+            return_value=Person(name="Colin Firth", id=1891)
+        )
 
-        with (
-            patch(
-                "cinema_game_backend.routes.game.validate_move",
-                new_callable=AsyncMock,
-                return_value=mock_validation,
-            ),
-            patch(
-                "cinema_game_backend.routes.game.tmdb.search_person",
-                new_callable=AsyncMock,
-                return_value=mock_person,
-            ),
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
         ):
             res = client.post(
                 f"/game/{game_id}/move",
@@ -273,7 +272,7 @@ class TestMakeMove:
         )
         assert res.status_code == 404
 
-    def test_move_on_finished_game(self, client):
+    def test_move_on_finished_game(self, client, mock_tmdb):
         game_id = self._create_game(client)
 
         # Win the game first
@@ -284,19 +283,14 @@ class TestMakeMove:
             movie_title="T",
             movie_year="2000",
         )
-        mock_person = Person(name="Colin Firth", id=1891)
+        mock_tmdb.search_person = AsyncMock(
+            return_value=Person(name="Colin Firth", id=1891)
+        )
 
-        with (
-            patch(
-                "cinema_game_backend.routes.game.validate_move",
-                new_callable=AsyncMock,
-                return_value=mock_validation,
-            ),
-            patch(
-                "cinema_game_backend.routes.game.tmdb.search_person",
-                new_callable=AsyncMock,
-                return_value=mock_person,
-            ),
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
         ):
             client.post(
                 f"/game/{game_id}/move",
@@ -379,7 +373,7 @@ class TestMakeMove:
 
 
 class TestUndoMove:
-    def _create_game_with_move(self, client):
+    def _create_game_with_move(self, client, mock_tmdb):
         with patch(
             "cinema_game_backend.routes.game.generate_puzzle",
             new_callable=AsyncMock,
@@ -405,19 +399,14 @@ class TestUndoMove:
             movie_title="12 Years a Slave",
             movie_year="2013",
         )
-        mock_person = Person(name="Michael Fassbender", id=17288)
+        mock_tmdb.search_person = AsyncMock(
+            return_value=Person(name="Michael Fassbender", id=17288)
+        )
 
-        with (
-            patch(
-                "cinema_game_backend.routes.game.validate_move",
-                new_callable=AsyncMock,
-                return_value=mock_validation,
-            ),
-            patch(
-                "cinema_game_backend.routes.game.tmdb.search_person",
-                new_callable=AsyncMock,
-                return_value=mock_person,
-            ),
+        with patch(
+            "cinema_game_backend.routes.game.validate_move",
+            new_callable=AsyncMock,
+            return_value=mock_validation,
         ):
             client.post(
                 f"/game/{game_id}/move",
@@ -426,16 +415,13 @@ class TestUndoMove:
 
         return game_id
 
-    def test_undo_removes_last_move(self, client):
-        game_id = self._create_game_with_move(client)
-        mock_person = Person(name="Brad Pitt", id=287)
+    def test_undo_removes_last_move(self, client, mock_tmdb):
+        game_id = self._create_game_with_move(client, mock_tmdb)
+        mock_tmdb.search_person = AsyncMock(
+            return_value=Person(name="Brad Pitt", id=287)
+        )
 
-        with patch(
-            "cinema_game_backend.routes.game.tmdb.search_person",
-            new_callable=AsyncMock,
-            return_value=mock_person,
-        ):
-            res = client.delete(f"/game/{game_id}/move")
+        res = client.delete(f"/game/{game_id}/move")
 
         assert res.status_code == 200
         data = res.json()

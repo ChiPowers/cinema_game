@@ -1,6 +1,6 @@
 import pytest
 from datetime import date
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from art_graph.cinema_data_providers.tmdb_models import (
     Person,
     MovieCreditRole,
@@ -30,74 +30,72 @@ def make_cast(id=1, name="Actor", character="Role", order=0, profile_path=None):
     )
 
 
+def make_tmdb(**methods):
+    tmdb = MagicMock()
+    for name, impl in methods.items():
+        setattr(tmdb, name, AsyncMock(side_effect=impl) if callable(impl) else AsyncMock(return_value=impl))
+    return tmdb
+
+
 # --- _has_short_path ---
 
 
 class TestHasShortPath:
     async def test_shared_movie_is_one_hop(self):
         shared = make_movie(id=100)
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(
-                side_effect=lambda pid, limit=15: {
-                    1: [shared, make_movie(id=101)],
-                    2: [shared, make_movie(id=102)],
-                }[pid]
-            )
-            assert await _has_short_path(1, 2, max_hops=1) is True
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=15: {
+                1: [shared, make_movie(id=101)],
+                2: [shared, make_movie(id=102)],
+            }[pid]
+        )
+        assert await _has_short_path(tmdb, 1, 2, max_hops=1) is True
 
     async def test_no_shared_movie_no_shortcut(self):
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(
-                side_effect=lambda pid, limit=15: {
-                    1: [make_movie(id=101)],
-                    2: [make_movie(id=102)],
-                }[pid]
-            )
-            mock_tmdb.get_movie_cast = AsyncMock(return_value=[])
-            assert await _has_short_path(1, 2, max_hops=2) is False
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=15: {
+                1: [make_movie(id=101)],
+                2: [make_movie(id=102)],
+            }[pid],
+            get_movie_cast=lambda mid: [],
+        )
+        assert await _has_short_path(tmdb, 1, 2, max_hops=2) is False
 
     async def test_max_hops_zero_skips_two_hop_check(self):
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(
-                side_effect=lambda pid, limit=15: {
-                    1: [make_movie(id=101)],
-                    2: [make_movie(id=102)],
-                }[pid]
-            )
-            assert await _has_short_path(1, 2, max_hops=0) is False
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=15: {
+                1: [make_movie(id=101)],
+                2: [make_movie(id=102)],
+            }[pid]
+        )
+        assert await _has_short_path(tmdb, 1, 2, max_hops=0) is False
 
     async def test_two_hop_via_shared_costar(self):
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(
-                side_effect=lambda pid, limit=15: {
-                    1: [make_movie(id=101)],
-                    2: [make_movie(id=102)],
-                }[pid]
-            )
-            costar = make_cast(id=99, name="Costar")
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {
-                    101: [costar],
-                    102: [costar],
-                }[mid]
-            )
-            assert await _has_short_path(1, 2, max_hops=2) is True
+        costar = make_cast(id=99, name="Costar")
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=15: {
+                1: [make_movie(id=101)],
+                2: [make_movie(id=102)],
+            }[pid],
+            get_movie_cast=lambda mid: {
+                101: [costar],
+                102: [costar],
+            }[mid],
+        )
+        assert await _has_short_path(tmdb, 1, 2, max_hops=2) is True
 
     async def test_two_hop_excludes_start_and_end_actors(self):
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(
-                side_effect=lambda pid, limit=15: {
-                    1: [make_movie(id=101)],
-                    2: [make_movie(id=102)],
-                }[pid]
-            )
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {
-                    101: [make_cast(id=1, name="Start")],
-                    102: [make_cast(id=2, name="End")],
-                }[mid]
-            )
-            assert await _has_short_path(1, 2, max_hops=2) is False
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=15: {
+                1: [make_movie(id=101)],
+                2: [make_movie(id=102)],
+            }[pid],
+            get_movie_cast=lambda mid: {
+                101: [make_cast(id=1, name="Start")],
+                102: [make_cast(id=2, name="End")],
+            }[mid],
+        )
+        assert await _has_short_path(tmdb, 1, 2, max_hops=2) is False
 
 
 # --- _pick_popular_actor ---
@@ -109,24 +107,22 @@ class TestPickPopularActor:
             make_person(id=1, name="Famous", popularity=20.0),
             make_person(id=2, name="Unknown", popularity=1.0),
         ]
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=people)
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 1
-                mock_random.choice.side_effect = lambda x: x[0]
-                result = await _pick_popular_actor(min_popularity=10.0)
+        tmdb = make_tmdb(get_popular_people=people)
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 1
+            mock_random.choice.side_effect = lambda x: x[0]
+            result = await _pick_popular_actor(tmdb, min_popularity=10.0)
 
         assert result.id == 1
         assert result.name == "Famous"
 
     async def test_falls_back_to_all_when_none_eligible(self):
         people = [make_person(id=1, name="Low", popularity=1.0)]
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=people)
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 1
-                mock_random.choice.side_effect = lambda x: x[0]
-                result = await _pick_popular_actor(min_popularity=50.0)
+        tmdb = make_tmdb(get_popular_people=people)
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 1
+            mock_random.choice.side_effect = lambda x: x[0]
+            result = await _pick_popular_actor(tmdb, min_popularity=50.0)
 
         assert result.id == 1
 
@@ -142,16 +138,14 @@ class TestRandomWalk:
         )
         end_cast = make_cast(id=2, name="End", profile_path="/end.jpg")
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(return_value=[end_cast])
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=2, name="End", popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                path = await _random_walk(start, hops=1, min_popularity=5.0)
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=20: [movie],
+            get_movie_cast=lambda mid: [end_cast],
+            get_person_details=lambda pid: make_person(id=2, name="End", popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.choice.side_effect = lambda x: x[0]
+            path = await _random_walk(tmdb, start, hops=1, min_popularity=5.0)
 
         assert path is not None
         assert len(path) == 3
@@ -164,27 +158,21 @@ class TestRandomWalk:
 
     async def test_returns_none_when_no_movies(self):
         start = make_person(id=1, name="Start")
-
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[])
-
-            path = await _random_walk(start, hops=1, min_popularity=5.0)
-
+        tmdb = make_tmdb(get_person_movies=lambda pid, limit=20: [])
+        path = await _random_walk(tmdb, start, hops=1, min_popularity=5.0)
         assert path is None
 
     async def test_returns_none_when_no_cast(self):
         start = make_person(id=1, name="Start")
         movie = make_movie(id=100)
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(
-                return_value=[make_cast(id=1, name="Start")]
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                path = await _random_walk(start, hops=1, min_popularity=5.0)
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=20: [movie],
+            get_movie_cast=lambda mid: [make_cast(id=1, name="Start")],
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.choice.side_effect = lambda x: x[0]
+            path = await _random_walk(tmdb, start, hops=1, min_popularity=5.0)
 
         assert path is None
 
@@ -197,30 +185,21 @@ class TestRandomWalk:
 
         call_count = 0
 
-        async def mock_get_movies(pid, limit=20):
+        def mock_get_movies(pid, limit=20):
             nonlocal call_count
             call_count += 1
-            if call_count == 1:
-                return [movie1, movie2]
             return [movie1, movie2]
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(side_effect=mock_get_movies)
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {
-                    100: [cast1],
-                    101: [cast2],
-                }[mid]
+        tmdb = make_tmdb(
+            get_person_movies=mock_get_movies,
+            get_movie_cast=lambda mid: {100: [cast1], 101: [cast2]}[mid],
+            get_person_details=lambda pid: make_person(id=3, popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.choice.side_effect = lambda x: x[0]
+            path = await _random_walk(
+                tmdb, start, hops=2, min_popularity=5.0, no_repeat_movies=True
             )
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=3, popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                path = await _random_walk(
-                    start, hops=2, min_popularity=5.0, no_repeat_movies=True
-                )
 
         assert path is not None
         movie_ids = [s["id"] for s in path if s["type"] == "movie"]
@@ -232,19 +211,17 @@ class TestRandomWalk:
         popular = make_cast(id=2, name="Popular")
         unpopular = make_cast(id=3, name="Unpopular")
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(return_value=[popular, unpopular])
-            mock_tmdb.get_person_details = AsyncMock(
-                side_effect=lambda pid: {
-                    2: make_person(id=2, name="Popular", popularity=20.0),
-                    3: make_person(id=3, name="Unpopular", popularity=1.0),
-                }[pid]
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                path = await _random_walk(start, hops=1, min_popularity=10.0)
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=20: [movie],
+            get_movie_cast=lambda mid: [popular, unpopular],
+            get_person_details=lambda pid: {
+                2: make_person(id=2, name="Popular", popularity=20.0),
+                3: make_person(id=3, name="Unpopular", popularity=1.0),
+            }[pid],
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.choice.side_effect = lambda x: x[0]
+            path = await _random_walk(tmdb, start, hops=1, min_popularity=10.0)
 
         assert path is not None
         assert path[-1]["name"] == "Popular"
@@ -255,17 +232,15 @@ class TestRandomWalk:
         cast_a = make_cast(id=2, name="Less Unpopular")
         cast_b = make_cast(id=3, name="More Unpopular")
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(return_value=[cast_a, cast_b])
-            mock_tmdb.get_person_details = AsyncMock(
-                side_effect=lambda pid: {
-                    2: make_person(id=2, popularity=3.0),
-                    3: make_person(id=3, popularity=1.0),
-                }[pid]
-            )
-
-            path = await _random_walk(start, hops=1, min_popularity=50.0)
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=20: [movie],
+            get_movie_cast=lambda mid: [cast_a, cast_b],
+            get_person_details=lambda pid: {
+                2: make_person(id=2, popularity=3.0),
+                3: make_person(id=3, popularity=1.0),
+            }[pid],
+        )
+        path = await _random_walk(tmdb, start, hops=1, min_popularity=50.0)
 
         assert path is not None
         assert path[-1]["id"] == 2
@@ -277,16 +252,14 @@ class TestRandomWalk:
         )
         end_cast = make_cast(id=2, name="End")
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie])
-            mock_tmdb.get_movie_cast = AsyncMock(return_value=[end_cast])
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=2, popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                path = await _random_walk(start, hops=1, min_popularity=5.0)
+        tmdb = make_tmdb(
+            get_person_movies=lambda pid, limit=20: [movie],
+            get_movie_cast=lambda mid: [end_cast],
+            get_person_details=lambda pid: make_person(id=2, popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.choice.side_effect = lambda x: x[0]
+            path = await _random_walk(tmdb, start, hops=1, min_popularity=5.0)
 
         movie_step = path[1]
         assert movie_step["title"] == "Cool Movie"
@@ -307,29 +280,26 @@ class TestGeneratePuzzle:
 
         call_count = 0
 
-        async def mock_get_movies(pid, limit=20):
+        def mock_get_movies(pid, limit=20):
             nonlocal call_count
             call_count += 1
             return [movie1, movie2]
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
-            mock_tmdb.get_person_movies = AsyncMock(side_effect=mock_get_movies)
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid]
-            )
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=3, name="End Actor", popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 2
-                mock_random.choice.side_effect = lambda x: x[0]
-                with patch(
-                    "cinema_game_backend.agents.puzzle_agent._has_short_path",
-                    new_callable=AsyncMock,
-                    return_value=False,
-                ):
-                    result = await generate_puzzle("easy")
+        tmdb = make_tmdb(
+            get_popular_people=[start],
+            get_person_movies=mock_get_movies,
+            get_movie_cast=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid],
+            get_person_details=lambda pid: make_person(id=3, name="End Actor", popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 2
+            mock_random.choice.side_effect = lambda x: x[0]
+            with patch(
+                "cinema_game_backend.agents.puzzle_agent._has_short_path",
+                new_callable=AsyncMock,
+                return_value=False,
+            ):
+                result = await generate_puzzle(tmdb, "easy")
 
         assert "start_actor" in result
         assert "end_actor" in result
@@ -356,40 +326,37 @@ class TestGeneratePuzzle:
             call_idx += 1
             return result
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[movie1, movie2])
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid]
-            )
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=3, popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 2
-                mock_random.choice.side_effect = lambda x: x[0]
-                with patch(
-                    "cinema_game_backend.agents.puzzle_agent._has_short_path",
-                    new_callable=AsyncMock,
-                    side_effect=mock_short_path,
-                ):
-                    result = await generate_puzzle("easy")
+        tmdb = make_tmdb(
+            get_popular_people=[start],
+            get_person_movies=lambda pid, limit=20: [movie1, movie2],
+            get_movie_cast=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid],
+            get_person_details=lambda pid: make_person(id=3, popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 2
+            mock_random.choice.side_effect = lambda x: x[0]
+            with patch(
+                "cinema_game_backend.agents.puzzle_agent._has_short_path",
+                new_callable=AsyncMock,
+                side_effect=mock_short_path,
+            ):
+                result = await generate_puzzle(tmdb, "easy")
 
         assert result is not None
         assert call_idx == 3
 
     async def test_raises_after_max_retries(self):
         start = make_person(id=1, name="Start", popularity=10.0)
+        tmdb = make_tmdb(
+            get_popular_people=[start],
+            get_person_movies=lambda pid, limit=20: [],
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 3
+            mock_random.choice.side_effect = lambda x: x[0]
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
-            mock_tmdb.get_person_movies = AsyncMock(return_value=[])
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 3
-                mock_random.choice.side_effect = lambda x: x[0]
-
-                with pytest.raises(RuntimeError, match="Failed to generate"):
-                    await generate_puzzle("medium")
+            with pytest.raises(RuntimeError, match="Failed to generate"):
+                await generate_puzzle(tmdb, "medium")
 
     async def test_easy_uses_no_repeat_movies(self):
         start = make_person(id=1, name="Start", popularity=10.0)
@@ -398,31 +365,28 @@ class TestGeneratePuzzle:
         mid_cast = make_cast(id=2, name="Mid")
         end_cast = make_cast(id=3, name="End")
 
-        with patch("cinema_game_backend.agents.puzzle_agent.tmdb") as mock_tmdb:
-            mock_tmdb.get_popular_people = AsyncMock(return_value=[start])
-            call_count = 0
+        call_count = 0
 
-            async def mock_get_movies(pid, limit=20):
-                nonlocal call_count
-                call_count += 1
-                return [movie1, movie2]
+        def mock_get_movies(pid, limit=20):
+            nonlocal call_count
+            call_count += 1
+            return [movie1, movie2]
 
-            mock_tmdb.get_person_movies = AsyncMock(side_effect=mock_get_movies)
-            mock_tmdb.get_movie_cast = AsyncMock(
-                side_effect=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid]
-            )
-            mock_tmdb.get_person_details = AsyncMock(
-                return_value=make_person(id=3, popularity=10.0)
-            )
-            with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
-                mock_random.randint.return_value = 2
-                mock_random.choice.side_effect = lambda x: x[0]
-                with patch(
-                    "cinema_game_backend.agents.puzzle_agent._has_short_path",
-                    new_callable=AsyncMock,
-                    return_value=False,
-                ):
-                    result = await generate_puzzle("easy")
+        tmdb = make_tmdb(
+            get_popular_people=[start],
+            get_person_movies=mock_get_movies,
+            get_movie_cast=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid],
+            get_person_details=lambda pid: make_person(id=3, popularity=10.0),
+        )
+        with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
+            mock_random.randint.return_value = 2
+            mock_random.choice.side_effect = lambda x: x[0]
+            with patch(
+                "cinema_game_backend.agents.puzzle_agent._has_short_path",
+                new_callable=AsyncMock,
+                return_value=False,
+            ):
+                result = await generate_puzzle(tmdb, "easy")
 
         movie_ids = [s["id"] for s in result["known_solution"] if s["type"] == "movie"]
         assert len(movie_ids) == len(set(movie_ids))
