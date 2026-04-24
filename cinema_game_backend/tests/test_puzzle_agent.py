@@ -33,7 +33,13 @@ def make_cast(id=1, name="Actor", character="Role", order=0, profile_path=None):
 def make_tmdb(**methods):
     tmdb = MagicMock()
     for name, impl in methods.items():
-        setattr(tmdb, name, AsyncMock(side_effect=impl) if callable(impl) else AsyncMock(return_value=impl))
+        setattr(
+            tmdb,
+            name,
+            AsyncMock(side_effect=impl)
+            if callable(impl)
+            else AsyncMock(return_value=impl),
+        )
     return tmdb
 
 
@@ -141,7 +147,9 @@ class TestRandomWalk:
         tmdb = make_tmdb(
             get_person_movies=lambda pid, limit=20: [movie],
             get_movie_cast=lambda mid: [end_cast],
-            get_person_details=lambda pid: make_person(id=2, name="End", popularity=10.0),
+            get_person_details=lambda pid: make_person(
+                id=2, name="End", popularity=10.0
+            ),
         )
         with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
             mock_random.choice.side_effect = lambda x: x[0]
@@ -289,7 +297,9 @@ class TestGeneratePuzzle:
             get_popular_people=[start],
             get_person_movies=mock_get_movies,
             get_movie_cast=lambda mid: {100: [mid_cast], 101: [end_cast]}[mid],
-            get_person_details=lambda pid: make_person(id=3, name="End Actor", popularity=10.0),
+            get_person_details=lambda pid: make_person(
+                id=3, name="End Actor", popularity=10.0
+            ),
         )
         with patch("cinema_game_backend.agents.puzzle_agent.random") as mock_random:
             mock_random.randint.return_value = 2

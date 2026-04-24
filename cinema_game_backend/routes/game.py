@@ -78,7 +78,9 @@ async def new_game(difficulty: str = "medium", tmdb: TMDbClient = Depends(get_tm
 
 @router.post("/{game_id}/move", response_model=MoveResponse)
 @traceable(run_type="chain", name="make_move")
-async def make_move(game_id: str, body: MoveRequest, tmdb: TMDbClient = Depends(get_tmdb)):
+async def make_move(
+    game_id: str, body: MoveRequest, tmdb: TMDbClient = Depends(get_tmdb)
+):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -167,7 +169,8 @@ async def undo_move(game_id: str, tmdb: TMDbClient = Depends(get_tmdb)):
 
     last_move = game["moves"].pop()
     restored_actor = await _resolve_actor(
-        tmdb, last_move["from_actor"],
+        tmdb,
+        last_move["from_actor"],
         fallback_id=game["start_actor"]["id"] if not game["moves"] else 0,
     )
     strikes = game.get("strikes", 0)

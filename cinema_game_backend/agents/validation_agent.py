@@ -90,7 +90,11 @@ async def validate_move(
             logger.warning(
                 "ValidationResult failed schema validation. Parsed: %r", parsed
             )
-            with trace(name="parse_error", run_type="tool", inputs={"raw": raw, "parsed": parsed}) as t:
+            with trace(
+                name="parse_error",
+                run_type="tool",
+                inputs={"raw": raw, "parsed": parsed},
+            ) as t:
                 t.error = "ValidationResult schema validation failed"
 
     logger.warning("Could not parse validation result. Raw agent response: %r", raw)

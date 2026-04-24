@@ -189,7 +189,9 @@ async def generate_puzzle(tmdb: TMDbClient, difficulty: str = "medium") -> dict:
         )
         if not path or len(path) < 3:
             continue
-        if await _has_short_path(tmdb, path[0]["id"], path[-1]["id"], shortcut_threshold):
+        if await _has_short_path(
+            tmdb, path[0]["id"], path[-1]["id"], shortcut_threshold
+        ):
             continue
         break
     else:
