@@ -91,7 +91,7 @@ tqdm = "^4.66.4"
 
 [package.source]
 type = "git"
-url = "ssh://git@github.com/newexo/artist-graph.git"
+url = "https://github.com/newexo/artist-graph.git"
 reference = "v0.2.5"
 resolved_reference = "c4f9930af8d95f207675c5d21bbf47083d978378"
 
@@ -1979,4 +1979,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "89d0de5cc72d3fe9890f57427c26419c6c8d8304356eb3117363d832437db231"
+content-hash = "67c1fe750e3c1581ee3e45671d259c9c9be396d828d30ad79f742be9c3951922"
