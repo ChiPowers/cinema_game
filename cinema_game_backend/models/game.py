@@ -1,10 +1,18 @@
+from enum import Enum
 from pydantic import BaseModel
 from typing import Literal
+
+
+class Confidence(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
 
 
 class ValidationResult(BaseModel):
     valid: bool
     explanation: str
+    confidence: Confidence = Confidence.high
     movie_id: int | None = None
     movie_title: str | None = None
     movie_year: str | None = None
