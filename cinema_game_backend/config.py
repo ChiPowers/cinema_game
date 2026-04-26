@@ -28,11 +28,11 @@ def create_tmdb_client() -> TMDbClient:
         backdrop_base=TMDB_BACKDROP_BASE,
     )
 
-    if TMDB_CACHE_PATH:
+    if TMDB_CACHE_DISABLE:
+        return TMDbClient(config)
+    elif TMDB_CACHE_PATH:
         engine = create_engine(f"sqlite:///{TMDB_CACHE_PATH}")
         return CachedTMDbClient(config, engine=engine)
-    elif TMDB_CACHE_DISABLE:
-        return TMDbClient(config)
     else:
         raise RuntimeError(
             "TMDB_CACHE_PATH must be set to a writable file path for the TMDb cache, "
