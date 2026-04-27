@@ -40,6 +40,22 @@ async def _tool_get_movie_cast(tmdb: TMDbClient, tool_input: dict) -> str:
     return json.dumps([c.model_dump(mode="json") for c in result])
 
 
+@traceable(run_type="llm", name="claude_call")
+def _call_llm_once(messages: list, system: str) -> anthropic.types.Message:
+    """Single traced LLM call without tools — for structured one-shot prompts.
+
+    Swap for provider.invoke_json(prompt, schema) when reusable-llm-provider
+    is integrated: the call site in validation_agent._validate_fast_path becomes
+    a one-line change.
+    """
+    return client.messages.create(
+        model=MODEL,
+        max_tokens=512,
+        system=system,
+        messages=messages,
+    )
+
+
 async def execute_tool(tmdb: TMDbClient, name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
