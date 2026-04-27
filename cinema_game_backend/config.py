@@ -1,4 +1,11 @@
 import os
+
+from sqlalchemy import create_engine
+
+from art_graph.cinema_data_providers.cache.cached_client import CachedTMDbClient
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+from art_graph.cinema_data_providers.tmdb.config import TMDbConfig
+
 from .env import load_cinema_game_env
 
 load_cinema_game_env()
@@ -6,9 +13,32 @@ load_cinema_game_env()
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
+TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
+TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
+
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280"
+
+
+def create_tmdb_client() -> TMDbClient:
+    config = TMDbConfig(
+        api_key=TMDB_API_KEY,
+        image_base=TMDB_IMAGE_BASE,
+        backdrop_base=TMDB_BACKDROP_BASE,
+    )
+
+    if TMDB_CACHE_DISABLE:
+        return TMDbClient(config)
+    elif TMDB_CACHE_PATH:
+        engine = create_engine(f"sqlite:///{TMDB_CACHE_PATH}")
+        return CachedTMDbClient(config, engine=engine)
+    else:
+        raise RuntimeError(
+            "TMDB_CACHE_PATH must be set to a writable file path for the TMDb cache, "
+            "or set TMDB_CACHE_DISABLE=true to run without caching."
+        )
+
 
 MODEL = "claude-sonnet-4-6"
 DB_PATH = "cinema_game.db"

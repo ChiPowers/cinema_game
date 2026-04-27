@@ -10,6 +10,7 @@ and external service access.
 
 import pytest
 from cinema_game_backend.env import load_cinema_game_env
+from cinema_game_backend.config import create_tmdb_client
 from cinema_game_backend.agents.base import run_agent
 from cinema_game_backend.agents.validation_agent import validate_move
 from cinema_game_backend.tools.definitions import ALL_TOOLS
@@ -19,25 +20,38 @@ load_cinema_game_env()
 
 
 @pytest.fixture
+def tmdb():
+    """Provide a real TMDb client configured from secrets/.env."""
+    return create_tmdb_client()
+
+
+@pytest.fixture
 def tmdb_tools():
     """Provide the TMDb tool definitions for agent use."""
     return ALL_TOOLS
 
 
 @pytest.fixture
-def run_agentic_loop():
+def run_agentic_loop(tmdb):
     """Fixture to run the agentic loop with clean environment.
 
-    Returns the run_agent function, allowing tests to call it directly
-    with custom system prompts and messages.
+    Returns a wrapper that injects the tmdb client into run_agent.
     """
-    return run_agent
+
+    async def _run(system, user_message, tools, max_iterations=10):
+        return await run_agent(tmdb, system, user_message, tools, max_iterations)
+
+    return _run
 
 
 @pytest.fixture
-def validate_move_fixture():
+def validate_move_fixture(tmdb):
     """Fixture to validate movie connections.
 
-    Returns the validate_move async function for testing the validation agent.
+    Returns a wrapper that injects the tmdb client into validate_move.
     """
-    return validate_move
+
+    async def _validate(from_actor, movie_title, to_actor, **kwargs):
+        return await validate_move(tmdb, from_actor, movie_title, to_actor, **kwargs)
+
+    return _validate

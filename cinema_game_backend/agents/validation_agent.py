@@ -10,6 +10,7 @@ import json
 import logging
 import re
 from langsmith import traceable, trace
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from .base import run_agent
 from ..models.game import ValidationResult
 from ..tools.definitions import ALL_TOOLS
@@ -56,7 +57,7 @@ def _extract_json(text: str) -> dict | None:
 
 @traceable(run_type="chain", name="validate_move")
 async def validate_move(
-    from_actor: str, movie_title: str, to_actor: str
+    tmdb: TMDbClient, from_actor: str, movie_title: str, to_actor: str
 ) -> ValidationResult:
     """
     Verify that from_actor and to_actor both appeared in movie_title.
@@ -79,7 +80,7 @@ async def validate_move(
         f"Return only the raw JSON object, nothing else."
     )
 
-    raw = await run_agent(SYSTEM_PROMPT, user_message, ALL_TOOLS)
+    raw = await run_agent(tmdb, SYSTEM_PROMPT, user_message, ALL_TOOLS)
 
     parsed = _extract_json(raw)
     if parsed:
@@ -89,7 +90,11 @@ async def validate_move(
             logger.warning(
                 "ValidationResult failed schema validation. Parsed: %r", parsed
             )
-            with trace(name="parse_error", run_type="tool", inputs={"raw": raw, "parsed": parsed}) as t:
+            with trace(
+                name="parse_error",
+                run_type="tool",
+                inputs={"raw": raw, "parsed": parsed},
+            ) as t:
                 t.error = "ValidationResult schema validation failed"
 
     logger.warning("Could not parse validation result. Raw agent response: %r", raw)

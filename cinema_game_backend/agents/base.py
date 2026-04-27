@@ -9,14 +9,14 @@ so we can substitute other providers or run locally with Ollama.
 import json
 import anthropic
 from langsmith import traceable
-from ..tools.tmdb import tmdb
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..config import MODEL, ANTHROPIC_API_KEY
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 @traceable(run_type="tool", name="tmdb_search_actor")
-async def _tool_search_actor(tool_input: dict) -> str:
+async def _tool_search_actor(tmdb: TMDbClient, tool_input: dict) -> str:
     result = await tmdb.search_person(tool_input["name"])
     return json.dumps(
         result.model_dump(mode="json") if result else {"error": "Actor not found"}
@@ -24,7 +24,7 @@ async def _tool_search_actor(tool_input: dict) -> str:
 
 
 @traceable(run_type="tool", name="tmdb_search_movie")
-async def _tool_search_movie(tool_input: dict) -> str:
+async def _tool_search_movie(tmdb: TMDbClient, tool_input: dict) -> str:
     result = await tmdb.search_movie(
         tool_input["title"],
         year=tool_input.get("year"),
@@ -35,19 +35,19 @@ async def _tool_search_movie(tool_input: dict) -> str:
 
 
 @traceable(run_type="tool", name="tmdb_get_movie_cast")
-async def _tool_get_movie_cast(tool_input: dict) -> str:
+async def _tool_get_movie_cast(tmdb: TMDbClient, tool_input: dict) -> str:
     result = await tmdb.get_movie_cast(tool_input["movie_id"])
     return json.dumps([c.model_dump(mode="json") for c in result])
 
 
-async def execute_tool(name: str, tool_input: dict) -> str:
+async def execute_tool(tmdb: TMDbClient, name: str, tool_input: dict) -> str:
     """Dispatch a tool call to the appropriate TMDb handler."""
     if name == "search_actor":
-        return await _tool_search_actor(tool_input)
+        return await _tool_search_actor(tmdb, tool_input)
     if name == "search_movie":
-        return await _tool_search_movie(tool_input)
+        return await _tool_search_movie(tmdb, tool_input)
     if name == "get_movie_cast":
-        return await _tool_get_movie_cast(tool_input)
+        return await _tool_get_movie_cast(tmdb, tool_input)
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -65,7 +65,11 @@ def _call_llm(messages: list, system: str, tools: list):
 
 @traceable(run_type="chain", name="agentic_loop")
 async def run_agent(
-    system: str, user_message: str, tools: list, max_iterations: int = 10
+    tmdb: TMDbClient,
+    system: str,
+    user_message: str,
+    tools: list,
+    max_iterations: int = 10,
 ) -> str:
     """
     Async agentic loop. Runs Claude with tools until stop_reason == 'end_turn'.
@@ -95,7 +99,7 @@ async def run_agent(
                 # web_search is executed server-side — skip client dispatch
                 if block.name == "web_search":
                     continue
-                result = await execute_tool(block.name, block.input)
+                result = await execute_tool(tmdb, block.name, block.input)
                 tool_results.append(
                     {
                         "type": "tool_result",
