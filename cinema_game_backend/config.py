@@ -40,7 +40,7 @@ def create_tmdb_client() -> TMDbClient:
         )
 
 
-MODEL = "claude-sonnet-4-6"
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 DB_PATH = "cinema_game.db"
 
 # Hops = number of actor→movie→actor steps.

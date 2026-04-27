@@ -12,7 +12,7 @@ from langsmith import traceable
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..config import MODEL, ANTHROPIC_API_KEY
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, max_retries=6)
 
 
 @traceable(run_type="tool", name="tmdb_search_actor")
@@ -102,10 +102,8 @@ async def run_agent(
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":
-            for block in response.content:
-                if block.type == "text":
-                    return block.text
-            return ""
+            text_parts = [block.text for block in response.content if block.type == "text"]
+            return "\n\n".join(text_parts)
 
         if response.stop_reason == "tool_use":
             tool_results = []
