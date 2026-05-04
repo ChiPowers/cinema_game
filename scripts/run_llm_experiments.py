@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from cinema_game_backend.env import load_cinema_game_env
 load_cinema_game_env()
 
-from cinema_game_backend.experiments_llm_harness import run_matrix
+from cinema_game_backend.experiments_llm_harness import run_matrix  # noqa: E402
 
 
 def main() -> int:
