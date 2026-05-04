@@ -1,9 +1,6 @@
 """
 Agentic loop base: runs Claude with tool use until it reaches a final answer.
 Handles both custom TMDb tools and Claude's built-in web_search tool.
-
-TODO: Abstract the LLM provider behind a testable interface (e.g. langchain)
-so we can substitute other providers or run locally with Ollama.
 """
 
 import json
@@ -13,6 +10,7 @@ from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..config import MODEL, ANTHROPIC_API_KEY
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY, max_retries=6)
+async_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY, max_retries=6)
 
 
 @traceable(run_type="tool", name="tmdb_search_actor")
@@ -41,14 +39,9 @@ async def _tool_get_movie_cast(tmdb: TMDbClient, tool_input: dict) -> str:
 
 
 @traceable(run_type="llm", name="claude_call")
-def _call_llm_once(messages: list, system: str) -> anthropic.types.Message:
-    """Single traced LLM call without tools — for structured one-shot prompts.
-
-    Swap for provider.invoke_json(prompt, schema) when reusable-llm-provider
-    is integrated: the call site in validation_agent._validate_fast_path becomes
-    a one-line change.
-    """
-    return client.messages.create(
+async def _call_llm_once(messages: list, system: str) -> anthropic.types.Message:
+    """Single traced LLM call without tools — for structured one-shot prompts."""
+    return await async_client.messages.create(
         model=MODEL,
         max_tokens=512,
         system=system,

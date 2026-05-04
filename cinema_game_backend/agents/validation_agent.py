@@ -43,7 +43,7 @@ If a movie title is ambiguous or might have a different exact spelling, try web_
 
 CRITICAL: Your entire response must be ONLY a raw JSON object. No prose, no markdown, no code fences.
 Start your response with { and end with }. The shape must be exactly:
-{"valid": true|false, "explanation": "brief reason", "confidence": "high", "movie_id": int|null, "movie_title": "str|null", "movie_year": "str|null", "poster_url": "str|null", "backdrop_url": "str|null", "from_actor_found": true|false, "to_actor_found": true|false}"""
+{"valid": true|false, "explanation": "brief reason", "confidence": "high"|"medium"|"low", "movie_id": int|null, "movie_title": "str|null", "movie_year": "str|null", "poster_url": "str|null", "backdrop_url": "str|null", "from_actor_found": true|false, "to_actor_found": true|false}"""
 
 
 def _extract_json(text: str) -> dict | None:
@@ -86,11 +86,7 @@ async def _validate_fast_path(
     to_actor: str,
     context: dict,
 ) -> ValidationResult | None:
-    """One-shot validation using pre-fetched context. No tool calls needed.
-
-    When reusable-llm-provider is integrated, replace _call_llm_once + manual
-    parsing with: provider.invoke_json(prompt, ValidationResult)
-    """
+    """One-shot validation using pre-fetched context. No tool calls needed."""
     movie = context["movie"]
     cast = context["cast"]
     cast_names = ", ".join(c.name for c in cast[:60])
@@ -102,7 +98,7 @@ async def _validate_fast_path(
         f"Return only the raw JSON object."
     )
 
-    response = _call_llm_once(
+    response = await _call_llm_once(
         [{"role": "user", "content": prompt}],
         FAST_PATH_SYSTEM,
     )
@@ -166,7 +162,7 @@ async def _validate_fallback(
     return ValidationResult(
         valid=False,
         explanation="Could not parse validation result. Please try again.",
-        confidence=Confidence.high,
+        confidence=Confidence.low,
     )
 
 
