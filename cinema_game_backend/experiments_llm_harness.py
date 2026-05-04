@@ -165,7 +165,10 @@ def _invoke_model(model: HarnessModel, system: str, user: str, max_tokens: int) 
         payload = {
             "model": model.model,
             "input": [
-                {"role": "developer", "content": [{"type": "input_text", "text": system}]},
+                {
+                    "role": "developer",
+                    "content": [{"type": "input_text", "text": system}],
+                },
                 {"role": "user", "content": [{"type": "input_text", "text": user}]},
             ],
             "max_output_tokens": max_tokens,
@@ -253,7 +256,11 @@ def _target_for_model(model: HarnessModel, max_tokens: int):
     return _target
 
 
-def _json_shape_evaluator(inputs: dict[str, Any], outputs: dict[str, Any], reference_outputs: dict[str, Any] | None = None) -> dict[str, Any]:
+def _json_shape_evaluator(
+    inputs: dict[str, Any],
+    outputs: dict[str, Any],
+    reference_outputs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     del reference_outputs
     must_include = inputs.get("must_include") or []
     text = outputs.get("text", "")
@@ -278,7 +285,10 @@ _DATASET_NAME = "cinema-game-validation-prompts"
 def _ensure_dataset(client: Client) -> None:
     """Create the LangSmith dataset from built-in examples if it doesn't exist or is empty."""
     has_ds = client.has_dataset(dataset_name=_DATASET_NAME)
-    if has_ds and next(client.list_examples(dataset_name=_DATASET_NAME), None) is not None:
+    if (
+        has_ds
+        and next(client.list_examples(dataset_name=_DATASET_NAME), None) is not None
+    ):
         return
 
     ls_inputs, ls_outputs = [], []

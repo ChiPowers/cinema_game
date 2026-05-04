@@ -102,7 +102,9 @@ async def run_agent(
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":
-            text_parts = [block.text for block in response.content if block.type == "text"]
+            text_parts = [
+                block.text for block in response.content if block.type == "text"
+            ]
             return "\n\n".join(text_parts)
 
         if response.stop_reason == "tool_use":

@@ -23,9 +23,9 @@ class TestTmdbTools:
         for tool in TMDB_TOOLS:
             schema = tool["input_schema"]
             for req in schema["required"]:
-                assert req in schema["properties"], (
-                    f"{tool['name']} requires '{req}' but it's not in properties"
-                )
+                assert (
+                    req in schema["properties"]
+                ), f"{tool['name']} requires '{req}' but it's not in properties"
 
 
 class TestWebSearchTool:

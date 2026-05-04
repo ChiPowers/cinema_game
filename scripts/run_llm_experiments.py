@@ -7,13 +7,16 @@ from datetime import datetime, timezone
 
 # Load secrets/.env before any langsmith or anthropic clients are constructed.
 from cinema_game_backend.env import load_cinema_game_env
+
 load_cinema_game_env()
 
 from cinema_game_backend.experiments_llm_harness import run_matrix
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run Cinema Game LLM matrix experiments")
+    parser = argparse.ArgumentParser(
+        description="Run Cinema Game LLM matrix experiments"
+    )
     parser.add_argument(
         "--models",
         default="",

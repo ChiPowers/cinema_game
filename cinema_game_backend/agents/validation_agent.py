@@ -126,7 +126,9 @@ async def _validate_fast_path(
     try:
         return ValidationResult.model_validate(parsed)
     except Exception:
-        with trace(name="parse_error", run_type="tool", inputs={"raw": raw, "parsed": parsed}) as t:
+        with trace(
+            name="parse_error", run_type="tool", inputs={"raw": raw, "parsed": parsed}
+        ) as t:
             t.error = "Fast path: ValidationResult schema validation failed"
         return None
 
@@ -158,8 +160,14 @@ async def _validate_fallback(
         try:
             return ValidationResult.model_validate(parsed)
         except Exception:
-            logger.warning("Fallback ValidationResult failed schema validation. Parsed: %r", parsed)
-            with trace(name="parse_error", run_type="tool", inputs={"raw": raw, "parsed": parsed}) as t:
+            logger.warning(
+                "Fallback ValidationResult failed schema validation. Parsed: %r", parsed
+            )
+            with trace(
+                name="parse_error",
+                run_type="tool",
+                inputs={"raw": raw, "parsed": parsed},
+            ) as t:
                 t.error = "Fallback: ValidationResult schema validation failed"
 
     logger.warning("Fallback could not parse validation result. Raw: %r", raw)
@@ -198,7 +206,10 @@ async def validate_move(
         movie = await tmdb.search_movie(result.movie_title or movie_title)
         if movie:
             result = result.model_copy(
-                update={"poster_url": movie.poster_url, "backdrop_url": movie.backdrop_url}
+                update={
+                    "poster_url": movie.poster_url,
+                    "backdrop_url": movie.backdrop_url,
+                }
             )
 
     return result
