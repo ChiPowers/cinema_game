@@ -118,8 +118,10 @@ async def _validate_fast_path(
     parsed.setdefault("movie_id", movie.id)
     parsed.setdefault("movie_title", movie.title)
     parsed.setdefault("movie_year", movie.year)
-    parsed.setdefault("poster_url", movie.poster_url)
-    parsed.setdefault("backdrop_url", movie.backdrop_url)
+    # Always use TMDb ground-truth URLs — Claude returns null for these
+    # because they aren't in the prompt, so setdefault() would never fire.
+    parsed["poster_url"] = movie.poster_url
+    parsed["backdrop_url"] = movie.backdrop_url
 
     try:
         return ValidationResult.model_validate(parsed)
@@ -188,4 +190,15 @@ async def validate_move(
         if result is not None and result.confidence != Confidence.low:
             return result
 
-    return await _validate_fallback(tmdb, from_actor, movie_title, to_actor)
+    result = await _validate_fallback(tmdb, from_actor, movie_title, to_actor)
+
+    # Fallback agents don't reliably copy poster URLs from tool results.
+    # If we have a movie_id but no poster, do one cheap TMDb lookup.
+    if result.movie_id and not result.poster_url:
+        movie = await tmdb.search_movie(result.movie_title or movie_title)
+        if movie:
+            result = result.model_copy(
+                update={"poster_url": movie.poster_url, "backdrop_url": movie.backdrop_url}
+            )
+
+    return result
