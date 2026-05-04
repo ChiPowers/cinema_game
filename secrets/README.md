@@ -13,6 +13,9 @@ cp .env.example .env
 Edit `.env` with your keys:
 - `TMDB_API_KEY`: Get from [The Movie Database (TMDb)](https://www.themoviedb.org/settings/api)
 - `ANTHROPIC_API_KEY`: Get from [Anthropic](https://console.anthropic.com/)
+- `OPENAI_API_KEY`: For GPT-5 mini
+- `OPENROUTER_API_KEY`: For Kimi K2 and Llama 4 Maverick via OpenRouter
+- `GEMINI_API_KEY`: For Gemini Flash models
 
 The `.env` file is automatically loaded by `cinema_game_backend/env.py` when the backend starts.
 

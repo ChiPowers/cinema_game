@@ -52,6 +52,9 @@ Copy `secrets/.env.example` to `secrets/.env` and fill in your keys:
 ```
 TMDB_API_KEY=...
 ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...
+OPENROUTER_API_KEY=...
+GEMINI_API_KEY=...
 ```
 
 **TMDb cache** — one of these must be set or the app will refuse to start:
@@ -72,6 +75,30 @@ LANGCHAIN_PROJECT=cinema-game
 ```
 
 See `secrets/README.md` for more detail.
+
+### LLM experiment harness (LangSmith)
+
+Run a model matrix over Cinema Game prompt surfaces and log each model run as a LangSmith experiment:
+
+```bash
+poetry run python scripts/run_llm_experiments.py --prefix cinema-game-llm-matrix
+```
+
+Run only a subset:
+
+```bash
+poetry run python scripts/run_llm_experiments.py --models haiku_4_5,sonnet_4_5,gpt_5_mini
+```
+
+Current model aliases:
+- `haiku_4_5`
+- `sonnet_4_5`
+- `gpt_5_mini`
+- `kimi_k2`
+- `gemini_3_flash`
+- `llama_4_maverick`
+
+If a provider's canonical model id changes, set the `EXPERIMENT_MODEL_*` env vars in `secrets/.env`.
 
 ### Development with Make
 

@@ -12,6 +12,9 @@ load_cinema_game_env()
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
