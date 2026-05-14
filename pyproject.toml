@@ -13,7 +13,7 @@ fastapi = "^0.135.2"
 uvicorn = "^0.30.0"
 python-dotenv = "^1.0.0"
 pydantic = "^2.12.5"
-langsmith = "^0.7.31"
+langsmith = ">=0.7.31,<0.9.0"
 rapidfuzz = "^3.12.0"
 art-graph = {git = "https://github.com/newexo/artist-graph.git", tag = "v0.2.7"}
 reusable-llm-provider = {git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.3.0"}

@@ -7,8 +7,7 @@ e.g. nicknames like "Larry" for "Laurence".
 """
 
 import logging
-from langsmith import traceable
-from langsmith.run_helpers import get_current_run_tree
+from langsmith import traceable, get_current_run_tree
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from ..matching import find_actor_in_cast, ActorMatch
 from ..models.game import Confidence, ValidationResult
