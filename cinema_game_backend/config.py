@@ -18,6 +18,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
+NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET", "")
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "")
+
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
