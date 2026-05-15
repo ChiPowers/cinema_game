@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import create_tmdb_client, create_llm_provider
 from .database import init_db
 from .routes.game import router as game_router
+from .routes.auth import router as auth_router
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ app.add_middleware(
 )
 
 app.include_router(game_router)
+app.include_router(auth_router)
 
 
 @app.get("/health")
