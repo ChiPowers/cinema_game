@@ -6,15 +6,15 @@ Usage:
   poetry run python scripts/manage_beta_users.py remove email@example.com
   poetry run python scripts/manage_beta_users.py list
 """
+
 import sys
 
-sys.path.insert(0, ".")
-
-from cinema_game_backend.env import load_cinema_game_env
-
-load_cinema_game_env()
-
-from cinema_game_backend.database import init_db, add_beta_user, remove_beta_user, list_beta_users
+from cinema_game_backend.database import (
+    init_db,
+    add_beta_user,
+    remove_beta_user,
+    list_beta_users,
+)
 
 init_db()
 
