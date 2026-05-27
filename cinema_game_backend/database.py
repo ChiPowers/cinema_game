@@ -47,7 +47,9 @@ def init_db():
 
 def is_beta_user(email: str) -> bool:
     conn = get_db()
-    row = conn.execute("SELECT 1 FROM beta_users WHERE email = ?", (email.lower(),)).fetchone()
+    row = conn.execute(
+        "SELECT 1 FROM beta_users WHERE email = ?", (email.lower(),)
+    ).fetchone()
     conn.close()
     return row is not None
 

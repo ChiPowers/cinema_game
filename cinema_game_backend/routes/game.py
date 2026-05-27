@@ -41,7 +41,11 @@ def _reached_end(next_actor_id: int, next_actor_name: str, end_actor: dict) -> b
 
 @router.post("/new", response_model=NewGameResponse)
 @traceable(run_type="chain", name="new_game")
-async def new_game(difficulty: str = "medium", tmdb: TMDbClient = Depends(get_tmdb), _user: dict = Depends(require_auth)):
+async def new_game(
+    difficulty: str = "medium",
+    tmdb: TMDbClient = Depends(get_tmdb),
+    _user: dict = Depends(require_auth),
+):
     if difficulty not in ("easy", "medium", "hard"):
         raise HTTPException(
             status_code=400, detail="difficulty must be easy, medium, or hard"
@@ -165,7 +169,11 @@ async def make_move(
 
 @router.delete("/{game_id}/move", response_model=UndoResponse)
 @traceable(run_type="chain", name="undo_move")
-async def undo_move(game_id: str, tmdb: TMDbClient = Depends(get_tmdb), _user: dict = Depends(require_auth)):
+async def undo_move(
+    game_id: str,
+    tmdb: TMDbClient = Depends(get_tmdb),
+    _user: dict = Depends(require_auth),
+):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
