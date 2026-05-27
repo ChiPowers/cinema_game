@@ -13,6 +13,8 @@ def get_llm(request: Request):
 
 
 async def require_auth(authorization: str = Header(...)) -> dict:
+    if not NEXTAUTH_SECRET:
+        raise HTTPException(status_code=500, detail="Server misconfigured")
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
     token = authorization[7:]

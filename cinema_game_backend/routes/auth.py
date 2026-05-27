@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Header, HTTPException
+import hmac
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from ..config import INTERNAL_SECRET
 from ..database import is_beta_user
@@ -11,16 +12,17 @@ class BetaCheckRequest(BaseModel):
 
 
 def _require_internal(x_internal_secret: str = Header(..., alias="x-internal-secret")):
-    if x_internal_secret != INTERNAL_SECRET:
+    if not INTERNAL_SECRET:
+        raise HTTPException(status_code=500, detail="Server misconfigured")
+    if not hmac.compare_digest(x_internal_secret, INTERNAL_SECRET):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
 @router.post("/check-beta", status_code=200)
 async def check_beta(
     body: BetaCheckRequest,
-    x_internal_secret: str = Header(..., alias="x-internal-secret"),
+    _: None = Depends(_require_internal),
 ):
-    _require_internal(x_internal_secret)
     if not is_beta_user(body.email):
         raise HTTPException(status_code=403, detail="Not in beta")
     return {"allowed": True}
