@@ -13,7 +13,7 @@ from ..models.game import (
 )
 from ..agents.puzzle_agent import generate_puzzle
 from ..agents.validation_agent import validate_move
-from ..dependencies import get_tmdb, get_llm
+from ..dependencies import get_tmdb, get_llm, require_auth
 from ..database import save_game, load_game, update_game
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -41,7 +41,11 @@ def _reached_end(next_actor_id: int, next_actor_name: str, end_actor: dict) -> b
 
 @router.post("/new", response_model=NewGameResponse)
 @traceable(run_type="chain", name="new_game")
-async def new_game(difficulty: str = "medium", tmdb: TMDbClient = Depends(get_tmdb)):
+async def new_game(
+    difficulty: str = "medium",
+    tmdb: TMDbClient = Depends(get_tmdb),
+    _user: dict = Depends(require_auth),
+):
     if difficulty not in ("easy", "medium", "hard"):
         raise HTTPException(
             status_code=400, detail="difficulty must be easy, medium, or hard"
@@ -83,6 +87,7 @@ async def make_move(
     body: MoveRequest,
     tmdb: TMDbClient = Depends(get_tmdb),
     llm=Depends(get_llm),
+    _user: dict = Depends(require_auth),
 ):
     game = load_game(game_id)
     if not game:
@@ -164,7 +169,11 @@ async def make_move(
 
 @router.delete("/{game_id}/move", response_model=UndoResponse)
 @traceable(run_type="chain", name="undo_move")
-async def undo_move(game_id: str, tmdb: TMDbClient = Depends(get_tmdb)):
+async def undo_move(
+    game_id: str,
+    tmdb: TMDbClient = Depends(get_tmdb),
+    _user: dict = Depends(require_auth),
+):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -191,7 +200,7 @@ async def undo_move(game_id: str, tmdb: TMDbClient = Depends(get_tmdb)):
 
 
 @router.get("/{game_id}", response_model=GameState)
-async def get_game(game_id: str):
+async def get_game(game_id: str, _user: dict = Depends(require_auth)):
     game = load_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")

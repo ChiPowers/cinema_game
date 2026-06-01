@@ -12,6 +12,12 @@ def get_db() -> sqlite3.Connection:
 def init_db():
     conn = get_db()
     conn.execute("""
+        CREATE TABLE IF NOT EXISTS beta_users (
+            email TEXT PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS games (
             id TEXT PRIMARY KEY,
             start_actor_name TEXT NOT NULL,
@@ -37,6 +43,38 @@ def init_db():
         pass  # Column already exists
     conn.commit()
     conn.close()
+
+
+def is_beta_user(email: str) -> bool:
+    conn = get_db()
+    row = conn.execute(
+        "SELECT 1 FROM beta_users WHERE email = ?", (email.lower(),)
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def add_beta_user(email: str):
+    conn = get_db()
+    conn.execute(
+        "INSERT OR IGNORE INTO beta_users (email) VALUES (?)", (email.lower(),)
+    )
+    conn.commit()
+    conn.close()
+
+
+def remove_beta_user(email: str):
+    conn = get_db()
+    conn.execute("DELETE FROM beta_users WHERE email = ?", (email.lower(),))
+    conn.commit()
+    conn.close()
+
+
+def list_beta_users() -> list[str]:
+    conn = get_db()
+    rows = conn.execute("SELECT email FROM beta_users ORDER BY created_at").fetchall()
+    conn.close()
+    return [row["email"] for row in rows]
 
 
 def save_game(game: dict):

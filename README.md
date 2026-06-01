@@ -84,6 +84,17 @@ LANGSMITH_API_KEY=...
 LANGSMITH_PROJECT=cinema-game
 ```
 
+**Authentication** — required when sign-in is enabled (`feature/auth` and successor branches):
+
+```
+NEXTAUTH_SECRET=...       # Must match the frontend's NEXTAUTH_SECRET, byte-identical
+INTERNAL_SECRET=...       # Must match the frontend's INTERNAL_SECRET, byte-identical
+```
+
+Generate each with `openssl rand -base64 32` and paste the same value into both the backend `secrets/.env` and the frontend `.env.local`. `NEXTAUTH_SECRET` is the HS256 key used to verify session JWTs minted by NextAuth on the frontend. `INTERNAL_SECRET` is the shared secret the Next.js server sends as the `x-internal-secret` header when calling `/auth/check-beta`; it prevents browsers from invoking that endpoint directly.
+
+The Google OAuth client (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) lives only in the frontend `.env.local` — the backend never talks to Google directly. See the [frontend repo](https://github.com/ChiPowers/cinema-frontend) for Google Console setup instructions.
+
 See `secrets/README.md` for more detail.
 
 ### LangSmith trace structure
@@ -160,19 +171,39 @@ poetry run uvicorn cinema_game_backend.main:app --reload
 
 API runs at `http://localhost:8000`.
 
+### Managing beta users
+
+Access to `/game/*` is gated by two independent layers, and both must pass:
+
+1. **Google level.** While the OAuth consent screen is in "testing" mode, only the Gmail addresses listed as test users in the Google Console can authenticate at all.
+2. **App level.** After a successful Google sign-in, the frontend's NextAuth `signIn` callback calls `POST /auth/check-beta`, which looks up the email in the `beta_users` table in this repo's SQLite database. Emails not present in the table are denied.
+
+Manage the `beta_users` table from the backend:
+
+```bash
+poetry run python scripts/manage_beta_users.py add user@example.com
+poetry run python scripts/manage_beta_users.py remove user@example.com
+poetry run python scripts/manage_beta_users.py list
+```
+
+Emails are stored lowercase; the script normalizes input.
+
 ### Frontend
 
 See the [frontend repo](https://github.com/ChiPowers/cinema-frontend).
 
 ## API
 
-| Method   | Route                                     | Description                           |
-|----------|-------------------------------------------|---------------------------------------|
-| `POST`   | `/game/new?difficulty=easy\|medium\|hard` | Generate a new puzzle                 |
-| `POST`   | `/game/{id}/move`                         | Submit a move `{ movie, next_actor }` |
-| `DELETE`  | `/game/{id}/move`                         | Undo the last move                    |
-| `GET`    | `/game/{id}`                              | Get current game state                |
-| `GET`    | `/health`                                 | Health check                          |
+| Method   | Route                                     | Auth                       | Description                                                              |
+|----------|-------------------------------------------|----------------------------|--------------------------------------------------------------------------|
+| `POST`   | `/game/new?difficulty=easy\|medium\|hard` | Bearer JWT                 | Generate a new puzzle                                                    |
+| `POST`   | `/game/{id}/move`                         | Bearer JWT                 | Submit a move `{ movie, next_actor }`                                    |
+| `DELETE` | `/game/{id}/move`                         | Bearer JWT                 | Undo the last move                                                       |
+| `GET`    | `/game/{id}`                              | Bearer JWT                 | Get current game state                                                   |
+| `POST`   | `/auth/check-beta`                        | `x-internal-secret` header | Server-to-server beta-list check, called by the Next.js `signIn` callback |
+| `GET`    | `/health`                                 | None                       | Health check                                                             |
+
+"Bearer JWT" means the request must include `Authorization: Bearer <token>`, where the token is an HS256 JWT signed with `NEXTAUTH_SECRET`. The frontend's NextAuth `session` callback mints these tokens automatically; the backend's `require_auth` dependency verifies them.
 
 ## Game session replay
 
@@ -254,6 +285,8 @@ The backend uses **FastAPI dependency injection** to provide the TMDb client and
 3. **LLM fallback** (optional) — if fuzzy matching fails and an LLM provider is available, an LLM call resolves harder cases like nicknames ("Larry" → "Laurence").
 
 The TMDb cache layer lives in the [art-graph](https://github.com/ChiPowers/artist-graph) library. It caches people, movies, and credits in three tables. The caller (this app) owns the database engine and configuration — art-graph has no opinion about which database backend is used.
+
+**Authentication** is a handshake between this repo and the frontend. The frontend uses NextAuth with the Google provider; after a successful Google sign-in, NextAuth's `session` callback mints an HS256 JWT signed with `NEXTAUTH_SECRET` and stores it on the browser session. The frontend attaches the JWT as `Authorization: Bearer <token>` on every `/game/*` request, and the backend's `require_auth` dependency decodes and verifies it using the same secret. A separate handshake runs during sign-in itself: the Next.js server (not the browser) calls `/auth/check-beta` with the user's email and the shared `INTERNAL_SECRET` in an `x-internal-secret` header, and the backend returns 200 only if the email is in the `beta_users` table. This two-call design separates the "who can authenticate" gate (Google plus `beta_users`) from the "who can call the API" gate (a valid HS256 token).
 
 ## Attribution
 

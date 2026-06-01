@@ -4,7 +4,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 from cinema_game_backend.main import app
 from cinema_game_backend.database import init_db
-from cinema_game_backend.dependencies import get_tmdb, get_llm
+from cinema_game_backend.dependencies import get_tmdb, get_llm, require_auth
 from cinema_game_backend.models.game import ValidationResult
 from art_graph.cinema_data_providers.tmdb_models import Person
 from cinema_game_backend.routes.game import _reached_end
@@ -116,6 +116,17 @@ def no_llm():
     app.dependency_overrides[get_llm] = lambda: None
     yield
     app.dependency_overrides.pop(get_llm, None)
+
+
+@pytest.fixture(autouse=True)
+def bypass_auth():
+    """Route tests bypass auth; auth is exercised in its own test module."""
+    app.dependency_overrides[require_auth] = lambda: {
+        "sub": "test-user",
+        "email": "test@example.com",
+    }
+    yield
+    app.dependency_overrides.pop(require_auth, None)
 
 
 @pytest.fixture
