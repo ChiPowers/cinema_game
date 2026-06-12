@@ -106,8 +106,9 @@ def list_games(limit: int | None = None) -> list[dict]:
     conn = get_db()
     query = "SELECT * FROM games ORDER BY created_at DESC"
     if limit is not None:
-        query += f" LIMIT {int(limit)}"
-    rows = conn.execute(query).fetchall()
+        rows = conn.execute(query + " LIMIT ?", (int(limit),)).fetchall()
+    else:
+        rows = conn.execute(query).fetchall()
     conn.close()
     return [_row_to_game(row) for row in rows]
 

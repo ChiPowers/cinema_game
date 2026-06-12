@@ -51,20 +51,41 @@ DB_PATH = directories.base("cinema_game.db")
 def create_llm_provider():
     """Create an LLM provider for fallback name matching.
 
-    Currently hardcoded to Anthropic. A follow-up PR will make the provider
-    configurable via an environment variable (e.g. LLM_PROVIDER=openai).
+    Provider is selected via the LLM_PROVIDER env var (default: anthropic).
+    Supported values: anthropic, openai, gemini.
+    The matching API key env var must also be set; if absent, returns None
+    and validation falls back to fuzzy string matching only.
 
-    Returns None if ANTHROPIC_API_KEY is not set, in which case validation
-    falls back to fuzzy string matching only.
+    LLM_MODEL selects the model within the provider; a sensible default is
+    used when omitted.
     """
-    if not ANTHROPIC_API_KEY:
-        return None
-    from reusable_llm_provider.config import create_anthropic_config
+    provider = os.getenv("LLM_PROVIDER", "anthropic").lower()
+    model = os.getenv("LLM_MODEL", "")
+
     from reusable_llm_provider.providers import create_provider
 
-    model = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
-    config = create_anthropic_config(model=model)
-    return create_provider(config)
+    if provider == "anthropic":
+        if not ANTHROPIC_API_KEY:
+            return None
+        from reusable_llm_provider.config import create_anthropic_config
+        return create_provider(create_anthropic_config(model=model or "claude-haiku-4-5-20251001"))
+
+    if provider == "openai":
+        if not OPENAI_API_KEY:
+            return None
+        from reusable_llm_provider.config import create_openai_config
+        return create_provider(create_openai_config(model=model or "gpt-4o-mini"))
+
+    if provider == "gemini":
+        if not GEMINI_API_KEY:
+            return None
+        from reusable_llm_provider.config import create_gemini_config
+        return create_provider(create_gemini_config(model=model or "gemini-2.0-flash"))
+
+    raise ValueError(
+        f"Unsupported LLM_PROVIDER: {provider!r}. "
+        "Supported values: anthropic, openai, gemini."
+    )
 
 
 # Hops = number of actor→movie→actor steps.
