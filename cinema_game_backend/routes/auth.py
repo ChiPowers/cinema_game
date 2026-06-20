@@ -1,4 +1,5 @@
 import logging
+import secrets
 from fastapi import APIRouter, HTTPException, Header, status
 from ..config import INTERNAL_SECRET
 
@@ -17,7 +18,7 @@ def verify_internal(
     that the secret is correctly provisioned on both sides.
     Returns 200 on success, 401 on mismatch.
     """
-    if not x_internal_secret or x_internal_secret != INTERNAL_SECRET:
+    if not x_internal_secret or not secrets.compare_digest(x_internal_secret, INTERNAL_SECRET):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing internal secret",
