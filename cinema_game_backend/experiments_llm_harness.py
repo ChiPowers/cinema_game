@@ -707,7 +707,7 @@ def run_matrix(
 
     for model in models:
         cost_row = CostRow(alias=model.alias, model=model.model)
-        evaluate(
+        result = evaluate(
             _target_for_model(model, max_tokens=max_tokens, cost_row=cost_row),
             data=_DATASET_NAME,
             evaluators=[_json_shape_evaluator, _cost_evaluator, _token_evaluator],
@@ -725,7 +725,7 @@ def run_matrix(
             client=client,
             max_concurrency=1,
         )
-        experiment_names.append(f"{experiment_prefix}-{model.alias}")
+        experiment_names.append(result.experiment_name)
         cost_rows.append(cost_row)
 
     return experiment_names, cost_rows
@@ -753,7 +753,7 @@ def run_name_match_matrix(
 
     for model in models:
         cost_row = CostRow(alias=model.alias, model=model.model)
-        evaluate(
+        result = evaluate(
             _target_for_model(model, max_tokens=max_tokens, cost_row=cost_row),
             data=_NAME_MATCH_DATASET_NAME,
             evaluators=[
@@ -778,7 +778,7 @@ def run_name_match_matrix(
             client=client,
             max_concurrency=1,
         )
-        experiment_names.append(f"{experiment_prefix}-{model.alias}")
+        experiment_names.append(result.experiment_name)
         cost_rows.append(cost_row)
 
     return experiment_names, cost_rows

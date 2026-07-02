@@ -102,7 +102,6 @@ def main() -> int:
 
     if args.dataset == "all" and all_cost_rows:
         # Merge rows by alias for a combined total
-        from collections import defaultdict
         merged: dict[str, CostRow] = {}
         for r in all_cost_rows:
             if r.alias not in merged:
