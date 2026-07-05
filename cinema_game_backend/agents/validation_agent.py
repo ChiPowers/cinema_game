@@ -10,6 +10,7 @@ import logging
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+from ..config import MAX_MOVIE_SEARCH_CANDIDATES
 from ..matching import find_actor_in_cast, ActorMatch
 from ..models.game import Confidence, ValidationResult
 
@@ -68,6 +69,18 @@ def _resolve_actor(query: str, cast_names: list[str], llm=None) -> ActorMatch | 
     return None
 
 
+@traceable(run_type="tool", name="check_movie_candidate")
+async def _check_candidate(
+    tmdb: TMDbClient, movie, from_actor: str, to_actor: str, llm
+):
+    """Fetch a candidate movie's cast and try to resolve both actors against it."""
+    cast = await tmdb.get_movie_cast(movie.id)
+    cast_names = [c.name for c in cast]
+    from_match = _resolve_actor(from_actor, cast_names, llm)
+    to_match = _resolve_actor(to_actor, cast_names, llm)
+    return from_match, to_match
+
+
 @traceable(run_type="chain", name="validate_move")
 async def validate_move(
     tmdb: TMDbClient,
@@ -77,26 +90,39 @@ async def validate_move(
     llm=None,
 ) -> ValidationResult:
     """
-    Verify that from_actor and to_actor both appeared in movie_title.
+    Verify that from_actor and to_actor both appeared in a movie titled movie_title.
 
-    1. Search TMDb for the movie (TMDb handles fuzzy title matching).
-    2. Fetch the cast list.
-    3. Fuzzy-match both actor names against the cast.
-    4. If fuzzy matching fails and an LLM provider is available, try LLM fallback.
+    1. Search TMDb for movies matching the title (TMDb handles fuzzy title
+       matching and ranks results by its own relevance/recency signal).
+    2. Check the top-ranked candidate's cast for both actors first.
+    3. If a title is ambiguous (shared by multiple films) and the top-ranked
+       candidate doesn't have both actors, walk the remaining candidates in
+       TMDb's order, up to MAX_MOVIE_SEARCH_CANDIDATES, stopping at the first
+       one that does.
+    4. If none of the checked candidates have both actors, report the
+       failure against the top-ranked candidate, as before.
     """
-    movie = await tmdb.search_movie(movie_title)
-    if not movie:
+    candidates = await tmdb.search_movies(movie_title)
+    if not candidates:
         return ValidationResult(
             valid=False,
             explanation=f"Movie '{movie_title}' not found on TMDb.",
             confidence=Confidence.high,
         )
 
-    cast = await tmdb.get_movie_cast(movie.id)
-    cast_names = [c.name for c in cast]
+    movie = candidates[0]
+    from_match, to_match = await _check_candidate(
+        tmdb, movie, from_actor, to_actor, llm
+    )
 
-    from_match = _resolve_actor(from_actor, cast_names, llm)
-    to_match = _resolve_actor(to_actor, cast_names, llm)
+    if from_match is None or to_match is None:
+        for candidate in candidates[1:MAX_MOVIE_SEARCH_CANDIDATES]:
+            candidate_from, candidate_to = await _check_candidate(
+                tmdb, candidate, from_actor, to_actor, llm
+            )
+            if candidate_from is not None and candidate_to is not None:
+                movie, from_match, to_match = candidate, candidate_from, candidate_to
+                break
 
     valid = from_match is not None and to_match is not None
 

@@ -24,7 +24,7 @@ def _cast(*names):
 @pytest.fixture
 def mock_tmdb():
     tmdb = AsyncMock()
-    tmdb.search_movie.return_value = _movie()
+    tmdb.search_movies.return_value = [_movie()]
     tmdb.get_movie_cast.return_value = _cast(
         "Chris Hemsworth",
         "Natalie Portman",
@@ -206,7 +206,7 @@ class TestReplayGame:
         await replay_game(mock_tmdb, game)
 
         # Second call to validate_move should use "Natalie Portman" as from_actor.
-        calls = mock_tmdb.search_movie.call_args_list
+        calls = mock_tmdb.search_movies.call_args_list
         assert len(calls) == 2
 
     async def test_from_actor_unchanged_after_failure(self, mock_tmdb):

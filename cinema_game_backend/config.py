@@ -80,6 +80,13 @@ DIFFICULTY_HOPS = {
     "hard": (6, 8),
 }
 
+# When a title is shared by multiple films, validate_move walks TMDb search
+# results in order looking for one whose cast contains both named actors,
+# stopping at the first match. This caps how many candidates get walked so a
+# pathological title can't trigger unbounded get_movie_cast calls (each a
+# live TMDb request when caching is disabled).
+MAX_MOVIE_SEARCH_CANDIDATES = 10
+
 # Minimum TMDb popularity score for actors selected in puzzles.
 # TMDb popularity is a daily trending score — even major stars typically score 5–20.
 MIN_ACTOR_POPULARITY = {
