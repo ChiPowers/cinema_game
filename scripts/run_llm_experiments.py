@@ -25,14 +25,18 @@ def _print_cost_table(rows: list[CostRow], label: str) -> None:
     print(f"\n{'─' * 72}")
     print(f"  Cost summary — {label}")
     print(f"{'─' * 72}")
-    print(f"  {'Model alias':<22} {'In tok':>8} {'Out tok':>8} {'Cost (USD)':>12}  Source")
-    print(f"  {'─'*22} {'─'*8} {'─'*8} {'─'*12}  {'─'*9}")
+    print(
+        f"  {'Model alias':<22} {'In tok':>8} {'Out tok':>8} {'Cost (USD)':>12}  Source"
+    )
+    print(f"  {'─' * 22} {'─' * 8} {'─' * 8} {'─' * 12}  {'─' * 9}")
     total_cost = 0.0
     for r in rows:
         cost_str = f"${r.cost_usd:.6f}" if r.cost_usd else "n/a"
-        print(f"  {r.alias:<22} {r.input_tokens:>8,} {r.output_tokens:>8,} {cost_str:>12}  {r.cost_source}")
+        print(
+            f"  {r.alias:<22} {r.input_tokens:>8,} {r.output_tokens:>8,} {cost_str:>12}  {r.cost_source}"
+        )
         total_cost += r.cost_usd
-    print(f"  {'─'*22} {'─'*8} {'─'*8} {'─'*12}")
+    print(f"  {'─' * 22} {'─' * 8} {'─' * 8} {'─' * 12}")
     total_in = sum(r.input_tokens for r in rows)
     total_out = sum(r.output_tokens for r in rows)
     print(f"  {'TOTAL':<22} {total_in:>8,} {total_out:>8,} ${total_cost:>11.6f}")
