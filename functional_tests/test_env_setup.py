@@ -39,10 +39,9 @@ class TestEnvironmentSetup:
         assert api_key is not None, "TMDB_API_KEY required but not set"
         assert len(api_key) > 0, "TMDB_API_KEY is empty"
 
-    def test_model_config(self):
-        """Test that the model configuration can be imported."""
-        from cinema_game_backend.config import MODEL
+    def test_llm_provider_can_be_created(self):
+        """Test that the LLM provider can be constructed from real credentials."""
+        from cinema_game_backend.config import create_llm_provider
 
-        assert MODEL is not None
-        assert len(MODEL) > 0
-        assert isinstance(MODEL, str)
+        provider = create_llm_provider()
+        assert provider is not None

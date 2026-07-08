@@ -105,7 +105,9 @@ DEFAULT_MODELS: list[HarnessModel] = [
     HarnessModel(
         alias="deepseek_v3",
         provider="openai_compatible",
-        model=os.getenv("EXPERIMENT_MODEL_DEEPSEEK_V3", "deepseek/deepseek-chat-v3-0324"),
+        model=os.getenv(
+            "EXPERIMENT_MODEL_DEEPSEEK_V3", "deepseek/deepseek-chat-v3-0324"
+        ),
         api_key_env="OPENROUTER_API_KEY",
         base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
     ),
@@ -188,7 +190,9 @@ _PRICE_PER_M_TOKENS: dict[str, tuple[float, float]] = {
 }
 
 
-def _estimate_cost(model_id: str, input_tok: int | None, output_tok: int | None) -> float | None:
+def _estimate_cost(
+    model_id: str, input_tok: int | None, output_tok: int | None
+) -> float | None:
     if input_tok is None or output_tok is None:
         return None
     prices = _PRICE_PER_M_TOKENS.get(model_id)
@@ -209,7 +213,9 @@ def _extract_text_from_openai_responses(payload: dict[str, Any]) -> str:
     return payload.get("output_text", "")
 
 
-def _invoke_model(model: HarnessModel, system: str, user: str, max_tokens: int) -> _InvokeResult:
+def _invoke_model(
+    model: HarnessModel, system: str, user: str, max_tokens: int
+) -> _InvokeResult:
     api_key = os.getenv(model.api_key_env, "")
     if not api_key:
         raise RuntimeError(f"Missing API key env var: {model.api_key_env}")
@@ -346,7 +352,9 @@ def _target_for_model(model: HarnessModel, max_tokens: int, cost_row: CostRow):
             cost = result.reported_cost_usd
             cost_source = "reported"
         else:
-            cost = _estimate_cost(model.model, result.input_tokens, result.output_tokens)
+            cost = _estimate_cost(
+                model.model, result.input_tokens, result.output_tokens
+            )
             cost_source = "estimated" if cost is not None else "n/a"
 
         cost_row.calls += 1
@@ -380,7 +388,11 @@ def _json_shape_evaluator(
     text = outputs.get("text", "")
     parsed = _parse_json_or_none(text)
     if not isinstance(parsed, dict):
-        return {"key": "json_shape", "score": 0, "comment": "Output is not a JSON object"}
+        return {
+            "key": "json_shape",
+            "score": 0,
+            "comment": "Output is not a JSON object",
+        }
 
     missing = [k for k in must_include if k not in parsed]
     if missing:
@@ -422,37 +434,65 @@ def _nm_user(cast: list[str], query: str) -> str:
 def _name_match_examples() -> list[dict[str, Any]]:
     """Test cases for the llm_name_match prompt surface in validation_agent.py."""
     matrix_cast = [
-        "Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss",
-        "Hugo Weaving", "Joe Pantoliano",
+        "Keanu Reeves",
+        "Laurence Fishburne",
+        "Carrie-Anne Moss",
+        "Hugo Weaving",
+        "Joe Pantoliano",
     ]
     departed_cast = [
-        "Leonardo DiCaprio", "Matt Damon", "Jack Nicholson",
-        "Mark Wahlberg", "Martin Sheen", "Alec Baldwin",
+        "Leonardo DiCaprio",
+        "Matt Damon",
+        "Jack Nicholson",
+        "Mark Wahlberg",
+        "Martin Sheen",
+        "Alec Baldwin",
     ]
     gwh_cast = [
-        "Matt Damon", "Robin Williams", "Ben Affleck",
-        "Stellan Skarsgård", "Minnie Driver",
+        "Matt Damon",
+        "Robin Williams",
+        "Ben Affleck",
+        "Stellan Skarsgård",
+        "Minnie Driver",
     ]
     sls_cast = [
-        "Bradley Cooper", "Jennifer Lawrence", "Robert De Niro",
-        "Jacki Weaver", "Chris Tucker",
+        "Bradley Cooper",
+        "Jennifer Lawrence",
+        "Robert De Niro",
+        "Jacki Weaver",
+        "Chris Tucker",
     ]
     goodfellas_cast = [
-        "Robert De Niro", "Ray Liotta", "Joe Pesci",
-        "Lorraine Bracco", "Paul Sorvino",
+        "Robert De Niro",
+        "Ray Liotta",
+        "Joe Pesci",
+        "Lorraine Bracco",
+        "Paul Sorvino",
     ]
     joker_cast = [
-        "Joaquin Phoenix", "Robert De Niro", "Zazie Beetz",
-        "Frances Conroy", "Brett Cullen",
+        "Joaquin Phoenix",
+        "Robert De Niro",
+        "Zazie Beetz",
+        "Frances Conroy",
+        "Brett Cullen",
     ]
     shawshank_cast = [
-        "Tim Robbins", "Morgan Freeman", "Bob Gunton",
-        "William Sadler", "Clancy Brown", "James Whitmore",
+        "Tim Robbins",
+        "Morgan Freeman",
+        "Bob Gunton",
+        "William Sadler",
+        "Clancy Brown",
+        "James Whitmore",
     ]
     avengers_cast = [
-        "Robert Downey Jr.", "Chris Evans", "Chris Hemsworth",
-        "Chris Pratt", "Mark Ruffalo", "Scarlett Johansson",
-        "Benedict Cumberbatch", "Don Cheadle",
+        "Robert Downey Jr.",
+        "Chris Evans",
+        "Chris Hemsworth",
+        "Chris Pratt",
+        "Mark Ruffalo",
+        "Scarlett Johansson",
+        "Benedict Cumberbatch",
+        "Don Cheadle",
     ]
 
     return [
@@ -591,9 +631,16 @@ def _token_evaluator(
 ) -> list[dict[str, Any]]:
     del inputs, reference_outputs
     results = []
-    for key, field in (("input_tokens", "input_tokens"), ("output_tokens", "output_tokens")):
+    for key, field in (
+        ("input_tokens", "input_tokens"),
+        ("output_tokens", "output_tokens"),
+    ):
         val = outputs.get(field)
-        results.append({"key": key, "score": val} if val is not None else {"key": key, "score": None, "comment": "unavailable"})
+        results.append(
+            {"key": key, "score": val}
+            if val is not None
+            else {"key": key, "score": None, "comment": "unavailable"}
+        )
     return results
 
 
@@ -606,7 +653,11 @@ def _name_match_correctness_evaluator(
     expected = inputs.get("expected_matched_name")
     parsed = _parse_json_or_none(outputs.get("text", ""))
     if not isinstance(parsed, dict):
-        return {"key": "name_match_correctness", "score": 0, "comment": "not a JSON object"}
+        return {
+            "key": "name_match_correctness",
+            "score": 0,
+            "comment": "not a JSON object",
+        }
     actual = parsed.get("matched_name")
     score = 1 if actual == expected else 0
     comment = "" if score else f"expected={expected!r} got={actual!r}"
@@ -621,7 +672,9 @@ def _null_precision_evaluator(
     """Only scores negative cases (expected_matched_name is None)."""
     del reference_outputs
     if inputs.get("expected_matched_name") is not None:
-        return EvaluationResult(key="null_precision", score=None, comment="n/a (positive case)")
+        return EvaluationResult(
+            key="null_precision", score=None, comment="n/a (positive case)"
+        )
     parsed = _parse_json_or_none(outputs.get("text", ""))
     if not isinstance(parsed, dict):
         return {"key": "null_precision", "score": 0, "comment": "not a JSON object"}
@@ -664,7 +717,8 @@ def _ensure_name_match_dataset(client: Client) -> None:
     has_ds = client.has_dataset(dataset_name=_NAME_MATCH_DATASET_NAME)
     if (
         has_ds
-        and next(client.list_examples(dataset_name=_NAME_MATCH_DATASET_NAME), None) is not None
+        and next(client.list_examples(dataset_name=_NAME_MATCH_DATASET_NAME), None)
+        is not None
     ):
         return
 

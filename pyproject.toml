@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cinema_game_backend"
-version = "2.3.1"
+version = "2.3.2"
 description = "Cinema Game — connect actors through shared movies"
 authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
 license = "mit"
@@ -13,10 +13,10 @@ fastapi = "^0.135.2"
 uvicorn = "^0.30.0"
 python-dotenv = "^1.0.0"
 pydantic = "^2.12.5"
-langsmith = "^0.7.31"
+langsmith = ">=0.8.18,<1.0.0"
 rapidfuzz = "^3.12.0"
-art-graph = {git = "https://github.com/newexo/artist-graph.git", tag = "v0.2.7"}
-reusable-llm-provider = {git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.3.0"}
+art-graph = {git = "https://github.com/newexo/artist-graph.git", tag = "v0.3.0"}
+reusable-llm-provider = {git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.3.1"}
 python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 
 [tool.poetry.group.dev.dependencies]

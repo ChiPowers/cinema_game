@@ -36,7 +36,7 @@ def thor_cast():
 @pytest.fixture
 def mock_tmdb(thor_cast):
     tmdb = AsyncMock()
-    tmdb.search_movie.return_value = make_movie()
+    tmdb.search_movies.return_value = [make_movie()]
     tmdb.get_movie_cast.return_value = thor_cast
     return tmdb
 
@@ -79,7 +79,7 @@ class TestInvalidMove:
         assert result.to_actor_found is False
 
     async def test_movie_not_found(self, mock_tmdb):
-        mock_tmdb.search_movie.return_value = None
+        mock_tmdb.search_movies.return_value = []
         result = await validate_move(
             mock_tmdb, "Chris Hemsworth", "Nonexistent Movie", "Natalie Portman"
         )
@@ -124,12 +124,14 @@ class TestLLMFallback:
     @pytest.fixture
     def apocalypse_now_tmdb(self):
         tmdb = AsyncMock()
-        tmdb.search_movie.return_value = make_movie(
-            title="Apocalypse Now",
-            movie_id=28,
-            release_date="1979-08-15",
-            poster_path="/apocalypse.jpg",
-        )
+        tmdb.search_movies.return_value = [
+            make_movie(
+                title="Apocalypse Now",
+                movie_id=28,
+                release_date="1979-08-15",
+                poster_path="/apocalypse.jpg",
+            )
+        ]
         tmdb.get_movie_cast.return_value = make_cast(
             "Marlon Brando",
             "Martin Sheen",
@@ -218,3 +220,88 @@ class TestMovieMetadata:
         assert result.movie_title == "Thor"
         assert result.movie_year == "2011"
         assert result.poster_url is not None
+
+
+class TestAmbiguousTitle:
+    """Regression tests for the bug where an ambiguous title (shared by
+    multiple films) resolves against the wrong TMDb search result and a
+    valid move is incorrectly rejected."""
+
+    @pytest.fixture
+    def ambiguous_tmdb(self):
+        tmdb = AsyncMock()
+        tmdb.search_movies.return_value = [
+            make_movie(title="The Batman", movie_id=414906, release_date="2022-03-01"),
+            make_movie(title="Batman", movie_id=268, release_date="1989-06-21"),
+        ]
+        casts = {
+            414906: make_cast("Robert Pattinson", "Zoë Kravitz", "Paul Dano"),
+            268: make_cast("Michael Keaton", "Jack Nicholson", "Kim Basinger"),
+        }
+
+        async def get_movie_cast(movie_id):
+            return casts[movie_id]
+
+        tmdb.get_movie_cast.side_effect = get_movie_cast
+        return tmdb
+
+    async def test_uses_second_candidate_when_first_lacks_actor_pair(
+        self, ambiguous_tmdb
+    ):
+        result = await validate_move(
+            ambiguous_tmdb, "Jack Nicholson", "Batman", "Michael Keaton"
+        )
+        assert result.valid is True
+        assert result.movie_id == 268
+        assert result.movie_title == "Batman"
+        assert result.movie_year == "1989"
+
+    async def test_short_circuits_when_first_candidate_matches(self):
+        tmdb = AsyncMock()
+        tmdb.search_movies.return_value = [
+            make_movie(title="Batman", movie_id=268, release_date="1989-06-21"),
+            make_movie(title="The Batman", movie_id=414906, release_date="2022-03-01"),
+        ]
+        tmdb.get_movie_cast.return_value = make_cast("Michael Keaton", "Jack Nicholson")
+
+        result = await validate_move(tmdb, "Jack Nicholson", "Batman", "Michael Keaton")
+
+        assert result.valid is True
+        tmdb.get_movie_cast.assert_called_once_with(268)
+
+    async def test_no_candidate_matches_reports_failure_against_top_ranked(
+        self, ambiguous_tmdb
+    ):
+        result = await validate_move(
+            ambiguous_tmdb, "Jack Nicholson", "Batman", "Leonardo DiCaprio"
+        )
+        assert result.valid is False
+        assert result.movie_id == 414906
+        assert "The Batman" in result.explanation
+
+    async def test_respects_max_candidates_cap(self, monkeypatch):
+        monkeypatch.setattr(
+            "cinema_game_backend.agents.validation_agent.MAX_MOVIE_SEARCH_CANDIDATES",
+            2,
+        )
+        tmdb = AsyncMock()
+        tmdb.search_movies.return_value = [
+            make_movie(title="Batman", movie_id=1, release_date="2001-01-01"),
+            make_movie(title="Batman", movie_id=2, release_date="2002-01-01"),
+            make_movie(title="Batman", movie_id=3, release_date="2003-01-01"),
+        ]
+        casts = {
+            1: make_cast("Nobody Relevant"),
+            2: make_cast("Nobody Relevant"),
+            3: make_cast("Jack Nicholson", "Michael Keaton"),
+        }
+
+        async def get_movie_cast(movie_id):
+            return casts[movie_id]
+
+        tmdb.get_movie_cast.side_effect = get_movie_cast
+
+        result = await validate_move(tmdb, "Jack Nicholson", "Batman", "Michael Keaton")
+
+        assert result.valid is False
+        assert tmdb.get_movie_cast.call_count == 2
