@@ -1,5 +1,5 @@
+import jwt
 from fastapi import Request, Header, HTTPException
-from jose import jwt, JWTError
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from .config import NEXTAUTH_SECRET
 
@@ -21,5 +21,5 @@ async def require_auth(authorization: str = Header(...)) -> dict:
     try:
         payload = jwt.decode(token, NEXTAUTH_SECRET, algorithms=["HS256"])
         return payload
-    except JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
