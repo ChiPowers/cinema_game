@@ -24,6 +24,8 @@ def sample_game_dict():
                 "movie_year": "2013",
                 "poster_url": None,
                 "backdrop_url": None,
+                "from_actor_id": 287,
+                "to_actor_id": 17288,
             },
             {
                 "from_actor": "Michael Fassbender",
@@ -34,6 +36,8 @@ def sample_game_dict():
                 "movie_year": "2016",
                 "poster_url": None,
                 "backdrop_url": None,
+                "from_actor_id": 17288,
+                "to_actor_id": 4586,
             },
         ],
         "current_actor": {"name": "Nicholas Hoult", "id": 4586},
@@ -126,12 +130,13 @@ class TestExportGame:
         assert first.expected.actor_name == "Michael Fassbender"
 
     @patch("cinema_game_backend.experiments.export.load_game")
-    def test_export_actor_id_is_none(self, mock_load, sample_game_dict):
+    def test_export_populates_actor_ids(self, mock_load, sample_game_dict):
         mock_load.return_value = sample_game_dict
         game = export_game("abc-123")
 
-        for move in game.moves:
-            assert move.expected.actor_id is None
+        assert game.start_actor_id == 287
+        assert game.moves[0].expected.actor_id == 17288
+        assert game.moves[1].expected.actor_id == 4586
 
     @patch("cinema_game_backend.experiments.export.load_game")
     def test_export_empty_game(self, mock_load, empty_game_dict):

@@ -44,7 +44,7 @@ def mock_tmdb(thor_cast):
 class TestValidMove:
     async def test_both_actors_exact(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portman"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portman", from_actor_id=1
         )
         assert result.valid is True
         assert result.from_actor_found is True
@@ -54,7 +54,7 @@ class TestValidMove:
 
     async def test_minor_typo_accepted(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portmen"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portmen", from_actor_id=1
         )
         assert result.valid is True
         assert result.to_actor_found is True
@@ -63,7 +63,7 @@ class TestValidMove:
 class TestInvalidMove:
     async def test_actor_not_in_cast(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Leonardo DiCaprio"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Leonardo DiCaprio", from_actor_id=1
         )
         assert result.valid is False
         assert result.from_actor_found is True
@@ -72,7 +72,7 @@ class TestInvalidMove:
 
     async def test_neither_actor_in_cast(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Brad Pitt", "Thor", "Leonardo DiCaprio"
+            mock_tmdb, "Brad Pitt", "Thor", "Leonardo DiCaprio", from_actor_id=999
         )
         assert result.valid is False
         assert result.from_actor_found is False
@@ -81,7 +81,11 @@ class TestInvalidMove:
     async def test_movie_not_found(self, mock_tmdb):
         mock_tmdb.search_movies.return_value = []
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Nonexistent Movie", "Natalie Portman"
+            mock_tmdb,
+            "Chris Hemsworth",
+            "Nonexistent Movie",
+            "Natalie Portman",
+            from_actor_id=1,
         )
         assert result.valid is False
         assert "not found" in result.explanation.lower()
@@ -94,26 +98,26 @@ class TestMisspelledFinalActor:
     async def test_misspelled_name_still_valid(self, mock_tmdb):
         # "Kat Denings" -> "Kat Dennings" (distance 1)
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings", from_actor_id=1
         )
         assert result.valid is True
         assert result.to_actor_found is True
 
     async def test_explanation_uses_canonical_name(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings", from_actor_id=1
         )
         assert "Kat Dennings" in result.explanation
 
     async def test_to_actor_name_is_canonical(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Kat Denings", from_actor_id=1
         )
         assert result.to_actor_name == "Kat Dennings"
 
     async def test_from_actor_name_is_canonical(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemswerth", "Thor", "Kat Dennings"
+            mock_tmdb, "Chris Hemswerth", "Thor", "Kat Dennings", from_actor_id=1
         )
         assert result.from_actor_name == "Chris Hemsworth"
 
@@ -155,6 +159,7 @@ class TestLLMFallback:
             "Marlon Brando",
             "Apocalypse Now",
             "Larry Fishburne",
+            from_actor_id=1,
             llm=mock_llm,
         )
         assert result.valid is True
@@ -167,6 +172,7 @@ class TestLLMFallback:
             "Marlon Brando",
             "Apocalypse Now",
             "Larry Fishburne",
+            from_actor_id=1,
         )
         assert result.valid is False
         assert result.to_actor_found is False
@@ -179,6 +185,7 @@ class TestLLMFallback:
             "Marlon Brando",
             "Apocalypse Now",
             "Larry Fishburne",
+            from_actor_id=1,
             llm=llm,
         )
         assert result.valid is False
@@ -192,6 +199,7 @@ class TestLLMFallback:
             "Marlon Brando",
             "Apocalypse Now",
             "Larry Fishburne",
+            from_actor_id=1,
             llm=llm,
         )
         assert result.valid is False
@@ -205,6 +213,7 @@ class TestLLMFallback:
             "Marlon Brando",
             "Apocalypse Now",
             "Laurence Fishburne",
+            from_actor_id=1,
             llm=mock_llm,
         )
         assert result.valid is True
@@ -214,7 +223,7 @@ class TestLLMFallback:
 class TestMovieMetadata:
     async def test_result_includes_movie_metadata(self, mock_tmdb):
         result = await validate_move(
-            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portman"
+            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portman", from_actor_id=1
         )
         assert result.movie_id == 10195
         assert result.movie_title == "Thor"
@@ -249,7 +258,11 @@ class TestAmbiguousTitle:
         self, ambiguous_tmdb
     ):
         result = await validate_move(
-            ambiguous_tmdb, "Jack Nicholson", "Batman", "Michael Keaton"
+            ambiguous_tmdb,
+            "Jack Nicholson",
+            "Batman",
+            "Michael Keaton",
+            from_actor_id=2,
         )
         assert result.valid is True
         assert result.movie_id == 268
@@ -264,7 +277,9 @@ class TestAmbiguousTitle:
         ]
         tmdb.get_movie_cast.return_value = make_cast("Michael Keaton", "Jack Nicholson")
 
-        result = await validate_move(tmdb, "Jack Nicholson", "Batman", "Michael Keaton")
+        result = await validate_move(
+            tmdb, "Jack Nicholson", "Batman", "Michael Keaton", from_actor_id=2
+        )
 
         assert result.valid is True
         tmdb.get_movie_cast.assert_called_once_with(268)
@@ -273,7 +288,11 @@ class TestAmbiguousTitle:
         self, ambiguous_tmdb
     ):
         result = await validate_move(
-            ambiguous_tmdb, "Jack Nicholson", "Batman", "Leonardo DiCaprio"
+            ambiguous_tmdb,
+            "Jack Nicholson",
+            "Batman",
+            "Leonardo DiCaprio",
+            from_actor_id=2,
         )
         assert result.valid is False
         assert result.movie_id == 414906
@@ -301,7 +320,45 @@ class TestAmbiguousTitle:
 
         tmdb.get_movie_cast.side_effect = get_movie_cast
 
-        result = await validate_move(tmdb, "Jack Nicholson", "Batman", "Michael Keaton")
+        result = await validate_move(
+            tmdb, "Jack Nicholson", "Batman", "Michael Keaton", from_actor_id=1
+        )
 
         assert result.valid is False
         assert tmdb.get_movie_cast.call_count == 2
+
+
+class TestActorIdentityAnchor:
+    """Regression tests for the bug where the chain is anchored by actor
+    name rather than TMDb id, so a cast member who merely shares a name
+    with the anchored actor is silently accepted as a continuation of
+    the chain."""
+
+    async def test_homonym_cast_member_is_rejected_when_id_does_not_match(self):
+        tmdb = AsyncMock()
+        tmdb.search_movies.return_value = [make_movie(title="Bandits", movie_id=500)]
+        tmdb.get_movie_cast.return_value = [
+            CastMember(id=999, name="Chris Pine"),  # homonym, wrong person
+            CastMember(id=42, name="Cate Blanchett"),
+        ]
+
+        result = await validate_move(
+            tmdb,
+            from_actor="Chris Pine",
+            movie_title="Bandits",
+            to_actor="Cate Blanchett",
+            from_actor_id=64,  # the actual anchored person's TMDb id
+        )
+
+        assert result.valid is False
+        assert result.from_actor_found is False
+
+    async def test_to_actor_id_is_captured_from_cast_member(self, mock_tmdb):
+        """The next actor's TMDb id should come straight from the cast
+        member validate_move matched, not require a separate lookup."""
+        result = await validate_move(
+            mock_tmdb, "Chris Hemsworth", "Thor", "Natalie Portman", from_actor_id=1
+        )
+
+        assert result.valid is True
+        assert result.to_actor_id == 2

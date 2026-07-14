@@ -35,10 +35,25 @@ def tmdb():
 def validate_move_fixture(tmdb):
     """Fixture to validate movie connections.
 
-    Returns a wrapper that injects the tmdb client into validate_move.
+    Returns a wrapper that injects the tmdb client into validate_move. If
+    from_actor_id isn't supplied, it's resolved via a real TMDb person
+    search, mirroring how a real game establishes the anchor from a prior
+    move.
     """
 
-    async def _validate(from_actor, movie_title, to_actor, **kwargs):
-        return await validate_move(tmdb, from_actor, movie_title, to_actor, **kwargs)
+    async def _validate(
+        from_actor, movie_title, to_actor, from_actor_id=None, **kwargs
+    ):
+        if from_actor_id is None:
+            person = await tmdb.search_person(from_actor)
+            from_actor_id = person.id if person else 0
+        return await validate_move(
+            tmdb,
+            from_actor,
+            movie_title,
+            to_actor,
+            from_actor_id=from_actor_id,
+            **kwargs,
+        )
 
     return _validate

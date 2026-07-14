@@ -45,9 +45,34 @@ class TestReplayMove:
                 actor_name="Natalie Portman",
             ),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is True
         assert result.detail == "ok"
+
+    async def test_passes_from_actor_id_to_validate_move(self, mock_tmdb):
+        """replay_move must anchor from_actor by TMDb id, same as the live
+        game route, not just by name."""
+        move = RecordedMove(
+            movie="Thor",
+            actor="Natalie Portman",
+            expected=ExpectedSuccess(
+                movie_id=10195,
+                movie_title="Thor",
+                actor_id=2,
+                actor_name="Natalie Portman",
+            ),
+        )
+        # A homonym with the wrong id sits in the cast; only the real
+        # Chris Hemsworth (id=1) should be accepted as from_actor.
+        mock_tmdb.get_movie_cast.return_value = [
+            CastMember(id=999, name="Chris Hemsworth"),
+            CastMember(id=2, name="Natalie Portman"),
+        ]
+
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
+
+        assert result.passed is False
+        assert result.actual_valid is False
 
     async def test_expected_failure_passes(self, mock_tmdb):
         move = RecordedMove(
@@ -55,7 +80,7 @@ class TestReplayMove:
             actor="Leonardo DiCaprio",
             expected=ExpectedFailure(),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is True
         assert result.detail == "ok"
 
@@ -70,7 +95,7 @@ class TestReplayMove:
                 actor_name="Leonardo DiCaprio",
             ),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is False
         assert "Expected success but move was rejected" in result.detail
 
@@ -80,7 +105,7 @@ class TestReplayMove:
             actor="Natalie Portman",
             expected=ExpectedFailure(),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is False
         assert "Expected failure but move was accepted" in result.detail
 
@@ -95,7 +120,7 @@ class TestReplayMove:
                 actor_name="Natalie Portman",
             ),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is False
         assert "Movie ID mismatch" in result.detail
 
@@ -110,7 +135,7 @@ class TestReplayMove:
                 actor_name="Natalie Portmann",
             ),
         )
-        result = await replay_move(mock_tmdb, "Chris Hemsworth", move)
+        result = await replay_move(mock_tmdb, "Chris Hemsworth", move, from_actor_id=1)
         assert result.passed is False
         assert "Actor name mismatch" in result.detail
 
@@ -119,6 +144,7 @@ class TestReplayGame:
     async def test_full_game_replay(self, mock_tmdb):
         game = RecordedGame(
             start_actor="Chris Hemsworth",
+            start_actor_id=1,
             end_actor="Tom Hiddleston",
             moves=[
                 RecordedMove(
@@ -150,6 +176,7 @@ class TestReplayGame:
     async def test_game_with_failed_move(self, mock_tmdb):
         game = RecordedGame(
             start_actor="Chris Hemsworth",
+            start_actor_id=1,
             end_actor="Natalie Portman",
             moves=[
                 RecordedMove(
@@ -179,6 +206,7 @@ class TestReplayGame:
         the previous move's expected actor_name."""
         game = RecordedGame(
             start_actor="Chris Hemsworth",
+            start_actor_id=1,
             end_actor="Tom Hiddleston",
             moves=[
                 RecordedMove(
@@ -213,6 +241,7 @@ class TestReplayGame:
         """After a failed move, from_actor should remain the same."""
         game = RecordedGame(
             start_actor="Chris Hemsworth",
+            start_actor_id=1,
             end_actor="Natalie Portman",
             moves=[
                 RecordedMove(

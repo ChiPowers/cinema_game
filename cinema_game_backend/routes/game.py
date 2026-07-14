@@ -96,6 +96,7 @@ async def make_move(
         raise HTTPException(status_code=400, detail="Game is already over")
 
     from_actor = game["current_actor"]["name"]
+    from_actor_id = game["current_actor"]["id"]
 
     rt = get_current_run_tree()
     if rt:
@@ -112,6 +113,7 @@ async def make_move(
         from_actor,
         body.movie,
         body.next_actor,
+        from_actor_id=from_actor_id,
         llm=llm,
         langsmith_extra={"metadata": {"game_id": game_id}},
     )
@@ -128,10 +130,14 @@ async def make_move(
             strikes=strikes,
         )
 
-    # Resolve the next actor's TMDb ID for accurate win detection.
-    # Use the canonical matched name from validation (not the raw player input)
-    # so that misspellings like "Kat Denings" resolve to "Kat Dennings".
-    new_actor = await _resolve_actor(tmdb, result.to_actor_name or body.next_actor)
+    # The next actor's TMDb ID and canonical name come straight from the cast
+    # member validate_move matched against — no separate name search needed,
+    # and no risk of that search resolving to a different person.
+    new_actor = {
+        "name": result.to_actor_name or body.next_actor,
+        "id": result.to_actor_id,
+        "profile_url": result.to_actor_profile_url,
+    }
 
     # Record the move with the canonical TMDb title
     move = Move(
@@ -143,6 +149,8 @@ async def make_move(
         movie_year=result.movie_year,
         poster_url=result.poster_url,
         backdrop_url=result.backdrop_url,
+        from_actor_id=from_actor_id,
+        to_actor_id=new_actor["id"],
     )
     game["moves"].append(move.model_dump())
 
