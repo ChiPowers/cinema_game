@@ -195,6 +195,28 @@ Emails are stored lowercase; the script normalizes input.
 
 See the [frontend repo](https://github.com/ChiPowers/cinema-frontend).
 
+### Docker
+
+Build the image:
+
+```bash
+docker build -t cinema-game-backend .
+```
+
+Run it, supplying the required secrets as environment variables — never bake secrets into the image itself:
+
+```bash
+docker run -p 8000:8000 \
+  --env-file secrets/.env \
+  -e NEXTAUTH_SECRET=... \
+  -e INTERNAL_SECRET=... \
+  cinema-game-backend
+```
+
+The API is then available at `http://localhost:8000`. The image sets `TMDB_CACHE_DISABLE=true` by default so it runs without any cache configuration; override with `TMDB_CACHE_PATH` (and a mounted volume, so the cache file persists) for cached lookups.
+
+The container's own SQLite files (`cinema_game.db`, and any TMDb cache path under `/app`) live inside the container's filesystem and are lost when the container is removed unless a volume is mounted. A `docker-compose.yml` to run this backend together with the [frontend](https://github.com/ChiPowers/cinema-frontend), with proper volumes and env file wiring, is planned as a follow-up once both repos' Dockerfiles have landed.
+
 ## API
 
 | Method   | Route                                     | Auth                       | Description                                                              |
