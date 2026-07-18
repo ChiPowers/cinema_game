@@ -22,6 +22,8 @@ class ValidationResult(BaseModel):
     to_actor_found: bool = False
     from_actor_name: str | None = None
     to_actor_name: str | None = None
+    to_actor_id: int | None = None
+    to_actor_profile_url: str | None = None
 
 
 class Actor(BaseModel):
@@ -55,6 +57,8 @@ class Move(BaseModel):
     movie_year: str | None = None
     poster_url: str | None = None
     backdrop_url: str | None = None
+    from_actor_id: int | None = None
+    to_actor_id: int | None = None
 
 
 class GameState(BaseModel):

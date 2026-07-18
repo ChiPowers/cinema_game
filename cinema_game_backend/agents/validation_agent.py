@@ -71,14 +71,29 @@ def _resolve_actor(query: str, cast_names: list[str], llm=None) -> ActorMatch | 
 
 @traceable(run_type="tool", name="check_movie_candidate")
 async def _check_candidate(
-    tmdb: TMDbClient, movie, from_actor: str, to_actor: str, llm
+    tmdb: TMDbClient, movie, from_actor: str, from_actor_id: int, to_actor: str, llm
 ):
-    """Fetch a candidate movie's cast and try to resolve both actors against it."""
+    """Fetch a candidate movie's cast and try to resolve both actors against it.
+
+    from_actor is anchored by TMDb id: a fuzzy name match is only accepted if
+    some cast member with that exact matched name also has the anchored id,
+    since a cast member who merely shares a name is a different person.
+    """
     cast = await tmdb.get_movie_cast(movie.id)
     cast_names = [c.name for c in cast]
+
     from_match = _resolve_actor(from_actor, cast_names, llm)
+    if from_match is not None and not any(
+        c.id == from_actor_id and c.name == from_match.matched_name for c in cast
+    ):
+        from_match = None
+
     to_match = _resolve_actor(to_actor, cast_names, llm)
-    return from_match, to_match
+    to_member = None
+    if to_match is not None:
+        to_member = next(c for c in cast if c.name == to_match.matched_name)
+
+    return from_match, to_match, to_member
 
 
 @traceable(run_type="chain", name="validate_move")
@@ -87,6 +102,8 @@ async def validate_move(
     from_actor: str,
     movie_title: str,
     to_actor: str,
+    *,
+    from_actor_id: int,
     llm=None,
 ) -> ValidationResult:
     """
@@ -94,7 +111,9 @@ async def validate_move(
 
     1. Search TMDb for movies matching the title (TMDb handles fuzzy title
        matching and ranks results by its own relevance/recency signal).
-    2. Check the top-ranked candidate's cast for both actors first.
+    2. Check the top-ranked candidate's cast for both actors first. from_actor
+       is anchored by TMDb id, not name: a cast member who merely shares
+       from_actor's name is not accepted unless their id also matches.
     3. If a title is ambiguous (shared by multiple films) and the top-ranked
        candidate doesn't have both actors, walk the remaining candidates in
        TMDb's order, up to MAX_MOVIE_SEARCH_CANDIDATES, stopping at the first
@@ -111,17 +130,22 @@ async def validate_move(
         )
 
     movie = candidates[0]
-    from_match, to_match = await _check_candidate(
-        tmdb, movie, from_actor, to_actor, llm
+    from_match, to_match, to_member = await _check_candidate(
+        tmdb, movie, from_actor, from_actor_id, to_actor, llm
     )
 
     if from_match is None or to_match is None:
         for candidate in candidates[1:MAX_MOVIE_SEARCH_CANDIDATES]:
-            candidate_from, candidate_to = await _check_candidate(
-                tmdb, candidate, from_actor, to_actor, llm
+            candidate_from, candidate_to, candidate_to_member = await _check_candidate(
+                tmdb, candidate, from_actor, from_actor_id, to_actor, llm
             )
             if candidate_from is not None and candidate_to is not None:
-                movie, from_match, to_match = candidate, candidate_from, candidate_to
+                movie, from_match, to_match, to_member = (
+                    candidate,
+                    candidate_from,
+                    candidate_to,
+                    candidate_to_member,
+                )
                 break
 
     valid = from_match is not None and to_match is not None
@@ -155,4 +179,6 @@ async def validate_move(
         to_actor_found=to_match is not None,
         from_actor_name=from_match.matched_name if from_match else None,
         to_actor_name=to_match.matched_name if to_match else None,
+        to_actor_id=to_member.id if to_member else None,
+        to_actor_profile_url=to_member.profile_url if to_member else None,
     )

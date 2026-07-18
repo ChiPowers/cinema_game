@@ -103,11 +103,14 @@ Each player move produces a `validate_move` trace with the following child spans
 
 ```
 validate_move (chain)
-├── resolve_actor (tool)   — from_actor
-│   └── llm_name_match (tool)   — only if fuzzy matching failed and LLM is available
-└── resolve_actor (tool)   — to_actor
-    └── llm_name_match (tool)   — only if fuzzy matching failed and LLM is available
+└── check_movie_candidate (tool)   — once per TMDb candidate checked; stops at the first full match
+    ├── resolve_actor (tool)   — from_actor
+    │   └── llm_name_match (tool)   — only if fuzzy matching failed and LLM is available
+    └── resolve_actor (tool)   — to_actor
+        └── llm_name_match (tool)   — only if fuzzy matching failed and LLM is available
 ```
+
+For an ambiguous title (e.g. "Batman"), `check_movie_candidate` appears once per candidate walked before a match is found — most moves show it only once, since the top-ranked candidate is checked first and the walk short-circuits on success.
 
 **Reading the traces:**
 
@@ -216,6 +219,7 @@ A recorded game is a JSON file containing a start actor, end actor, and a list o
 ```json
 {
   "start_actor": "Brad Pitt",
+  "start_actor_id": 287,
   "end_actor": "Colin Firth",
   "moves": [
     {
@@ -280,9 +284,11 @@ poetry install --with notebook
 The backend uses **FastAPI dependency injection** to provide the TMDb client and an optional LLM provider. At startup, `create_tmdb_client()` reads the cache configuration and produces either a `CachedTMDbClient` (backed by SQLAlchemy) or a plain `TMDbClient`. If an LLM API key is configured, `create_llm_provider()` creates a provider via reusable-llm-provider. Both are stored on `app.state` and injected into route handlers via `Depends()`.
 
 **Move validation** works in three stages:
-1. **TMDb lookup** — search for the movie and fetch its cast list.
+1. **TMDb lookup** — search for movies matching the title (TMDb may return multiple candidates for an ambiguous title, e.g. "Batman"). Check the top-ranked candidate's cast first; if a title is ambiguous and the top-ranked film doesn't have both actors, walk the remaining candidates in TMDb's own order until one does.
 2. **Fuzzy matching** — rapidfuzz Levenshtein distance + WRatio scoring resolves typos and minor misspellings against the cast list.
 3. **LLM fallback** (optional) — if fuzzy matching fails and an LLM provider is available, an LLM call resolves harder cases like nicknames ("Larry" → "Laurence").
+
+The chain is anchored by TMDb person id, not name. `from_actor` must match the actor established by the puzzle's start actor or the previous move by TMDb id — a cast member who merely shares that name is rejected, even if the name matches exactly. `to_actor`'s id (and profile image) are read directly off the matched cast member and become the anchor for the next move; no separate actor search is performed.
 
 The TMDb cache layer lives in the [art-graph](https://github.com/ChiPowers/artist-graph) library. It caches people, movies, and credits in three tables. The caller (this app) owns the database engine and configuration — art-graph has no opinion about which database backend is used.
 

@@ -44,6 +44,7 @@ def export_game(game_id: str) -> RecordedGame:
         expected = ExpectedSuccess(
             movie_id=m["movie_id"],
             movie_title=m["movie_title"],
+            actor_id=m.get("to_actor_id"),
             actor_name=m["to_actor"],
         )
         moves.append(
@@ -52,6 +53,7 @@ def export_game(game_id: str) -> RecordedGame:
 
     return RecordedGame(
         start_actor=game["start_actor"]["name"],
+        start_actor_id=game["start_actor"]["id"],
         end_actor=game["end_actor"]["name"],
         moves=moves,
     )

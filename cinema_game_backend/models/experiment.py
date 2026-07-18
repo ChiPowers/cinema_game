@@ -31,5 +31,6 @@ class RecordedGame(BaseModel):
     """A complete recorded game session for regression testing."""
 
     start_actor: str
+    start_actor_id: int | None = None
     end_actor: str
     moves: list[RecordedMove]

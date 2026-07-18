@@ -21,10 +21,13 @@ async def replay_move(
     tmdb: TMDbClient,
     from_actor: str,
     move: RecordedMove,
+    from_actor_id: int,
     llm=None,
 ) -> MoveResult:
     """Replay a single move and compare against the expected outcome."""
-    result = await validate_move(tmdb, from_actor, move.movie, move.actor, llm=llm)
+    result = await validate_move(
+        tmdb, from_actor, move.movie, move.actor, from_actor_id=from_actor_id, llm=llm
+    )
 
     expected_valid = move.expected.valid
     passed = result.valid == expected_valid
@@ -73,13 +76,17 @@ async def replay_game(
     """
     results = []
     current_actor = game.start_actor
+    current_actor_id = game.start_actor_id
 
     for move in game.moves:
-        result = await replay_move(tmdb, current_actor, move, llm=llm)
+        result = await replay_move(
+            tmdb, current_actor, move, from_actor_id=current_actor_id, llm=llm
+        )
         results.append(result)
 
         # Advance the chain only if the move was expected to succeed.
         if isinstance(move.expected, ExpectedSuccess):
             current_actor = move.expected.actor_name
+            current_actor_id = move.expected.actor_id
 
     return results

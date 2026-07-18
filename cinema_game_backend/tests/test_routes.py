@@ -209,16 +209,17 @@ class TestMakeMove:
             movie_id=76203,
             movie_title="12 Years a Slave",
             movie_year="2013",
-        )
-        mock_tmdb.search_person = AsyncMock(
-            return_value=Person(name="Michael Fassbender", id=17288)
+            from_actor_found=True,
+            to_actor_found=True,
+            to_actor_name="Michael Fassbender",
+            to_actor_id=17288,
         )
 
         with patch(
             "cinema_game_backend.routes.game.validate_move",
             new_callable=AsyncMock,
             return_value=mock_validation,
-        ):
+        ) as mock_validate:
             res = client.post(
                 f"/game/{game_id}/move",
                 json={"movie": "12 Years a Slave", "next_actor": "Michael Fassbender"},
@@ -229,7 +230,10 @@ class TestMakeMove:
         assert data["valid"] is True
         assert data["game_status"] == "in_progress"
         assert data["current_actor"]["name"] == "Michael Fassbender"
+        assert data["current_actor"]["id"] == 17288
         assert data["movie_title"] == "12 Years a Slave"
+        # from_actor is anchored by the current actor's TMDb id, not just name.
+        assert mock_validate.call_args.kwargs["from_actor_id"] == 287
 
     def test_invalid_move(self, client):
         game_id = self._create_game(client)
@@ -264,9 +268,10 @@ class TestMakeMove:
             movie_id=24420,
             movie_title="A Single Man",
             movie_year="2009",
-        )
-        mock_tmdb.search_person = AsyncMock(
-            return_value=Person(name="Colin Firth", id=1891)
+            from_actor_found=True,
+            to_actor_found=True,
+            to_actor_name="Colin Firth",
+            to_actor_id=1891,
         )
 
         with patch(
@@ -301,9 +306,10 @@ class TestMakeMove:
             movie_id=1,
             movie_title="T",
             movie_year="2000",
-        )
-        mock_tmdb.search_person = AsyncMock(
-            return_value=Person(name="Colin Firth", id=1891)
+            from_actor_found=True,
+            to_actor_found=True,
+            to_actor_name="Colin Firth",
+            to_actor_id=1891,
         )
 
         with patch(
@@ -417,9 +423,10 @@ class TestUndoMove:
             movie_id=76203,
             movie_title="12 Years a Slave",
             movie_year="2013",
-        )
-        mock_tmdb.search_person = AsyncMock(
-            return_value=Person(name="Michael Fassbender", id=17288)
+            from_actor_found=True,
+            to_actor_found=True,
+            to_actor_name="Michael Fassbender",
+            to_actor_id=17288,
         )
 
         with patch(
