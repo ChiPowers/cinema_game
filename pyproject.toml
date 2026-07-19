@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cinema_game_backend"
-version = "2.3.3"
+version = "2.3.4"
 description = "Cinema Game — connect actors through shared movies"
 authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
 license = "mit"
