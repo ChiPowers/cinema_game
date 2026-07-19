@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./secrets/.env
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_API_URL is inlined into the client bundle at build
+        # time, so it must be a build arg, not a runtime env var. Override
+        # by exporting NEXT_PUBLIC_API_URL before running `docker compose up`
+        # if the backend is not reachable at localhost:8000 from the browser.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env.local
+    environment:
+      # Overrides whatever BACKEND_URL is set to in frontend/.env.local:
+      # inside the compose network, the frontend must reach the backend by
+      # service name, not localhost.
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy

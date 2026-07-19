@@ -32,6 +32,22 @@ The backend generates a puzzle: a start actor, an end actor, and a guaranteed so
 
 ## Getting started
 
+### Cloning
+
+This repo includes the [frontend](https://github.com/ChiPowers/cinema-frontend) as a git submodule at `frontend/`, pinned to a specific tagged commit. Clone with submodules included in one step:
+
+```bash
+git clone --recurse-submodules https://github.com/ChiPowers/cinema_game.git
+```
+
+If you already cloned without `--recurse-submodules` (or pulled a change that updated the submodule pointer), the `frontend/` directory will exist but be empty. Fix it with:
+
+```bash
+git submodule update --init --recursive
+```
+
+This checks out `frontend/` at the exact commit this repo's submodule pointer names — not `frontend`'s own `main` branch. To move the pin forward to a newer frontend commit, that's a deliberate `cd frontend && git checkout <ref> && cd .. && git add frontend` in this repo, not something that happens automatically on `git pull`.
+
 ### Backend
 
 Requires Python >=3.10, <3.15.
@@ -193,7 +209,7 @@ Emails are stored lowercase; the script normalizes input.
 
 ### Frontend
 
-See the [frontend repo](https://github.com/ChiPowers/cinema-frontend).
+Included as a git submodule at `frontend/` — see "Cloning" above. Also available as its own repo: [cinema-frontend](https://github.com/ChiPowers/cinema-frontend).
 
 ### Docker
 
@@ -215,7 +231,38 @@ docker run -p 8000:8000 \
 
 The API is then available at `http://localhost:8000`. The image sets `TMDB_CACHE_DISABLE=true` by default so it runs without any cache configuration; override with `TMDB_CACHE_PATH` (and a mounted volume, so the cache file persists) for cached lookups.
 
-The container's own SQLite files (`cinema_game.db`, and any TMDb cache path under `/app`) live inside the container's filesystem and are lost when the container is removed unless a volume is mounted. A `docker-compose.yml` to run this backend together with the [frontend](https://github.com/ChiPowers/cinema-frontend), with proper volumes and env file wiring, is planned as a follow-up once both repos' Dockerfiles have landed.
+The container's own SQLite files (`cinema_game.db`, and any TMDb cache path under `/app`) live inside the container's filesystem and are lost when the container is removed unless a volume is mounted.
+
+### Running both services with Docker Compose
+
+`docker-compose.yml` builds and runs this backend together with the `frontend/` submodule, wired together on a shared network.
+
+Before the first run, each service still needs its own real secrets — Compose does not create these for you:
+
+```bash
+cp secrets/.env.example secrets/.env      # fill in real values
+cp frontend/.env.example frontend/.env.local   # fill in real values
+```
+
+`NEXTAUTH_SECRET` and `INTERNAL_SECRET` must be identical in both files, per the Configuration section above.
+
+Then:
+
+```bash
+docker compose up --build
+```
+
+This builds both images, starts the backend first, waits for it to report healthy (via the image's built-in `HEALTHCHECK`), then starts the frontend. Backend is at `http://localhost:8000`, frontend at `http://localhost:3000`. Inside the Compose network, the frontend reaches the backend at `http://backend:8000` — this overrides whatever `BACKEND_URL` is set to in `frontend/.env.local`, since `localhost` would otherwise resolve to the frontend container itself, not the backend.
+
+`NEXT_PUBLIC_API_URL` is inlined into the frontend's client-side bundle at build time (browser code cannot read `frontend/.env.local` at runtime), so it comes from a build arg instead, defaulting to `http://localhost:8000`. Override it by exporting `NEXT_PUBLIC_API_URL` in your shell before running `docker compose up --build`, if the backend will not be reachable at that address from your browser.
+
+To stop everything:
+
+```bash
+docker compose down
+```
+
+Add `-v` to also remove the containers' volumes (there are none defined yet, so this currently has no additional effect — relevant once the SQLite-to-Postgres migration discussed in the deployment planning doc happens and volumes get added for persistence).
 
 ## API
 
