@@ -256,13 +256,15 @@ This builds both images, starts the backend first, waits for it to report health
 
 `NEXT_PUBLIC_API_URL` is inlined into the frontend's client-side bundle at build time (browser code cannot read `frontend/.env.local` at runtime), so it comes from a build arg instead, defaulting to `http://localhost:8000`. Override it by exporting `NEXT_PUBLIC_API_URL` in your shell before running `docker compose up --build`, if the backend will not be reachable at that address from your browser.
 
+The backend's SQLite database (game state and the `beta_users` table) persists in a named volume (`cinema_game_db`, mounted at `/data`) across `docker compose down`/`up`/`--build`. Without it, every run would start from a completely empty database — including an empty `beta_users` table, meaning anyone added via `manage_beta_users.py` would appear to have been silently removed the next time the stack restarts.
+
 To stop everything:
 
 ```bash
 docker compose down
 ```
 
-Add `-v` to also remove the containers' volumes (there are none defined yet, so this currently has no additional effect — relevant once the SQLite-to-Postgres migration discussed in the deployment planning doc happens and volumes get added for persistence).
+Add `-v` to also remove the named volume — this deletes all game state and the beta-user allowlist, starting the next `docker compose up` completely fresh. Omit `-v` for a normal restart that keeps that data.
 
 ## API
 
