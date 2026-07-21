@@ -21,6 +21,15 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET", "")
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "")
 
+# Comma-separated allowlist re-applied to the beta_users table on every
+# startup, so a database that gets wiped (container rebuild, fresh volume,
+# etc.) self-heals instead of silently locking everyone out.
+BETA_SEED_EMAILS = [
+    email.strip()
+    for email in os.getenv("BETA_SEED_EMAILS", "").split(",")
+    if email.strip()
+]
+
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
