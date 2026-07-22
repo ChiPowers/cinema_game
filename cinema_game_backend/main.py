@@ -8,8 +8,9 @@ from .config import (
     create_llm_provider,
     NEXTAUTH_SECRET,
     INTERNAL_SECRET,
+    BETA_SEED_EMAILS,
 )
-from .database import init_db
+from .database import init_db, seed_beta_users
 from .routes.game import router as game_router
 from .routes.auth import router as auth_router
 
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
             "INTERNAL_SECRET environment variable is required but not set"
         )
     init_db()
+    seed_beta_users(BETA_SEED_EMAILS)
     app.state.tmdb = create_tmdb_client()
     app.state.llm = create_llm_provider()
     if app.state.llm is None:

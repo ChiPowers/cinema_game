@@ -63,6 +63,11 @@ def add_beta_user(email: str):
     conn.close()
 
 
+def seed_beta_users(emails: list[str]):
+    for email in emails:
+        add_beta_user(email)
+
+
 def remove_beta_user(email: str):
     conn = get_db()
     conn.execute("DELETE FROM beta_users WHERE email = ?", (email.lower(),))

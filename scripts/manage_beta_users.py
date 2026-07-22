@@ -9,6 +9,7 @@ Usage:
 
 import sys
 
+from cinema_game_backend.config import BETA_SEED_EMAILS
 from cinema_game_backend.database import (
     init_db,
     add_beta_user,
@@ -35,6 +36,14 @@ elif command == "remove":
     email = sys.argv[2]
     remove_beta_user(email)
     print(f"Removed: {email}")
+    seeded = {seed.strip().lower() for seed in BETA_SEED_EMAILS}
+    if email.strip().lower() in seeded:
+        print(
+            f"WARNING: {email} is still listed in BETA_SEED_EMAILS "
+            "(secrets/.env). It will be re-added automatically the next "
+            "time the app starts. Remove it from BETA_SEED_EMAILS too if "
+            "this removal should stick."
+        )
 
 elif command == "list":
     users = list_beta_users()
