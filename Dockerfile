@@ -7,7 +7,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1 \
     POETRY_VERSION=2.3.4 \
-    TMDB_CACHE_DISABLE=true
+    TMDB_CACHE_DISABLE=true \
+    DB_PATH=/data/cinema_game.db
 
 WORKDIR /app
 
@@ -29,6 +30,16 @@ RUN poetry install --only main
 
 RUN useradd --create-home --uid 1000 appuser \
     && chown -R appuser:appuser /app
+
+# DB_PATH points here rather than the app code directory so a volume can be
+# mounted at /data alone (see docker-compose.yml) without shadowing the
+# application code on every `docker compose up` — mounting a volume over
+# /app itself would pin the container to whatever code existed the first
+# time the volume was created, defeating rebuilds. This is what lets game
+# state and the beta_users table survive `docker compose down`/`up`/`--build`
+# instead of resetting every run.
+RUN mkdir -p /data && chown appuser:appuser /data
+
 USER appuser
 
 EXPOSE 8000

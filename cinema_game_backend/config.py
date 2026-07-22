@@ -48,7 +48,7 @@ def create_tmdb_client() -> TMDbClient:
         )
 
 
-DB_PATH = directories.base("cinema_game.db")
+DB_PATH = os.getenv("DB_PATH", directories.base("cinema_game.db"))
 
 
 def create_llm_provider():

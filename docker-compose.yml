@@ -7,6 +7,14 @@ services:
       - "8000:8000"
     env_file:
       - ./secrets/.env
+    volumes:
+      # Persists game state and the beta_users table across
+      # `docker compose down`/`up`/`--build`. Without this, every run starts
+      # from a fresh, empty database — including an empty beta_users table,
+      # so anyone previously added is effectively removed on every restart.
+      # Mounted at /data (not /app) so the app code itself is never shadowed
+      # by the volume; see DB_PATH in the Dockerfile.
+      - cinema_game_db:/data
 
   frontend:
     build:
@@ -30,3 +38,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+volumes:
+  cinema_game_db:
