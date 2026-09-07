@@ -7,6 +7,7 @@ e.g. nicknames like "Larry" for "Laurence".
 """
 
 import logging
+from pydantic import BaseModel
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
@@ -32,6 +33,17 @@ LLM_NAME_MATCH_PROMPT = (
 )
 
 
+class NameMatchResult(BaseModel):
+    """Structured result of an LLM name-resolution call.
+
+    ``matched_name`` is None when the LLM finds no cast member matching
+    the player's input. Passed to ``invoke_structured`` as the output
+    model, which re-validates the provider's response against it locally.
+    """
+
+    matched_name: str | None = None
+
+
 @traceable(run_type="tool", name="llm_name_match")
 def _llm_name_match(llm, query: str, cast_names: list[str]) -> ActorMatch | None:
     """Ask the LLM to resolve a name that fuzzy matching could not."""
@@ -40,12 +52,12 @@ def _llm_name_match(llm, query: str, cast_names: list[str]) -> ActorMatch | None
         query=query,
     )
     try:
-        result = llm.invoke_json(prompt)
+        result = llm.invoke_structured(prompt, NameMatchResult)
     except Exception:
         logger.warning("LLM name match failed for %r", query, exc_info=True)
         return None
 
-    matched = result.get("matched_name") if isinstance(result, dict) else None
+    matched = result.matched_name
     if matched and matched in cast_names:
         return ActorMatch(matched_name=matched)
     return None

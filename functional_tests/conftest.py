@@ -11,7 +11,7 @@ and external service access.
 import asyncio
 import pytest
 from cinema_game_backend.env import load_cinema_game_env
-from cinema_game_backend.config import create_tmdb_client
+from cinema_game_backend.config import create_tmdb_client, create_llm_provider
 from cinema_game_backend.agents.validation_agent import validate_move
 
 # Load credentials from secrets/.env
@@ -29,6 +29,19 @@ async def throttle_between_tests():
 def tmdb():
     """Provide a real TMDb client configured from secrets/.env."""
     return create_tmdb_client()
+
+
+@pytest.fixture
+def llm():
+    """Provide the real LLM provider configured from secrets/.env.
+
+    Skips rather than fails when no key is configured, so the rest of the
+    functional suite still runs without Anthropic credentials.
+    """
+    provider = create_llm_provider()
+    if provider is None:
+        pytest.skip("ANTHROPIC_API_KEY not set; LLM fallback cannot be tested")
+    return provider
 
 
 @pytest.fixture

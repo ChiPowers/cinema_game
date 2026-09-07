@@ -79,6 +79,25 @@ class TestValidationAgentFunctional:
         assert result.valid is not None
         assert isinstance(result.valid, bool)
 
+    async def test_nickname_resolved_by_real_llm(self, validate_move_fixture, llm):
+        """A nickname beyond fuzzy matching's reach is resolved by the real LLM.
+
+        "Larry" -> "Laurence" exceeds the Levenshtein <= 3 gate in
+        find_actor_in_cast, so this move is only valid if the LLM fallback
+        actually runs against a real provider. Every other functional test
+        leaves llm=None, and the unit tests mock the provider, so this is
+        the only place the real fallback path is exercised end to end.
+        """
+        result = await validate_move_fixture(
+            from_actor="Marlon Brando",
+            movie_title="Apocalypse Now",
+            to_actor="Larry Fishburne",
+            llm=llm,
+        )
+        assert result.valid is True
+        assert result.to_actor_found is True
+        assert result.to_actor_name == "Laurence Fishburne"
+
     async def test_response_schema_valid_move(self, validate_move_fixture):
         """Test that the response schema is correct for a valid move."""
         result = await validate_move_fixture(
