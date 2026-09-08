@@ -1,10 +1,15 @@
 """Tests for validate_move using a mocked TMDbClient."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, create_autospec
+
+from reusable_llm_provider.providers import LLMProvider
 
 from art_graph.cinema_data_providers.tmdb_models import Movie, CastMember
-from cinema_game_backend.agents.validation_agent import validate_move
+from cinema_game_backend.agents.validation_agent import (
+    validate_move,
+    NameMatchResult,
+)
 
 
 def make_movie(
@@ -147,11 +152,26 @@ class TestLLMFallback:
         )
         return tmdb
 
+    @staticmethod
+    def make_llm(matched_name):
+        """A provider mock specced to the real LLMProvider contract.
+
+        ``create_autospec`` means any call to a method the real provider
+        does not define raises AttributeError, so this mock cannot keep
+        passing if production drifts off the library's interface.
+        ``invoke_structured`` contractually returns an instance of the
+        caller's own ``output_model``, so the mock builds one rather than
+        hardcoding a shape.
+        """
+        llm = create_autospec(LLMProvider, instance=True)
+        llm.invoke_structured.side_effect = lambda prompt, output_model: output_model(
+            matched_name=matched_name
+        )
+        return llm
+
     @pytest.fixture
     def mock_llm(self):
-        llm = MagicMock()
-        llm.invoke_json.return_value = {"matched_name": "Laurence Fishburne"}
-        return llm
+        return self.make_llm("Laurence Fishburne")
 
     async def test_nickname_resolved_by_llm(self, apocalypse_now_tmdb, mock_llm):
         result = await validate_move(
@@ -178,8 +198,7 @@ class TestLLMFallback:
         assert result.to_actor_found is False
 
     async def test_llm_returns_null_match(self, apocalypse_now_tmdb):
-        llm = MagicMock()
-        llm.invoke_json.return_value = {"matched_name": None}
+        llm = self.make_llm(None)
         result = await validate_move(
             apocalypse_now_tmdb,
             "Marlon Brando",
@@ -190,10 +209,16 @@ class TestLLMFallback:
         )
         assert result.valid is False
         assert result.to_actor_found is False
+        # The move must be rejected because the LLM was consulted and found
+        # no match -- not because the call failed. Without this, the test
+        # passes just as happily when the provider call raises.
+        llm.invoke_structured.assert_called_once()
+        _, output_model = llm.invoke_structured.call_args[0]
+        assert output_model is NameMatchResult
 
     async def test_llm_exception_degrades_gracefully(self, apocalypse_now_tmdb):
-        llm = MagicMock()
-        llm.invoke_json.side_effect = RuntimeError("API timeout")
+        llm = create_autospec(LLMProvider, instance=True)
+        llm.invoke_structured.side_effect = RuntimeError("API timeout")
         result = await validate_move(
             apocalypse_now_tmdb,
             "Marlon Brando",
@@ -217,7 +242,7 @@ class TestLLMFallback:
             llm=mock_llm,
         )
         assert result.valid is True
-        mock_llm.invoke_json.assert_not_called()
+        mock_llm.invoke_structured.assert_not_called()
 
 
 class TestMovieMetadata:
