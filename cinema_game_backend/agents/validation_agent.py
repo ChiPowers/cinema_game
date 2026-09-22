@@ -12,6 +12,7 @@ from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
 from pydantic import BaseModel
+from reusable_llm_provider.providers import LLMGenerationError
 
 from ..config import MAX_MOVIE_SEARCH_CANDIDATES
 from ..matching import ActorMatch, find_actor_in_cast
@@ -55,7 +56,11 @@ def _llm_name_match(llm, query: str, cast_names: list[str]) -> ActorMatch | None
     )
     try:
         result = llm.invoke_structured(prompt, NameMatchResult)
-    except Exception:
+    except LLMGenerationError:
+        # Transient: transport failure, empty response, or a response that
+        # failed local schema validation. Degrade to fuzzy matching rather
+        # than failing the player's move. Anything else -- contract drift, a
+        # missing backend -- propagates, because it is a defect, not weather.
         logger.warning("LLM name match failed for %r", query, exc_info=True)
         return None
 

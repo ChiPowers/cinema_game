@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock, create_autospec
 
 import pytest
 from art_graph.cinema_data_providers.tmdb_models import CastMember, Movie
-from reusable_llm_provider.providers import LLMProvider
+from reusable_llm_provider.providers import LLMProvider, LLMTransportError
 
 from cinema_game_backend.agents.validation_agent import (
     NameMatchResult,
+    _llm_name_match,
     validate_move,
 )
 
@@ -217,8 +218,13 @@ class TestLLMFallback:
         assert output_model is NameMatchResult
 
     async def test_llm_exception_degrades_gracefully(self, apocalypse_now_tmdb):
+        """A real API timeout arrives from the library already wrapped as
+        LLMTransportError (see reusable_llm_provider's _wrap_errors), not as
+        a raw exception -- so that is what this simulates."""
         llm = create_autospec(LLMProvider, instance=True)
-        llm.invoke_structured.side_effect = RuntimeError("API timeout")
+        llm.invoke_structured.side_effect = LLMTransportError(
+            "anthropic", RuntimeError("API timeout")
+        )
         result = await validate_move(
             apocalypse_now_tmdb,
             "Marlon Brando",
@@ -387,3 +393,18 @@ class TestActorIdentityAnchor:
 
         assert result.valid is True
         assert result.to_actor_id == 2
+
+
+class TestLLMNameMatchErrorHandling:
+    def test_generation_failure_degrades_to_none(self):
+        """A transient provider failure must not break the game."""
+        llm = create_autospec(LLMProvider, instance=True)
+        llm.invoke_structured.side_effect = LLMTransportError("anthropic", Exception())
+        assert _llm_name_match(llm, "bobby", ["Robert De Niro"]) is None
+
+    def test_contract_drift_propagates(self):
+        """Calling a method the provider does not have must not be silent."""
+        llm = create_autospec(LLMProvider, instance=True)
+        llm.invoke_structured.side_effect = AttributeError("invoke_json")
+        with pytest.raises(AttributeError):
+            _llm_name_match(llm, "bobby", ["Robert De Niro"])
