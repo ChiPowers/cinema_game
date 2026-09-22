@@ -1,14 +1,14 @@
 """Tests for validate_move using a mocked TMDbClient."""
 
-import pytest
 from unittest.mock import AsyncMock, create_autospec
 
+import pytest
+from art_graph.cinema_data_providers.tmdb_models import CastMember, Movie
 from reusable_llm_provider.providers import LLMProvider
 
-from art_graph.cinema_data_providers.tmdb_models import Movie, CastMember
 from cinema_game_backend.agents.validation_agent import (
-    validate_move,
     NameMatchResult,
+    validate_move,
 )
 
 

@@ -5,6 +5,7 @@ API keys for the backend to function.
 """
 
 import os
+
 from cinema_game_backend.directories import secrets
 from cinema_game_backend.env import load_cinema_game_env
 

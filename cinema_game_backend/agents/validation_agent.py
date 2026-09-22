@@ -7,12 +7,14 @@ e.g. nicknames like "Larry" for "Laurence".
 """
 
 import logging
-from pydantic import BaseModel
+
+from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
-from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+from pydantic import BaseModel
+
 from ..config import MAX_MOVIE_SEARCH_CANDIDATES
-from ..matching import find_actor_in_cast, ActorMatch
+from ..matching import ActorMatch, find_actor_in_cast
 from ..models.game import Confidence, ValidationResult
 
 logger = logging.getLogger(__name__)

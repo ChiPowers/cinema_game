@@ -1,9 +1,11 @@
 """Replay recorded games through validate_move and compare against expected outcomes."""
 
 from dataclasses import dataclass
+
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+
 from ..agents.validation_agent import validate_move
-from ..models.experiment import RecordedGame, RecordedMove, ExpectedSuccess
+from ..models.experiment import ExpectedSuccess, RecordedGame, RecordedMove
 
 
 @dataclass

@@ -1,10 +1,10 @@
 """Export game sessions from the database into RecordedGame models."""
 
-from ..database import load_game, list_games
+from ..database import list_games, load_game
 from ..models.experiment import (
     ExpectedSuccess,
-    RecordedMove,
     RecordedGame,
+    RecordedMove,
 )
 
 

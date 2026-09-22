@@ -1,5 +1,6 @@
-import sqlite3
 import json
+import sqlite3
+
 from .config import DB_PATH
 
 

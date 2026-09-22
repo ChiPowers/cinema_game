@@ -1,11 +1,10 @@
 import os
 
-from sqlalchemy import create_engine
-
 from art_graph.cinema_data_providers.cache.cached_client import CachedTMDbClient
+from art_graph.cinema_data_providers.filters import MovieFilter
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from art_graph.cinema_data_providers.tmdb.config import TMDbConfig
-from art_graph.cinema_data_providers.filters import MovieFilter
+from sqlalchemy import create_engine
 
 from . import directories
 from .env import load_cinema_game_env

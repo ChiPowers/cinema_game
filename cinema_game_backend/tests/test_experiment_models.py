@@ -1,11 +1,12 @@
 """Tests for recorded game session models."""
 
 import pytest
+
 from cinema_game_backend.models.experiment import (
-    ExpectedSuccess,
     ExpectedFailure,
-    RecordedMove,
+    ExpectedSuccess,
     RecordedGame,
+    RecordedMove,
 )
 
 

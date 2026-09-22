@@ -9,10 +9,12 @@ and external service access.
 """
 
 import asyncio
+
 import pytest
-from cinema_game_backend.env import load_cinema_game_env
-from cinema_game_backend.config import create_tmdb_client, create_llm_provider
+
 from cinema_game_backend.agents.validation_agent import validate_move
+from cinema_game_backend.config import create_llm_provider, create_tmdb_client
+from cinema_game_backend.env import load_cinema_game_env
 
 # Load credentials from secrets/.env
 load_cinema_game_env()

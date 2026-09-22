@@ -55,9 +55,19 @@ filterwarnings = [
 [tool.ruff]
 line-length = 88
 
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes (includes E402 import placement, F401 unused
+# imports). I: import sorting. UP: pyupgrade. ERA001: commented-out code.
+# ARG is deliberately NOT enabled -- unused arguments are usually signature
+# contracts in interface implementations, not dead code.
+select = ["E", "F", "I", "UP", "ERA001"]
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "_version.py" = ["F841"]
+# A vulture baseline is a list of bare names, so every line is an undefined
+# reference. See `make deadcode` for when this file exists.
+"deadcode-whitelist.py" = ["F821"]
 
 [tool.coverage.run]
 omit = [

@@ -1,12 +1,14 @@
 import sqlite3
-import pytest
 from unittest.mock import patch
+
+import pytest
+
 from cinema_game_backend.database import (
     init_db,
-    save_game,
-    load_game,
-    update_game,
     list_games,
+    load_game,
+    save_game,
+    update_game,
 )
 
 

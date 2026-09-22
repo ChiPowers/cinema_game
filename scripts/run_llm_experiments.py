@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Load secrets/.env before any langsmith or anthropic clients are constructed.
 from cinema_game_backend.env import load_cinema_game_env
@@ -33,7 +33,8 @@ def _print_cost_table(rows: list[CostRow], label: str) -> None:
     for r in rows:
         cost_str = f"${r.cost_usd:.6f}" if r.cost_usd else "n/a"
         print(
-            f"  {r.alias:<22} {r.input_tokens:>8,} {r.output_tokens:>8,} {cost_str:>12}  {r.cost_source}"
+            f"  {r.alias:<22} {r.input_tokens:>8,} {r.output_tokens:>8,} "
+            f"{cost_str:>12}  {r.cost_source}"
         )
         total_cost += r.cost_usd
     print(f"  {'─' * 22} {'─' * 8} {'─' * 8} {'─' * 12}")
@@ -77,7 +78,7 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%SZ")
     prefix = f"{args.prefix}-{stamp}"
     models = [m.strip() for m in args.models.split(",") if m.strip()] or None
 

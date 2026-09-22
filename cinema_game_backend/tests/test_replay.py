@@ -1,15 +1,16 @@
 """Tests for replaying recorded games against mocked TMDb data."""
 
-import pytest
 from unittest.mock import AsyncMock
 
-from art_graph.cinema_data_providers.tmdb_models import Movie, CastMember
-from cinema_game_backend.experiments.replay import replay_move, replay_game
+import pytest
+from art_graph.cinema_data_providers.tmdb_models import CastMember, Movie
+
+from cinema_game_backend.experiments.replay import replay_game, replay_move
 from cinema_game_backend.models.experiment import (
-    ExpectedSuccess,
     ExpectedFailure,
-    RecordedMove,
+    ExpectedSuccess,
     RecordedGame,
+    RecordedMove,
 )
 
 

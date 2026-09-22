@@ -4,11 +4,13 @@ Guarantees a valid solution by construction (the walk IS the solution).
 No LLM needed here — pure TMDb API calls.
 """
 
-import random
 import asyncio
-from langsmith import traceable
+import random
+
 from art_graph.cinema_data_providers.filters import MovieFilter
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+from langsmith import traceable
+
 from ..config import DIFFICULTY_HOPS, MIN_ACTOR_POPULARITY, MOVIE_FILTERS
 
 
@@ -59,7 +61,8 @@ async def _has_short_path(
 
 @traceable(run_type="tool", name="pick_start_actor")
 async def _pick_popular_actor(tmdb: TMDbClient, min_popularity: float):
-    """Pick a random actor from TMDb's popular people list above a popularity threshold."""
+    """Pick a random actor from TMDb's popular people list above a popularity
+    threshold."""
     page = random.randint(1, 5)
     people = await tmdb.get_popular_people(page=page)
     eligible = [p for p in people if p.popularity >= min_popularity]
@@ -134,7 +137,8 @@ async def _random_walk(
 
         is_last_hop = hop == hops - 1
         if is_last_hop:
-            # Prefer end actor above the popularity floor; fall back to most popular available.
+            # Prefer end actor above the popularity floor; fall back to most
+            # popular available.
             scored = []
             for candidate in cast[:20]:
                 person = await tmdb.get_person_details(candidate.id)

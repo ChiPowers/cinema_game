@@ -1,6 +1,7 @@
 import jwt
-from fastapi import Request, Header, HTTPException
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
+from fastapi import Header, HTTPException, Request
+
 from .config import NEXTAUTH_SECRET
 
 
