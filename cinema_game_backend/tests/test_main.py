@@ -8,9 +8,21 @@ from cinema_game_backend.main import app
 
 
 def test_startup_fails_when_provider_unconfigured(monkeypatch):
-    """A misconfigured deployment must not boot."""
-    monkeypatch.setenv("NEXTAUTH_SECRET", "test-secret")
-    monkeypatch.setenv("INTERNAL_SECRET", "test-internal")
+    """A misconfigured deployment must not boot.
+
+    NEXTAUTH_SECRET and INTERNAL_SECRET are patched as module ATTRIBUTES, not
+    as environment variables: config.py binds them to module constants at
+    import time, so monkeypatch.setenv cannot reach them. Setting the
+    environment instead passes locally, where secrets/.env happens to supply
+    both at import, and fails in CI, where it does not -- the lifespan then
+    raises about NEXTAUTH_SECRET before ever reaching the LLM_PROVIDER check
+    this test is about.
+
+    LLM_PROVIDER is different and correctly uses delenv: validate_llm_config
+    reads it via os.getenv at call time, precisely so it stays testable.
+    """
+    monkeypatch.setattr("cinema_game_backend.main.NEXTAUTH_SECRET", "test-secret")
+    monkeypatch.setattr("cinema_game_backend.main.INTERNAL_SECRET", "test-internal")
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
     with pytest.raises(RuntimeError, match="LLM_PROVIDER"):
         with TestClient(app):
