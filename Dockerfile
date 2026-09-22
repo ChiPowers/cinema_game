@@ -23,8 +23,12 @@ RUN apt-get update \
 # Install dependencies before copying source, so this layer is cached
 # across source-only changes.
 # Which LLM backend to build in. Exactly one vendor SDK ends up in the image.
-# LLM_PROVIDER is derived from it below so a build/runtime mismatch is
-# impossible rather than a startup failure. "all" is not valid here.
+# LLM_PROVIDER is derived from it below, setting the image's DEFAULT so it
+# matches the installed backend out of the box. An explicit override still
+# wins at runtime (e.g. docker-compose.yml's env_file loading secrets/.env),
+# so a build/runtime mismatch is still possible if that override disagrees --
+# it then fails fast at startup (see config.validate_llm_config) rather than
+# silently running with the wrong backend. "all" is not valid here.
 ARG LLM_EXTRA=vertex
 RUN case "$LLM_EXTRA" in \
       anthropic|openai|vertex|ollama) ;; \

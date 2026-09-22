@@ -97,11 +97,43 @@ def requirement_name(requirement):
     return re.split(r"[\s\[(<>=!~;@]", requirement.strip(), maxsplit=1)[0]
 
 
+def core_dependency_names(config):
+    """Canonical names declared as core (non-optional) dependencies.
+
+    Per the module docstring, core dependencies are out of scope for this
+    check: spreading pandas across ten modules is normal, spreading an
+    optional service client across ten modules is a missing boundary. A
+    distribution can appear in `[project.optional-dependencies]` purely as
+    the carrier of a *vendor* extra (`mypkg = ["reusable-llm-provider[anthropic]"]`)
+    while itself being declared a core dependency in `[project.dependencies]`
+    -- that does not make the carrier optional, so it must not be watched.
+    """
+    poetry = config.get("tool", {}).get("poetry", {})
+    names = set()
+
+    for requirement in config.get("project", {}).get("dependencies", []):
+        distribution = requirement_name(requirement)
+        if distribution:
+            names.add(canonical(distribution))
+
+    # Older Poetry-style `[tool.poetry.dependencies]` entries are core unless
+    # explicitly marked `optional = true`.
+    for distribution, spec in poetry.get("dependencies", {}).items():
+        if distribution == "python":
+            continue
+        if isinstance(spec, dict) and spec.get("optional"):
+            continue
+        names.add(canonical(distribution))
+
+    return names
+
+
 def optional_dependencies(root):
     with open(os.path.join(root, "pyproject.toml"), "rb") as handle:
         config = tomllib.load(handle)
     poetry = config.get("tool", {}).get("poetry", {})
     mine = own_names(config)
+    core = core_dependency_names(config)
     names = set()
 
     # Poetry groups marked optional (developer-facing)
@@ -109,7 +141,7 @@ def optional_dependencies(root):
         if not group.get("optional"):
             continue
         for distribution in group.get("dependencies", {}):
-            if distribution != "python":
+            if distribution != "python" and canonical(distribution) not in core:
                 names.add(module_name(distribution))
 
     # PEP 621 extras (consumer-facing; these are what reach wheel metadata)
@@ -119,14 +151,25 @@ def optional_dependencies(root):
         for requirement in requirements:
             distribution = requirement_name(requirement)
             # `all = ["mypkg[anthropic]"]` refers to this project, not a dep.
-            if distribution and canonical(distribution) not in mine:
+            # A distribution that is itself a core dependency (declared in
+            # `[project.dependencies]`) is only appearing here as the carrier
+            # of a vendor extra -- see core_dependency_names().
+            if (
+                distribution
+                and canonical(distribution) not in mine
+                and canonical(distribution) not in core
+            ):
                 names.add(module_name(distribution))
 
     # Legacy Poetry extras
     for distributions in poetry.get("extras", {}).values():
         for distribution in distributions:
             distribution = requirement_name(distribution)
-            if distribution and canonical(distribution) not in mine:
+            if (
+                distribution
+                and canonical(distribution) not in mine
+                and canonical(distribution) not in core
+            ):
                 names.add(module_name(distribution))
 
     return names

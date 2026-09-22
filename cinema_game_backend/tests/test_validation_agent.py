@@ -219,8 +219,10 @@ class TestLLMFallback:
 
     async def test_llm_exception_degrades_gracefully(self, apocalypse_now_tmdb):
         """A real API timeout arrives from the library already wrapped as
-        LLMTransportError (see reusable_llm_provider's _wrap_errors), not as
-        a raw exception -- so that is what this simulates."""
+        LLMGenerationError (see reusable_llm_provider's _wrap_errors), not as
+        a raw exception -- so that is what this simulates. LLMTransportError is
+        a subclass of LLMGenerationError, so raising it here still exercises
+        the same handling path."""
         llm = create_autospec(LLMProvider, instance=True)
         llm.invoke_structured.side_effect = LLMTransportError(
             "anthropic", RuntimeError("API timeout")

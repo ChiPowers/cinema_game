@@ -12,8 +12,11 @@ def get_tmdb(request: Request) -> TMDbClient:
 def get_llm(request: Request):
     """Return the LLM provider, constructing it on first use.
 
-    The lifespan has already validated the configuration, so this cannot
-    fail for a reason a healthy container could have caught at startup.
+    The lifespan has already validated the configuration and confirmed the
+    backend module is present (via find_spec, which locates without
+    importing). That rules out the reasons a healthy container could have
+    caught at startup -- failure here is limited to problems only an actual
+    import can reveal, such as a broken transitive install.
     """
     if request.app.state.llm is None:
         request.app.state.llm = create_llm_provider()

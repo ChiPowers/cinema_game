@@ -20,7 +20,6 @@ from .env import load_cinema_game_env
 load_cinema_game_env()
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
 NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET", "")
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "")
