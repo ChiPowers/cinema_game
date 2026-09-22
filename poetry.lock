@@ -5557,4 +5557,4 @@ vertex = ["reusable-llm-provider"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4.0"
-content-hash = "1aa8d6e77a4ed80f99a30cd1734567452a9889a03276655a1adfc5835e446199"
+content-hash = "93bafc13f6bc8c4d0dfb1672e49951f78618fbfdf423d7c96604edc058783736"

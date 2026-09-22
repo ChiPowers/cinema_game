@@ -34,11 +34,8 @@ anthropic = ["reusable-llm-provider[anthropic]"]
 openai    = ["reusable-llm-provider[openai]"]
 vertex    = ["reusable-llm-provider[vertex]"]
 ollama    = ["reusable-llm-provider[ollama]"]
-# One combined requirement string, not four repeated ones: Poetry's resolver
-# cannot reconcile the same "reusable-llm-provider[extra]" string appearing
-# in two different optional-dependency groups (it derives inconsistent
-# version facts for the duplicate and fails to lock).
-all = ["reusable-llm-provider[anthropic,openai,vertex,ollama]"]
+# Forward to the library's all extra for automatic provider discovery and to avoid Poetry resolver conflicts.
+all = ["reusable-llm-provider[all]"]
 
 [tool.poetry]
 packages = [{ include = "cinema_game_backend" }]
