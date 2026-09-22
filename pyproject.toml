@@ -1,23 +1,37 @@
-[tool.poetry]
+[project]
 name = "cinema_game_backend"
 version = "2.3.4"
 description = "Cinema Game — connect actors through shared movies"
-authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
-license = "mit"
+authors = [
+    { name = "Chivon Powers", email = "chivon.powers@gmail.com" },
+    { name = "Reuben Brasher", email = "rkbrasher@gmail.com" },
+]
+license = "MIT"
 readme = "README.md"
-packages = [{include = "cinema_game_backend"}]
+# Upper bound is required: Poetry cannot resolve dependencies that cap
+# themselves at <4.0 against an unbounded range. Equivalent to the old
+# Poetry-style `python = "^3.11"`.
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "fastapi>=0.135.2,<0.136.0",
+    "uvicorn>=0.30.0,<0.31.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "pydantic>=2.12.5,<3.0.0",
+    "langsmith>=0.8.18,<1.0.0",
+    "rapidfuzz>=3.12.0,<4.0.0",
+    "pyjwt>=2.13.0,<3.0.0",
+    "art-graph",
+    "reusable-llm-provider",
+]
 
+[tool.poetry]
+packages = [{ include = "cinema_game_backend" }]
+
+# Source enrichment only. These two are git dependencies, not on PyPI; the
+# version constraint lives in [project.dependencies] above and the source here.
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.135.2"
-uvicorn = "^0.30.0"
-python-dotenv = "^1.0.0"
-pydantic = "^2.12.5"
-langsmith = ">=0.8.18,<1.0.0"
-rapidfuzz = "^3.12.0"
-art-graph = {git = "https://github.com/newexo/artist-graph.git", tag = "v0.3.0"}
-reusable-llm-provider = {git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.5.1"}
-pyjwt = "^2.13.0"
+art-graph = { git = "https://github.com/newexo/artist-graph.git", tag = "v0.3.0" }
+reusable-llm-provider = { git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.5.1" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.6"
