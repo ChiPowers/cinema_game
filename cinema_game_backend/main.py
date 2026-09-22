@@ -1,20 +1,20 @@
-import logging
 import os
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from ._version import __version__
 from .config import (
-    create_tmdb_client,
-    create_llm_provider,
-    NEXTAUTH_SECRET,
-    INTERNAL_SECRET,
     BETA_SEED_EMAILS,
+    INTERNAL_SECRET,
+    NEXTAUTH_SECRET,
+    create_tmdb_client,
+    validate_llm_config,
 )
 from .database import init_db, seed_beta_users
-from .routes.game import router as game_router
 from .routes.auth import router as auth_router
-
-logger = logging.getLogger(__name__)
+from .routes.game import router as game_router
 
 
 @asynccontextmanager
@@ -30,16 +30,20 @@ async def lifespan(app: FastAPI):
     init_db()
     seed_beta_users(BETA_SEED_EMAILS)
     app.state.tmdb = create_tmdb_client()
-    app.state.llm = create_llm_provider()
-    if app.state.llm is None:
-        logger.warning(
-            "No LLM provider configured — nickname resolution disabled. "
-            "Set ANTHROPIC_API_KEY to enable LLM fallback for name matching."
-        )
+    # Raises if LLM_PROVIDER is unset, unknown, its credentials are missing,
+    # or its backend is not installed. A container that cannot resolve
+    # nicknames must not start. The provider itself is built on first use --
+    # importing it costs ~773 ms, and the LLM is a fallback most games never
+    # reach, so it does not belong on the cold-start path.
+    validate_llm_config()
+    app.state.llm = None
     yield
 
 
-app = FastAPI(title="Cinema Game API", version="2.0.0", lifespan=lifespan)
+# Version comes from the installed package metadata rather than a literal, so
+# the version advertised by /openapi.json cannot drift from pyproject.toml the
+# way the previous hardcoded "2.0.0" did — it sat four patch releases behind.
+app = FastAPI(title="Cinema Game API", version=__version__, lifespan=lifespan)
 
 ALLOWED_ORIGINS = [
     "http://localhost:3000",

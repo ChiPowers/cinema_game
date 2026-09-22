@@ -56,6 +56,8 @@ Requires Python >=3.10, <3.15.
 poetry install
 ```
 
+This installs **no LLM backend** — the app will not start until you also install a provider extra. See [LLM provider](#llm-provider) below before running anything.
+
 To also install dev tools (ruff, pytest):
 
 ```bash
@@ -74,13 +76,56 @@ Or install everything:
 poetry install --with dev,notebook
 ```
 
+### LLM provider
+
+Cinema Game needs exactly one LLM backend to start; it does not pick one for you and it does not run without one.
+
+Install the extra for the provider you want:
+
+```bash
+poetry install --extras anthropic   # or: openai, vertex, ollama
+```
+
+There's also an `all` extra, which forwards to `reusable-llm-provider`'s own `all` extra for local convenience (e.g. experimenting with more than one backend). Never use `all` to build a deployable image — see Docker below, where it's rejected outright.
+
+Then, after creating `secrets/.env` as described under Configuration below, set `LLM_PROVIDER` in it to the **same name** as the extra you installed:
+
+```
+LLM_PROVIDER=anthropic
+```
+
+Each provider needs its own environment on top of that:
+
+| Provider | Required env | Notes |
+|----------|--------------|-------|
+| `anthropic` | `ANTHROPIC_API_KEY` | |
+| `openai` | `OPENAI_API_KEY` | |
+| `vertex` | `VERTEX_PROJECT_ID`, `VERTEX_LOCATION` | Authenticates via Application Default Credentials — no API key needed |
+| `ollama` | *(none)* | Local, nothing to configure |
+
+Each provider also has its own optional model override — unset falls back to the library's default for that provider:
+
+```
+# ANTHROPIC_MODEL=
+# OPENAI_MODEL=
+# VERTEX_MODEL=
+# OLLAMA_MODEL=
+```
+
+There is no global `LLM_MODEL` any more. If your `secrets/.env` predates this change and still has one, it's inert — remove it.
+
+The configuration above is validated when the app starts (so a misconfigured deploy fails at rollout, not mid-game), but the provider itself is only constructed the first time it's actually needed — importing a vendor SDK costs ~773 ms, and most moves never reach the LLM fallback. That means every cold start is faster, at the cost of the first move that needs nickname resolution being that much slower.
+
+The functional test suite exercises a real provider, so `make test-functional` needs both an installed extra and `LLM_PROVIDER` set — it cannot run against a bare install.
+
 ### Configuration
 
 Copy `secrets/.env.example` to `secrets/.env` and fill in your keys:
 
 ```
 TMDB_API_KEY=...          # Required
-ANTHROPIC_API_KEY=...     # Optional — enables LLM fallback for nickname resolution
+LLM_PROVIDER=anthropic    # Required — see LLM provider above
+ANTHROPIC_API_KEY=...     # Required when LLM_PROVIDER=anthropic
 ```
 
 **TMDb cache** — one of these must be set or the app will refuse to start:
@@ -213,11 +258,13 @@ Included as a git submodule at `frontend/` — see "Cloning" above. Also availab
 
 ### Docker
 
-Build the image:
+Build the image, choosing which LLM backend goes into it with `LLM_EXTRA` (defaults to `vertex`):
 
 ```bash
-docker build -t cinema-game-backend .
+docker build --build-arg LLM_EXTRA=anthropic -t cinema-game-backend .
 ```
+
+`LLM_EXTRA` must be one of `anthropic`, `openai`, `vertex`, `ollama` — `all` is rejected at build time, so an image always ships exactly one vendor SDK. The image derives `LLM_PROVIDER` from `LLM_EXTRA` and bakes it in as the default, so build and runtime can't silently drift; if `secrets/.env` also sets `LLM_PROVIDER` (as `secrets/.env.example` does), keep it matching the `LLM_EXTRA` you built with — a mismatch fails fast at container startup rather than at the first move.
 
 Run it, supplying the required secrets as environment variables — never bake secrets into the image itself:
 
@@ -245,6 +292,8 @@ cp frontend/.env.example frontend/.env.local   # fill in real values
 ```
 
 `NEXTAUTH_SECRET` and `INTERNAL_SECRET` must be identical in both files, per the Configuration section above.
+
+The backend's build arg is `LLM_EXTRA`, sourced from an `LLM_EXTRA` environment variable in your shell (defaulting to `anthropic`); export it before building to pick a different provider, and make sure `secrets/.env`'s `LLM_PROVIDER` matches it — see Docker above.
 
 Then:
 
@@ -352,7 +401,7 @@ poetry install --with notebook
 
 ## Architecture
 
-The backend uses **FastAPI dependency injection** to provide the TMDb client and an optional LLM provider. At startup, `create_tmdb_client()` reads the cache configuration and produces either a `CachedTMDbClient` (backed by SQLAlchemy) or a plain `TMDbClient`. If an LLM API key is configured, `create_llm_provider()` creates a provider via reusable-llm-provider. Both are stored on `app.state` and injected into route handlers via `Depends()`.
+The backend uses **FastAPI dependency injection** to provide the TMDb client and the LLM provider. At startup, `create_tmdb_client()` reads the cache configuration and produces either a `CachedTMDbClient` (backed by SQLAlchemy) or a plain `TMDbClient`; `validate_llm_config()` also runs at startup and fails fast if `LLM_PROVIDER` is unset, unrecognized, missing required credentials, or its extra isn't installed. The LLM provider itself is constructed by `create_llm_provider()` (via reusable-llm-provider) lazily, the first time a route actually needs it, since importing a vendor SDK is too slow for the cold-start path — see [LLM provider](#llm-provider) above. Both clients are stored on `app.state` and injected into route handlers via `Depends()`.
 
 **Move validation** works in three stages:
 1. **TMDb lookup** — search for movies matching the title (TMDb may return multiple candidates for an ambiguous title, e.g. "Batman"). Check the top-ranked candidate's cast first; if a title is ambiguous and the top-ranked film doesn't have both actors, walk the remaining candidates in TMDb's own order until one does.

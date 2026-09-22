@@ -22,11 +22,26 @@ RUN apt-get update \
 
 # Install dependencies before copying source, so this layer is cached
 # across source-only changes.
+# Which LLM backend to build in. Exactly one vendor SDK ends up in the image.
+# LLM_PROVIDER is derived from it below, setting the image's DEFAULT so it
+# matches the installed backend out of the box. An explicit override still
+# wins at runtime (e.g. docker-compose.yml's env_file loading secrets/.env),
+# so a build/runtime mismatch is still possible if that override disagrees --
+# it then fails fast at startup (see config.validate_llm_config) rather than
+# silently running with the wrong backend. "all" is not valid here.
+ARG LLM_EXTRA=vertex
+RUN case "$LLM_EXTRA" in \
+      anthropic|openai|vertex|ollama) ;; \
+      *) echo "LLM_EXTRA must be one of: anthropic openai vertex ollama" >&2; exit 1 ;; \
+    esac
+
 COPY pyproject.toml poetry.lock README.md ./
-RUN poetry install --only main --no-root
+RUN poetry install --only main --extras "$LLM_EXTRA" --no-root
 
 COPY cinema_game_backend ./cinema_game_backend
-RUN poetry install --only main
+RUN poetry install --only main --extras "$LLM_EXTRA"
+
+ENV LLM_PROVIDER=${LLM_EXTRA}
 
 RUN useradd --create-home --uid 1000 appuser \
     && chown -R appuser:appuser /app

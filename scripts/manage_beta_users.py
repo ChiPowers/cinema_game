@@ -11,10 +11,10 @@ import sys
 
 from cinema_game_backend.config import BETA_SEED_EMAILS
 from cinema_game_backend.database import (
-    init_db,
     add_beta_user,
-    remove_beta_user,
+    init_db,
     list_beta_users,
+    remove_beta_user,
 )
 
 init_db()

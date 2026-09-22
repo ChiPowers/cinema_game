@@ -16,16 +16,22 @@ test-functional:
 test-all:
 	poetry run pytest $(PACKAGE)/tests/ functional_tests/
 
-# Format the code using Ruff
+# Format the code using Ruff. Applies safe lint fixes (import sorting,
+# pyupgrade rewrites) before formatting, so `make check` passes afterwards.
 format:
+	poetry run ruff check --fix .
 	poetry run ruff format .
+
+# Verify formatting without rewriting anything (this is what CI runs)
+format-check:
+	poetry run ruff format --check .
 
 # Lint the code using Ruff (configured in pyproject.toml [tool.ruff])
 lint:
 	poetry run ruff check .
 
-# Run all quality checks: formatting, linting, and unit tests
-check: format lint test
+# Run all quality checks. Does not modify files; run `make format` to fix.
+check: format-check lint test
 
 # Run unit tests with coverage enforcement (terminal output only)
 # Omit patterns are configured in pyproject.toml [tool.coverage.run].
@@ -51,3 +57,33 @@ coverage-all-html:
 	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
 	poetry run coverage html
 	@echo "HTML coverage report generated at htmlcov/index.html"
+
+# Verify every optional dependency is isolated behind a single module.
+import-boundaries:
+	poetry run python scripts/import_boundaries.py .
+
+# Verify imported packages are declared, and declared in the right group.
+deps-check:
+	poetry run deptry .
+
+# Report unused code. ADVISORY: read the output rather than trusting it.
+deadcode:
+	poetry run vulture $(PACKAGE) scripts $(wildcard deadcode-whitelist.py)
+
+# Baseline the existing dead code so it stops blocking work while new dead
+# code still surfaces. Commit the result. Two traps are handled here: vulture
+# exits 3 whenever it finds anything, and it emits a trailing blank line that
+# `ruff format --check` rejects.
+deadcode-baseline:
+	-poetry run vulture --make-whitelist $(PACKAGE) scripts > deadcode-whitelist.py
+	poetry run ruff format deadcode-whitelist.py
+	@if [ -s deadcode-whitelist.py ]; then \
+	    echo "baseline written to deadcode-whitelist.py - review it, then commit it"; \
+	else \
+	    rm -f deadcode-whitelist.py; \
+	    echo "no dead code found; no baseline needed"; \
+	fi
+
+.PHONY: test test-functional test-all format format-check lint check \
+        coverage coverage-html coverage-all coverage-all-html \
+        import-boundaries deps-check deadcode deadcode-baseline

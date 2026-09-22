@@ -28,9 +28,10 @@ files = [
 name = "anthropic"
 version = "0.116.0"
 description = "The official Python library for the anthropic API"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "anthropic-0.116.0-py3-none-any.whl", hash = "sha256:6c0a7698e8d652455da3499978279bb2588c7264d0a35be3666009a4258c8256"},
     {file = "anthropic-0.116.0.tar.gz", hash = "sha256:5fc248fbb9fe03ef686f8a774f81586bca31a043260aab88b387ea3660f4a396"},
@@ -392,7 +393,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\""}
+markers = {main = "(extra == \"vertex\" or extra == \"all\") and platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -542,7 +543,7 @@ version = "8.4.2"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "click-8.4.2-py3-none-any.whl", hash = "sha256:e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76"},
     {file = "click-8.4.2.tar.gz", hash = "sha256:9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6"},
@@ -562,7 +563,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win32\"", notebook = "sys_platform == \"win32\""}
+markers = {main = "platform_system == \"Windows\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\"", notebook = "sys_platform == \"win32\""}
 
 [[package]]
 name = "comm"
@@ -779,9 +780,10 @@ toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 name = "cryptography"
 version = "50.0.1"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-optional = false
+optional = true
 python-versions = "!=3.9.0,!=3.9.1,>=3.9"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "cryptography-50.0.1-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"},
     {file = "cryptography-50.0.1-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:53e279950892dc102c6b4e52af03ae5ea92fac572a1ddab78ca73a997f62b69f"},
@@ -918,6 +920,39 @@ files = [
 ]
 
 [[package]]
+name = "deptry"
+version = "0.25.1"
+description = "A command line utility to check for unused, missing and transitive dependencies in a Python project."
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "deptry-0.25.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:a4dd1148db24a1ddacfa8b840836c6019c2f864fcb7579dd089fd217606338c8"},
+    {file = "deptry-0.25.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:c67c666d916ef12013c0772e40d78be0f21577a495d8d99ec5fcb18c332d393d"},
+    {file = "deptry-0.25.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:58d39279828dbf4efc1abb40bf50a71b21499c36759bed5a8d8a3c0e3149b091"},
+    {file = "deptry-0.25.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:14bfcc28b4326ed8c6abb30691b19077d4ef8613cfba6c37ef5b1f471775bf6f"},
+    {file = "deptry-0.25.1-cp310-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:555f5f9a487899ec9bf301eecba1745e14d212c4b354f4d3a5fd691e907366d3"},
+    {file = "deptry-0.25.1-cp310-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:18d21b3545ab2bfec53f3f45c6f5f201d55f713323327f8d12674505469ae6b7"},
+    {file = "deptry-0.25.1-cp310-abi3-win_amd64.whl", hash = "sha256:b59a560cb7dffb21832a98bb80d33d614cfb5630ea36ce21833eabf4eae3df99"},
+    {file = "deptry-0.25.1-cp310-abi3-win_arm64.whl", hash = "sha256:6efffd8116fb9d2c45a251382ce4ce1c38dbb17179f581ec9231ed5390f7fc12"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-macosx_10_12_x86_64.whl", hash = "sha256:30d64d4df1c08bc69de56cb0b4ec1f4cd9fa2e42582347d5b1eb25fd0e401745"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:87bcd90f99a98bb059c7580bc315c3f87d97fe2db725530030bc974176834735"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:80f31eb5c520651b102568dd91f738222b250a3e44c9e95d4941322109b8d40a"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:df88952a2bab7517ef23cb304b979199b28449e5d9db2e9ba9bc27a286ac852b"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:e6f7b8fa72932e51e86799b10dcd29381b2132dc799c790dca3b28ab08dffb28"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:e3fa3321078e11cd1ac3f10ce3ff0547731c53f9253b87c757a8749c76fe8fa9"},
+    {file = "deptry-0.25.1-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:03c032c32492fde434736954fbcaff09c02bf207b0f793b77e9040300e34b344"},
+    {file = "deptry-0.25.1.tar.gz", hash = "sha256:45c8cd982c85cd4faae573ddff6920de7eec735336db6973f26a765ae7950f7d"},
+]
+
+[package.dependencies]
+click = ">=8.0.0,<9"
+colorama = {version = ">=0.4.6", markers = "sys_platform == \"win32\""}
+packaging = ">=23.2"
+requirements-parser = ">=0.11.0,<1"
+tomli = {version = ">=2.0.1", markers = "python_full_version < \"3.15.0\""}
+
+[[package]]
 name = "distro"
 version = "1.9.0"
 description = "Distro - an OS platform information API"
@@ -933,9 +968,10 @@ files = [
 name = "docstring-parser"
 version = "0.18.0"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "docstring_parser-0.18.0-py3-none-any.whl", hash = "sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b"},
     {file = "docstring_parser-0.18.0.tar.gz", hash = "sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015"},
@@ -1004,9 +1040,10 @@ devel = ["colorama", "json-spec", "jsonschema", "pylint", "pytest", "pytest-benc
 name = "filetype"
 version = "1.2.0"
 description = "Infer file type and MIME type of any file/buffer. No external dependencies."
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25"},
     {file = "filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb"},
@@ -1101,9 +1138,10 @@ files = [
 name = "google-auth"
 version = "2.55.1"
 description = "Google Authentication Library"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "google_auth-2.55.1-py3-none-any.whl", hash = "sha256:eada68dfd52b3b81191827601e2a0c3fa12540c818534b630ddc5355769c3995"},
     {file = "google_auth-2.55.1.tar.gz", hash = "sha256:fb2d9b730f2c9b8d326ec8d7222f21aef2ead15bf0513793d6442485d87af0a1"},
@@ -1130,9 +1168,10 @@ urllib3 = ["packaging", "urllib3"]
 name = "google-genai"
 version = "1.75.0"
 description = "GenAI Python SDK"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "google_genai-1.75.0-py3-none-any.whl", hash = "sha256:8dc4c096e7d6288c3087f6893f582fe52468932464781edb8193bd92b9fefb2c"},
     {file = "google_genai-1.75.0.tar.gz", hash = "sha256:56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf"},
@@ -1496,9 +1535,10 @@ i18n = ["Babel (>=2.7)"]
 name = "jiter"
 version = "0.16.0"
 description = "Fast iterable JSON parser."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\""
 files = [
     {file = "jiter-0.16.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:c5fc4f8def331036a7b8e981b4347ebe409981edbc8308a5ea842b8c3614fa6c"},
     {file = "jiter-0.16.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5a71d0d2014c3275043e1170bf3d4e771493cb0dcf07be54c567155f4d8ee64b"},
@@ -1623,9 +1663,10 @@ files = [
 name = "jsonpatch"
 version = "1.33"
 description = "Apply JSON-Patches (RFC 6902)"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "jsonpatch-1.33-py2.py3-none-any.whl", hash = "sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade"},
     {file = "jsonpatch-1.33.tar.gz", hash = "sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c"},
@@ -1645,6 +1686,7 @@ files = [
     {file = "jsonpointer-3.1.1-py3-none-any.whl", hash = "sha256:8ff8b95779d071ba472cf5bc913028df06031797532f08a7d5b602d8b2a488ca"},
     {file = "jsonpointer-3.1.1.tar.gz", hash = "sha256:0b801c7db33a904024f6004d526dcc53bbb8a4a0f4e32bfd10beadf60adf1900"},
 ]
+markers = {main = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""}
 
 [[package]]
 name = "jsonschema"
@@ -2116,9 +2158,10 @@ files = [
 name = "langchain-anthropic"
 version = "1.4.8"
 description = "Integration package connecting Claude (Anthropic) APIs and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "langchain_anthropic-1.4.8-py3-none-any.whl", hash = "sha256:778e9301b6fd517824f76ec1776975ce8add97a1f6a36c50ae3c2f4b03a66f7f"},
     {file = "langchain_anthropic-1.4.8.tar.gz", hash = "sha256:c76891b2044d56105ff13c106ed12650637b53bd598a4bdf15b4796eefa2a4ec"},
@@ -2133,9 +2176,10 @@ pydantic = ">=2.7.4,<3.0.0"
 name = "langchain-core"
 version = "1.6.2"
 description = "Building applications with LLMs through composability"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "langchain_core-1.6.2-py3-none-any.whl", hash = "sha256:21e6c7cf097c68b777fd69ea00864f09bd9ca76ac73e3e3fa14e1ee366eb4711"},
     {file = "langchain_core-1.6.2.tar.gz", hash = "sha256:1ec6d3a98f7c8cdbb5bb0deff86e7ca37e16bf4f8f49f022d10723656c62352d"},
@@ -2157,9 +2201,10 @@ uuid-utils = ">=0.12.0,<1.0"
 name = "langchain-google-genai"
 version = "4.3.7"
 description = "An integration package connecting Google's genai package and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "langchain_google_genai-4.3.7-py3-none-any.whl", hash = "sha256:8d4b1aa8f2c2e17b8e790d34a7e9a7b8e7d13e9a00175679d17647c235104bf9"},
     {file = "langchain_google_genai-4.3.7.tar.gz", hash = "sha256:8a57f936b1fbde52776fdde6673fdabd99cfa5cbbb122a926f1cff0ba00f6bc6"},
@@ -2175,9 +2220,10 @@ pydantic = ">=2.0.0,<3.0.0"
 name = "langchain-ollama"
 version = "1.1.0"
 description = "An integration package connecting Ollama and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"ollama\" or extra == \"all\""
 files = [
     {file = "langchain_ollama-1.1.0-py3-none-any.whl", hash = "sha256:43ac83a6eacb0f43855810739794dd55019e0d9b17bdcf3ecb3b1991ac3b59dd"},
     {file = "langchain_ollama-1.1.0.tar.gz", hash = "sha256:f776f56f6782ae4da7692579b94a6575906118318d1023b455d7207f9d059811"},
@@ -2191,9 +2237,10 @@ ollama = ">=0.6.1,<1.0.0"
 name = "langchain-openai"
 version = "1.3.3"
 description = "An integration package connecting OpenAI and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "langchain_openai-1.3.3-py3-none-any.whl", hash = "sha256:e469659862c8aabba4f6653df973206e7be54f98cf2275c86be7f06b7abe20d7"},
     {file = "langchain_openai-1.3.3.tar.gz", hash = "sha256:143769bf943820b80db769e47ca8fd0aac08ed18714519333b044c4431e9aa67"},
@@ -2208,9 +2255,10 @@ tiktoken = ">=0.7.0,<1.0.0"
 name = "langchain-protocol"
 version = "0.0.18"
 description = "Python bindings for the LangChain agent streaming protocol"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "langchain_protocol-0.0.18-py3-none-any.whl", hash = "sha256:70b53a86fbf9cedc863555effe44da192ab02d556ddbf2cf95b8873adcf41b5a"},
     {file = "langchain_protocol-0.0.18.tar.gz", hash = "sha256:ec3e11782f1ed0c9db38e5a9ed01b0e7a0d3fba406faa8aef6594b73c56a63e6"},
@@ -2710,9 +2758,10 @@ files = [
 name = "ollama"
 version = "0.6.2"
 description = "The official Python client for Ollama."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"ollama\" or extra == \"all\""
 files = [
     {file = "ollama-0.6.2-py3-none-any.whl", hash = "sha256:3ad7daab28e5a973445c36a73882a3ef698c2ebb00e21e308652741577509f7d"},
     {file = "ollama-0.6.2.tar.gz", hash = "sha256:936d55daa684f474364c098611c933626f8d6c7d67065c5b7ae0c477b508b07f"},
@@ -2726,9 +2775,10 @@ pydantic = ">=2.9"
 name = "openai"
 version = "2.44.0"
 description = "The official Python library for the openai API"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "openai-2.44.0-py3-none-any.whl", hash = "sha256:0a2a3ab2e29aeda368700f662ff9ba0f9df17ba4c54577a64e08b8115a3cc0ad"},
     {file = "openai-2.44.0.tar.gz", hash = "sha256:68a5a5ffad82b8ff7d451c437529fb64f7c3b8123aaf0c021966a882d9e3947d"},
@@ -3313,9 +3363,10 @@ tests = ["pytest"]
 name = "pyasn1"
 version = "0.6.4"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "pyasn1-0.6.4-py3-none-any.whl", hash = "sha256:deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b"},
     {file = "pyasn1-0.6.4.tar.gz", hash = "sha256:9c447d8431c947fe4c8febc4ed9e760bc29011a5b01e5c74b67025bd9fb8ce81"},
@@ -3325,9 +3376,10 @@ files = [
 name = "pyasn1-modules"
 version = "0.4.2"
 description = "A collection of ASN.1-based protocols modules"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"},
     {file = "pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6"},
@@ -3347,7 +3399,7 @@ files = [
     {file = "pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"},
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", notebook = "implementation_name != \"PyPy\""}
+markers = {main = "(extra == \"vertex\" or extra == \"all\") and implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\"", notebook = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -3756,6 +3808,7 @@ files = [
     {file = "pyyaml-6.0.3-cp39-cp39-win_amd64.whl", hash = "sha256:2e71d11abed7344e42a8849600193d15b6def118602c4c176f748e4583246007"},
     {file = "pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"},
 ]
+markers = {main = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""}
 
 [[package]]
 name = "pyzmq"
@@ -3979,9 +4032,10 @@ typing-extensions = {version = ">=4.4.0", markers = "python_version < \"3.13\""}
 name = "regex"
 version = "2026.6.28"
 description = "Alternative regular expression module, to replace re."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "regex-2026.6.28-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b83932645630965fd860fdb70ebbf964bf3e8007f08851ea424d01f8d35454a8"},
     {file = "regex-2026.6.28-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e81f1952355042e517dc9861ce65c676e4a098f42402993c40461786d1f794d4"},
@@ -4137,30 +4191,52 @@ files = [
 requests = ">=2.0.1,<3.0.0"
 
 [[package]]
+name = "requirements-parser"
+version = "0.13.1"
+description = "This is a small Python module for parsing Pip requirement files."
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["dev"]
+files = [
+    {file = "requirements_parser-0.13.1-py3-none-any.whl", hash = "sha256:6e385663eb32589d16e5b22bb6e5251a57908e73803ffff438b53cd6ea2056e0"},
+    {file = "requirements_parser-0.13.1.tar.gz", hash = "sha256:78811383b2089b6c5197a1431bc2c12ff950245edca39a23eea3460782038dd3"},
+]
+
+[package.dependencies]
+packaging = ">=23.2"
+
+[[package]]
 name = "reusable-llm-provider"
-version = "0.5.1"
+version = "0.8.0"
 description = "Reusable LLM provider abstraction layer supporting Anthropic, OpenAI, Vertex AI, and Ollama"
 optional = false
-python-versions = "^3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main"]
 files = []
 develop = false
 
 [package.dependencies]
-anthropic = ">=0.96.0,<1.0.0"
-google-genai = "^1.61.0"
-langchain-anthropic = "^1.3.1"
-langchain-google-genai = "^4.3.7"
-langchain-ollama = "^1.0.1"
-langchain-openai = "^1.1.7"
-openai = "^2.15.0"
-pydantic = "^2.12.0"
+anthropic = {version = ">=0.96.0,<1.0.0", optional = true}
+google-genai = {version = ">=1.61.0,<2.0.0", optional = true}
+langchain-anthropic = {version = ">=1.3.1,<2.0.0", optional = true}
+langchain-google-genai = {version = ">=4.3.7,<5.0.0", optional = true}
+langchain-ollama = {version = ">=1.0.1,<2.0.0", optional = true}
+langchain-openai = {version = ">=1.1.7,<2.0.0", optional = true}
+openai = {version = ">=2.15.0,<3.0.0", optional = true}
+pydantic = ">=2.12.0,<3.0.0"
+
+[package.extras]
+all = ["anthropic (>=0.96.0,<1.0.0)", "google-genai (>=1.61.0,<2.0.0)", "langchain-anthropic (>=1.3.1,<2.0.0)", "langchain-google-genai (>=4.3.7,<5.0.0)", "langchain-ollama (>=1.0.1,<2.0.0)", "langchain-openai (>=1.1.7,<2.0.0)", "openai (>=2.15.0,<3.0.0)"]
+anthropic = ["anthropic (>=0.96.0,<1.0.0)", "langchain-anthropic (>=1.3.1,<2.0.0)"]
+ollama = ["langchain-ollama (>=1.0.1,<2.0.0)"]
+openai = ["langchain-openai (>=1.1.7,<2.0.0)", "openai (>=2.15.0,<3.0.0)"]
+vertex = ["google-genai (>=1.61.0,<2.0.0)", "langchain-google-genai (>=4.3.7,<5.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/newexo/reusable-llm-provider.git"
-reference = "v0.5.1"
-resolved_reference = "0055dabaf3fbebb93797c21a8771b7211ab3e81e"
+reference = "v0.8.0"
+resolved_reference = "27f74bdb5a99869c37764457aa4d78d03c4623ba"
 
 [[package]]
 name = "rfc3339-validator"
@@ -4575,9 +4651,10 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 name = "tenacity"
 version = "9.1.4"
 description = "Retry code until it succeeds"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55"},
     {file = "tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a"},
@@ -4613,9 +4690,10 @@ typing = ["mypy (>=1.6,<2.0)", "traitlets (>=5.11.1)"]
 name = "tiktoken"
 version = "0.13.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "tiktoken-0.13.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:47b1df8d73390a24f94980c75158cdd5c56d256f16d55f30cb49c230caba9ba4"},
     {file = "tiktoken-0.13.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:7d40c6c5aab171dcd6eb8455bc567bde404bb9def60cdb8c1299cc782b242bb9"},
@@ -4701,6 +4779,64 @@ webencodings = ">=0.4"
 [package.extras]
 doc = ["furo", "sphinx"]
 test = ["pytest", "ruff"]
+
+[[package]]
+name = "tomli"
+version = "2.4.1"
+description = "A lil' TOML parser"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+markers = "python_full_version < \"3.15.0\""
+files = [
+    {file = "tomli-2.4.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:f8f0fc26ec2cc2b965b7a3b87cd19c5c6b8c5e5f436b984e85f486d652285c30"},
+    {file = "tomli-2.4.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4ab97e64ccda8756376892c53a72bd1f964e519c77236368527f758fbc36a53a"},
+    {file = "tomli-2.4.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:96481a5786729fd470164b47cdb3e0e58062a496f455ee41b4403be77cb5a076"},
+    {file = "tomli-2.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5a881ab208c0baf688221f8cecc5401bd291d67e38a1ac884d6736cbcd8247e9"},
+    {file = "tomli-2.4.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:47149d5bd38761ac8be13a84864bf0b7b70bc051806bc3669ab1cbc56216b23c"},
+    {file = "tomli-2.4.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:ec9bfaf3ad2df51ace80688143a6a4ebc09a248f6ff781a9945e51937008fcbc"},
+    {file = "tomli-2.4.1-cp311-cp311-win32.whl", hash = "sha256:ff2983983d34813c1aeb0fa89091e76c3a22889ee83ab27c5eeb45100560c049"},
+    {file = "tomli-2.4.1-cp311-cp311-win_amd64.whl", hash = "sha256:5ee18d9ebdb417e384b58fe414e8d6af9f4e7a0ae761519fb50f721de398dd4e"},
+    {file = "tomli-2.4.1-cp311-cp311-win_arm64.whl", hash = "sha256:c2541745709bad0264b7d4705ad453b76ccd191e64aa6f0fc66b69a293a45ece"},
+    {file = "tomli-2.4.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:c742f741d58a28940ce01d58f0ab2ea3ced8b12402f162f4d534dfe18ba1cd6a"},
+    {file = "tomli-2.4.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:7f86fd587c4ed9dd76f318225e7d9b29cfc5a9d43de44e5754db8d1128487085"},
+    {file = "tomli-2.4.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ff18e6a727ee0ab0388507b89d1bc6a22b138d1e2fa56d1ad494586d61d2eae9"},
+    {file = "tomli-2.4.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:136443dbd7e1dee43c68ac2694fde36b2849865fa258d39bf822c10e8068eac5"},
+    {file = "tomli-2.4.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:5e262d41726bc187e69af7825504c933b6794dc3fbd5945e41a79bb14c31f585"},
+    {file = "tomli-2.4.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:5cb41aa38891e073ee49d55fbc7839cfdb2bc0e600add13874d048c94aadddd1"},
+    {file = "tomli-2.4.1-cp312-cp312-win32.whl", hash = "sha256:da25dc3563bff5965356133435b757a795a17b17d01dbc0f42fb32447ddfd917"},
+    {file = "tomli-2.4.1-cp312-cp312-win_amd64.whl", hash = "sha256:52c8ef851d9a240f11a88c003eacb03c31fc1c9c4ec64a99a0f922b93874fda9"},
+    {file = "tomli-2.4.1-cp312-cp312-win_arm64.whl", hash = "sha256:f758f1b9299d059cc3f6546ae2af89670cb1c4d48ea29c3cacc4fe7de3058257"},
+    {file = "tomli-2.4.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:36d2bd2ad5fb9eaddba5226aa02c8ec3fa4f192631e347b3ed28186d43be6b54"},
+    {file = "tomli-2.4.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:eb0dc4e38e6a1fd579e5d50369aa2e10acfc9cace504579b2faabb478e76941a"},
+    {file = "tomli-2.4.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c7f2c7f2b9ca6bdeef8f0fa897f8e05085923eb091721675170254cbc5b02897"},
+    {file = "tomli-2.4.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f3c6818a1a86dd6dca7ddcaaf76947d5ba31aecc28cb1b67009a5877c9a64f3f"},
+    {file = "tomli-2.4.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:d312ef37c91508b0ab2cee7da26ec0b3ed2f03ce12bd87a588d771ae15dcf82d"},
+    {file = "tomli-2.4.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:51529d40e3ca50046d7606fa99ce3956a617f9b36380da3b7f0dd3dd28e68cb5"},
+    {file = "tomli-2.4.1-cp313-cp313-win32.whl", hash = "sha256:2190f2e9dd7508d2a90ded5ed369255980a1bcdd58e52f7fe24b8162bf9fedbd"},
+    {file = "tomli-2.4.1-cp313-cp313-win_amd64.whl", hash = "sha256:8d65a2fbf9d2f8352685bc1364177ee3923d6baf5e7f43ea4959d7d8bc326a36"},
+    {file = "tomli-2.4.1-cp313-cp313-win_arm64.whl", hash = "sha256:4b605484e43cdc43f0954ddae319fb75f04cc10dd80d830540060ee7cd0243cd"},
+    {file = "tomli-2.4.1-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:fd0409a3653af6c147209d267a0e4243f0ae46b011aa978b1080359fddc9b6cf"},
+    {file = "tomli-2.4.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:a120733b01c45e9a0c34aeef92bf0cf1d56cfe81ed9d47d562f9ed591a9828ac"},
+    {file = "tomli-2.4.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:559db847dc486944896521f68d8190be1c9e719fced785720d2216fe7022b662"},
+    {file = "tomli-2.4.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:01f520d4f53ef97964a240a035ec2a869fe1a37dde002b57ebc4417a27ccd853"},
+    {file = "tomli-2.4.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:7f94b27a62cfad8496c8d2513e1a222dd446f095fca8987fceef261225538a15"},
+    {file = "tomli-2.4.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:ede3e6487c5ef5d28634ba3f31f989030ad6af71edfb0055cbbd14189ff240ba"},
+    {file = "tomli-2.4.1-cp314-cp314-win32.whl", hash = "sha256:3d48a93ee1c9b79c04bb38772ee1b64dcf18ff43085896ea460ca8dec96f35f6"},
+    {file = "tomli-2.4.1-cp314-cp314-win_amd64.whl", hash = "sha256:88dceee75c2c63af144e456745e10101eb67361050196b0b6af5d717254dddf7"},
+    {file = "tomli-2.4.1-cp314-cp314-win_arm64.whl", hash = "sha256:b8c198f8c1805dc42708689ed6864951fd2494f924149d3e4bce7710f8eb5232"},
+    {file = "tomli-2.4.1-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:d4d8fe59808a54658fcc0160ecfb1b30f9089906c50b23bcb4c69eddc19ec2b4"},
+    {file = "tomli-2.4.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:7008df2e7655c495dd12d2a4ad038ff878d4ca4b81fccaf82b714e07eae4402c"},
+    {file = "tomli-2.4.1-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1d8591993e228b0c930c4bb0db464bdad97b3289fb981255d6c9a41aedc84b2d"},
+    {file = "tomli-2.4.1-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:734e20b57ba95624ecf1841e72b53f6e186355e216e5412de414e3c51e5e3c41"},
+    {file = "tomli-2.4.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:8a650c2dbafa08d42e51ba0b62740dae4ecb9338eefa093aa5c78ceb546fcd5c"},
+    {file = "tomli-2.4.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:504aa796fe0569bb43171066009ead363de03675276d2d121ac1a4572397870f"},
+    {file = "tomli-2.4.1-cp314-cp314t-win32.whl", hash = "sha256:b1d22e6e9387bf4739fbe23bfa80e93f6b0373a7f1b96c6227c32bef95a4d7a8"},
+    {file = "tomli-2.4.1-cp314-cp314t-win_amd64.whl", hash = "sha256:2c1c351919aca02858f740c6d33adea0c5deea37f9ecca1cc1ef9e884a619d26"},
+    {file = "tomli-2.4.1-cp314-cp314t-win_arm64.whl", hash = "sha256:eab21f45c7f66c13f2a9e0e1535309cee140182a9cdae1e041d02e47291e8396"},
+    {file = "tomli-2.4.1-py3-none-any.whl", hash = "sha256:0d85819802132122da43cb86656f8d1f8c6587d54ae7dcaf30e90533028b49fe"},
+    {file = "tomli-2.4.1.tar.gz", hash = "sha256:7c7e1a961a0b2f2472c1ac5b69affa0ae1132c39adcb67aba98568702b9cc23f"},
+]
 
 [[package]]
 name = "tornado"
@@ -4953,6 +5089,18 @@ h11 = ">=0.8"
 
 [package.extras]
 standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.5.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", "watchfiles (>=0.13)", "websockets (>=10.4)"]
+
+[[package]]
+name = "vulture"
+version = "2.16"
+description = "Find dead code"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "vulture-2.16-py3-none-any.whl", hash = "sha256:6e0f1c312cef1c87856957e5c2ca9608834a7c794c2180477f30bf0e4cc58eee"},
+    {file = "vulture-2.16.tar.gz", hash = "sha256:f8d9f6e2af03011664a3c6c240c9765b3f392917d3135fddca6d6a68d359f717"},
+]
 
 [[package]]
 name = "wcwidth"
@@ -5399,7 +5547,14 @@ files = [
 [package.extras]
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b0) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
+[extras]
+all = ["reusable-llm-provider"]
+anthropic = ["reusable-llm-provider"]
+ollama = ["reusable-llm-provider"]
+openai = ["reusable-llm-provider"]
+vertex = ["reusable-llm-provider"]
+
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.11"
-content-hash = "0bb08a15f461988d14290a9d18be3eca116ff0ba7e0ee82d658fb6c40dee2eb0"
+python-versions = ">=3.11,<4.0"
+content-hash = "93bafc13f6bc8c4d0dfb1672e49951f78618fbfdf423d7c96604edc058783736"

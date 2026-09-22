@@ -1,9 +1,10 @@
-from enum import Enum
-from pydantic import BaseModel
+from enum import StrEnum
 from typing import Literal
 
+from pydantic import BaseModel
 
-class Confidence(str, Enum):
+
+class Confidence(StrEnum):
     low = "low"
     medium = "medium"
     high = "high"

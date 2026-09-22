@@ -1,6 +1,8 @@
 import hmac
+
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
+
 from ..config import INTERNAL_SECRET
 from ..database import is_beta_user
 

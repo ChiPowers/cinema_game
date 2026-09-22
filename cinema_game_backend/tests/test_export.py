@@ -1,9 +1,11 @@
 """Tests for database-to-RecordedGame export."""
 
-import pytest
 from unittest.mock import patch
-from cinema_game_backend.experiments.export import list_game_ids, export_game
-from cinema_game_backend.models.experiment import RecordedGame, ExpectedSuccess
+
+import pytest
+
+from cinema_game_backend.experiments.export import export_game, list_game_ids
+from cinema_game_backend.models.experiment import ExpectedSuccess, RecordedGame
 
 
 @pytest.fixture

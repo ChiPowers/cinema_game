@@ -1,12 +1,14 @@
 import sqlite3
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from fastapi.testclient import TestClient
-from cinema_game_backend.main import app
-from cinema_game_backend.database import init_db
-from cinema_game_backend.dependencies import get_tmdb, get_llm, require_auth
-from cinema_game_backend.models.game import ValidationResult
 from art_graph.cinema_data_providers.tmdb_models import Person
+from fastapi.testclient import TestClient
+
+from cinema_game_backend.database import init_db
+from cinema_game_backend.dependencies import get_llm, get_tmdb, require_auth
+from cinema_game_backend.main import app
+from cinema_game_backend.models.game import ValidationResult
 from cinema_game_backend.routes.game import _reached_end
 
 # --- Pure logic: _reached_end ---

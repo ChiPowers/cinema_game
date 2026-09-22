@@ -18,7 +18,6 @@ from langsmith import Client
 from langsmith.evaluation import evaluate
 from langsmith.evaluation.evaluator import EvaluationResult
 
-
 DEFAULT_MAX_TOKENS = 512
 
 
@@ -126,8 +125,10 @@ def _built_in_examples() -> list[dict[str, Any]]:
                 ),
                 "user": (
                     "Movie: The Departed (2006)\\n"
-                    "TMDb cast: Leonardo DiCaprio, Matt Damon, Jack Nicholson, Mark Wahlberg\\n\\n"
-                    "Verify whether cast includes both 'Leonardo DiCaprio' and 'Matt Damon'."
+                    "TMDb cast: Leonardo DiCaprio, Matt Damon, Jack Nicholson, "
+                    "Mark Wahlberg\\n\\n"
+                    "Verify whether cast includes both 'Leonardo DiCaprio' "
+                    "and 'Matt Damon'."
                 ),
             },
             "outputs": {
@@ -143,8 +144,10 @@ def _built_in_examples() -> list[dict[str, Any]]:
                 ),
                 "user": (
                     "Movie: The Matrix (1999)\\n"
-                    "TMDb cast: Keanu Reeves, Carrie-Anne Moss, Laurence Fishburne\\n\\n"
-                    "Verify whether cast includes both 'Keanu Reeves' and 'Tom Hanks'."
+                    "TMDb cast: Keanu Reeves, Carrie-Anne Moss, "
+                    "Laurence Fishburne\\n\\n"
+                    "Verify whether cast includes both 'Keanu Reeves' "
+                    "and 'Tom Hanks'."
                 ),
             },
             "outputs": {
@@ -156,10 +159,12 @@ def _built_in_examples() -> list[dict[str, Any]]:
                 "call_site": "fallback_style_single_turn",
                 "system": (
                     "You are a movie trivia validator for a cinema connections game. "
-                    "Return ONLY raw JSON with keys: valid, explanation, confidence, movie_title."
+                    "Return ONLY raw JSON with keys: valid, explanation, "
+                    "confidence, movie_title."
                 ),
                 "user": (
-                    "Verify this connection: Brad Pitt -> 12 Years a Slave -> Michael Fassbender. "
+                    "Verify this connection: Brad Pitt -> 12 Years a Slave -> "
+                    "Michael Fassbender. "
                     "Return only JSON."
                 ),
             },
@@ -551,7 +556,8 @@ def _name_match_examples() -> list[dict[str, Any]]:
                 "expected_matched_name": "Joaquin Phoenix",
             },
         },
-        # --- Positive: exact match (fuzzy should catch this, but LLM must not regress) ---
+        # --- Positive: exact match (fuzzy should catch this, but LLM must
+        # not regress) ---
         {
             "inputs": {
                 "call_site": "llm_name_match",
@@ -685,7 +691,8 @@ def _null_precision_evaluator(
 
 
 def _ensure_dataset(client: Client) -> None:
-    """Create the LangSmith dataset from built-in examples if it doesn't exist or is empty."""
+    """Create the LangSmith dataset from built-in examples if it doesn't
+    exist or is empty."""
     has_ds = client.has_dataset(dataset_name=_DATASET_NAME)
     if (
         has_ds

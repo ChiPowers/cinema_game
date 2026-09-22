@@ -1,14 +1,15 @@
 import pytest
 from pydantic import ValidationError
+
 from cinema_game_backend.models.game import (
     Actor,
-    MovieStep,
     ActorStep,
-    Move,
     GameState,
-    NewGameResponse,
+    Move,
     MoveRequest,
     MoveResponse,
+    MovieStep,
+    NewGameResponse,
 )
 
 # --- Actor ---

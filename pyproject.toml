@@ -1,29 +1,58 @@
-[tool.poetry]
+[project]
 name = "cinema_game_backend"
-version = "2.3.4"
+version = "2.4.0"
 description = "Cinema Game — connect actors through shared movies"
-authors = ["Chivon Powers <chivon.powers@gmail.com>", "Reuben Brasher <rkbrasher@gmail.com>"]
-license = "mit"
+authors = [
+    { name = "Chivon Powers", email = "chivon.powers@gmail.com" },
+    { name = "Reuben Brasher", email = "rkbrasher@gmail.com" },
+]
+license = "MIT"
 readme = "README.md"
-packages = [{include = "cinema_game_backend"}]
+# Upper bound is required: Poetry cannot resolve dependencies that cap
+# themselves at <4.0 against an unbounded range. Equivalent to the old
+# Poetry-style `python = "^3.11"`.
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "fastapi>=0.135.2,<0.136.0",
+    "uvicorn>=0.30.0,<0.31.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "pydantic>=2.12.5,<3.0.0",
+    "langsmith>=0.8.18,<1.0.0",
+    "rapidfuzz>=3.12.0,<4.0.0",
+    "pyjwt>=2.13.0,<3.0.0",
+    "sqlalchemy>=2.0.51,<3.0.0",
+    "art-graph",
+    "reusable-llm-provider",
+]
 
+# Vendor SDKs are optional and forwarded to reusable-llm-provider, which owns
+# their version ranges. A bare install brings no backend; the Docker image
+# installs exactly one. `all` is for local convenience only -- never used to
+# build an image, which would defeat the one-vendor-per-image guarantee.
+[project.optional-dependencies]
+anthropic = ["reusable-llm-provider[anthropic]"]
+openai    = ["reusable-llm-provider[openai]"]
+vertex    = ["reusable-llm-provider[vertex]"]
+ollama    = ["reusable-llm-provider[ollama]"]
+# Forward to the library's all extra for automatic provider discovery and to avoid Poetry resolver conflicts.
+all = ["reusable-llm-provider[all]"]
+
+[tool.poetry]
+packages = [{ include = "cinema_game_backend" }]
+
+# Source enrichment only. These two are git dependencies, not on PyPI; the
+# version constraint lives in [project.dependencies] above and the source here.
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.135.2"
-uvicorn = "^0.30.0"
-python-dotenv = "^1.0.0"
-pydantic = "^2.12.5"
-langsmith = ">=0.8.18,<1.0.0"
-rapidfuzz = "^3.12.0"
-art-graph = {git = "https://github.com/newexo/artist-graph.git", tag = "v0.3.0"}
-reusable-llm-provider = {git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.5.1"}
-pyjwt = "^2.13.0"
+art-graph = { git = "https://github.com/newexo/artist-graph.git", tag = "v0.3.0" }
+reusable-llm-provider = { git = "https://github.com/newexo/reusable-llm-provider.git", tag = "v0.8.0" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.6"
 pytest = "^9.0.2"
 pytest-asyncio = "^1.3.0"
 coverage = "^7.12.0"
+vulture = "^2.16"
+deptry = "^0.25.1"
 
 [tool.poetry.group.notebook.dependencies]
 jupyter = "^1.1.1"
@@ -41,9 +70,22 @@ filterwarnings = [
 [tool.ruff]
 line-length = 88
 
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes (includes E402 import placement, F401 unused
+# imports). I: import sorting. UP: pyupgrade. ERA001: commented-out code.
+# ARG is deliberately NOT enabled -- unused arguments are usually signature
+# contracts in interface implementations, not dead code.
+select = ["E", "F", "I", "UP", "ERA001"]
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "_version.py" = ["F841"]
+# A vulture baseline is a list of bare names, so every line is an undefined
+# reference. See `make deadcode` for when this file exists. Vulture's
+# generated comments (name plus source path and line number) routinely exceed
+# the line-length limit and cannot be reflowed without breaking the format
+# `--make-whitelist` produces, hence E501 as well as F821.
+"deadcode-whitelist.py" = ["F821", "E501"]
 
 [tool.coverage.run]
 omit = [
@@ -60,6 +102,27 @@ exclude_lines = [
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]
+
+[tool.deptry]
+# deptry's default DEP004 exclusion only matches a top-level `tests/`
+# directory (see deptry.cli.DEFAULT_EXCLUDE); this project nests its tests at
+# cinema_game_backend/tests/, so that exclusion never applies and the test
+# suite's import of pytest is flagged even though it is correctly a dev
+# dependency.
+# cinema_game_backend/experiments_llm_harness.py is a dev-only LLM experiment
+# tool invoked via scripts/run_llm_experiments.py, never by the deployed app,
+# but it lives inside the package tree (same non-standard layout as above)
+# rather than an excluded directory. It imports anthropic/httpx directly for
+# experimentation, but this project names no vendor LLM package or version
+# range of its own -- that lives solely in reusable-llm-provider, so those
+# packages are deliberately NOT declared as dependencies here. The file is
+# excluded from analysis instead of adding a vendor declaration.
+# uvicorn is run as the container's ASGI server (see Dockerfile CMD), never
+# imported in Python code, so deptry cannot see the usage.
+extend_exclude = ["cinema_game_backend/experiments_llm_harness.py"]
+[tool.deptry.per_rule_ignores]
+DEP004 = ["pytest"]
+DEP002 = ["uvicorn"]
 
 [build-system]
 requires = ["poetry-core"]

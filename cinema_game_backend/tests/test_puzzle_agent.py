@@ -1,11 +1,13 @@
-import pytest
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from art_graph.cinema_data_providers.tmdb_models import (
-    Person,
-    MovieCreditRole,
     CastMember,
+    MovieCreditRole,
+    Person,
 )
+
 from cinema_game_backend.agents.puzzle_agent import (
     _has_short_path,
     _pick_popular_actor,

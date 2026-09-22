@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from rapidfuzz import fuzz, process
 from rapidfuzz.distance import Levenshtein
 
-
 _MIN_SCORE = 85
 
 

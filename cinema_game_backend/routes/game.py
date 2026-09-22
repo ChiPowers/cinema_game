@@ -1,20 +1,22 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
-from langsmith import traceable, get_current_run_tree
+
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
-from ..models.game import (
-    NewGameResponse,
-    MoveRequest,
-    MoveResponse,
-    UndoResponse,
-    GameState,
-    Actor,
-    Move,
-)
+from fastapi import APIRouter, Depends, HTTPException
+from langsmith import get_current_run_tree, traceable
+
 from ..agents.puzzle_agent import generate_puzzle
 from ..agents.validation_agent import validate_move
-from ..dependencies import get_tmdb, get_llm, require_auth
-from ..database import save_game, load_game, update_game
+from ..database import load_game, save_game, update_game
+from ..dependencies import get_llm, get_tmdb, require_auth
+from ..models.game import (
+    Actor,
+    GameState,
+    Move,
+    MoveRequest,
+    MoveResponse,
+    NewGameResponse,
+    UndoResponse,
+)
 
 router = APIRouter(prefix="/game", tags=["game"])
 
