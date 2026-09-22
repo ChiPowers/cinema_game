@@ -1,4 +1,3 @@
-import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -9,14 +8,12 @@ from .config import (
     BETA_SEED_EMAILS,
     INTERNAL_SECRET,
     NEXTAUTH_SECRET,
-    create_llm_provider,
     create_tmdb_client,
+    validate_llm_config,
 )
 from .database import init_db, seed_beta_users
 from .routes.auth import router as auth_router
 from .routes.game import router as game_router
-
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -32,12 +29,13 @@ async def lifespan(app: FastAPI):
     init_db()
     seed_beta_users(BETA_SEED_EMAILS)
     app.state.tmdb = create_tmdb_client()
-    app.state.llm = create_llm_provider()
-    if app.state.llm is None:
-        logger.warning(
-            "No LLM provider configured — nickname resolution disabled. "
-            "Set ANTHROPIC_API_KEY to enable LLM fallback for name matching."
-        )
+    # Raises if LLM_PROVIDER is unset, unknown, its credentials are missing,
+    # or its backend is not installed. A container that cannot resolve
+    # nicknames must not start. The provider itself is built on first use --
+    # importing it costs ~773 ms, and the LLM is a fallback most games never
+    # reach, so it does not belong on the cold-start path.
+    validate_llm_config()
+    app.state.llm = None
     yield
 
 
