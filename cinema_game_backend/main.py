@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ._version import __version__
 from .config import (
     BETA_SEED_EMAILS,
     INTERNAL_SECRET,
@@ -39,7 +40,10 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Cinema Game API", version="2.0.0", lifespan=lifespan)
+# Version comes from the installed package metadata rather than a literal, so
+# the version advertised by /openapi.json cannot drift from pyproject.toml the
+# way the previous hardcoded "2.0.0" did — it sat four patch releases behind.
+app = FastAPI(title="Cinema Game API", version=__version__, lifespan=lifespan)
 
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
