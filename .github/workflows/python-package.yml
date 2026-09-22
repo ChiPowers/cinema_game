@@ -65,3 +65,60 @@ jobs:
 
     - name: Import boundaries
       run: make import-boundaries
+
+  # The build job runs with no extras, so it passes whether or not the
+  # optional-dependency machinery works. These two build environments that
+  # really do have exactly one backend, or none.
+  extras:
+    name: extra:${{ matrix.extra }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        extra: ["anthropic", "openai", "vertex", "ollama"]
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.13"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.4.3
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install only this extra
+      run: poetry install --only main --extras ${{ matrix.extra }}
+
+    - name: Only this backend is usable
+      run: poetry run python scripts/check_extras.py ${{ matrix.extra }}
+
+  no-extras:
+    name: no extras
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.13"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.4.3
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install with no extras
+      run: poetry install --only main
+
+    - name: No backend is usable
+      run: poetry run python scripts/check_extras.py
