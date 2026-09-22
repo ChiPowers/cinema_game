@@ -28,9 +28,10 @@ files = [
 name = "anthropic"
 version = "0.116.0"
 description = "The official Python library for the anthropic API"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "anthropic-0.116.0-py3-none-any.whl", hash = "sha256:6c0a7698e8d652455da3499978279bb2588c7264d0a35be3666009a4258c8256"},
     {file = "anthropic-0.116.0.tar.gz", hash = "sha256:5fc248fbb9fe03ef686f8a774f81586bca31a043260aab88b387ea3660f4a396"},
@@ -392,7 +393,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\""}
+markers = {main = "(extra == \"vertex\" or extra == \"all\") and platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -779,9 +780,10 @@ toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 name = "cryptography"
 version = "50.0.1"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-optional = false
+optional = true
 python-versions = "!=3.9.0,!=3.9.1,>=3.9"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "cryptography-50.0.1-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"},
     {file = "cryptography-50.0.1-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:53e279950892dc102c6b4e52af03ae5ea92fac572a1ddab78ca73a997f62b69f"},
@@ -966,9 +968,10 @@ files = [
 name = "docstring-parser"
 version = "0.18.0"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "docstring_parser-0.18.0-py3-none-any.whl", hash = "sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b"},
     {file = "docstring_parser-0.18.0.tar.gz", hash = "sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015"},
@@ -1037,9 +1040,10 @@ devel = ["colorama", "json-spec", "jsonschema", "pylint", "pytest", "pytest-benc
 name = "filetype"
 version = "1.2.0"
 description = "Infer file type and MIME type of any file/buffer. No external dependencies."
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25"},
     {file = "filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb"},
@@ -1134,9 +1138,10 @@ files = [
 name = "google-auth"
 version = "2.55.1"
 description = "Google Authentication Library"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "google_auth-2.55.1-py3-none-any.whl", hash = "sha256:eada68dfd52b3b81191827601e2a0c3fa12540c818534b630ddc5355769c3995"},
     {file = "google_auth-2.55.1.tar.gz", hash = "sha256:fb2d9b730f2c9b8d326ec8d7222f21aef2ead15bf0513793d6442485d87af0a1"},
@@ -1163,9 +1168,10 @@ urllib3 = ["packaging", "urllib3"]
 name = "google-genai"
 version = "1.75.0"
 description = "GenAI Python SDK"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "google_genai-1.75.0-py3-none-any.whl", hash = "sha256:8dc4c096e7d6288c3087f6893f582fe52468932464781edb8193bd92b9fefb2c"},
     {file = "google_genai-1.75.0.tar.gz", hash = "sha256:56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf"},
@@ -1529,9 +1535,10 @@ i18n = ["Babel (>=2.7)"]
 name = "jiter"
 version = "0.16.0"
 description = "Fast iterable JSON parser."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\""
 files = [
     {file = "jiter-0.16.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:c5fc4f8def331036a7b8e981b4347ebe409981edbc8308a5ea842b8c3614fa6c"},
     {file = "jiter-0.16.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5a71d0d2014c3275043e1170bf3d4e771493cb0dcf07be54c567155f4d8ee64b"},
@@ -1656,9 +1663,10 @@ files = [
 name = "jsonpatch"
 version = "1.33"
 description = "Apply JSON-Patches (RFC 6902)"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "jsonpatch-1.33-py2.py3-none-any.whl", hash = "sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade"},
     {file = "jsonpatch-1.33.tar.gz", hash = "sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c"},
@@ -1678,6 +1686,7 @@ files = [
     {file = "jsonpointer-3.1.1-py3-none-any.whl", hash = "sha256:8ff8b95779d071ba472cf5bc913028df06031797532f08a7d5b602d8b2a488ca"},
     {file = "jsonpointer-3.1.1.tar.gz", hash = "sha256:0b801c7db33a904024f6004d526dcc53bbb8a4a0f4e32bfd10beadf60adf1900"},
 ]
+markers = {main = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""}
 
 [[package]]
 name = "jsonschema"
@@ -2149,9 +2158,10 @@ files = [
 name = "langchain-anthropic"
 version = "1.4.8"
 description = "Integration package connecting Claude (Anthropic) APIs and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\""
 files = [
     {file = "langchain_anthropic-1.4.8-py3-none-any.whl", hash = "sha256:778e9301b6fd517824f76ec1776975ce8add97a1f6a36c50ae3c2f4b03a66f7f"},
     {file = "langchain_anthropic-1.4.8.tar.gz", hash = "sha256:c76891b2044d56105ff13c106ed12650637b53bd598a4bdf15b4796eefa2a4ec"},
@@ -2166,9 +2176,10 @@ pydantic = ">=2.7.4,<3.0.0"
 name = "langchain-core"
 version = "1.6.2"
 description = "Building applications with LLMs through composability"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "langchain_core-1.6.2-py3-none-any.whl", hash = "sha256:21e6c7cf097c68b777fd69ea00864f09bd9ca76ac73e3e3fa14e1ee366eb4711"},
     {file = "langchain_core-1.6.2.tar.gz", hash = "sha256:1ec6d3a98f7c8cdbb5bb0deff86e7ca37e16bf4f8f49f022d10723656c62352d"},
@@ -2190,9 +2201,10 @@ uuid-utils = ">=0.12.0,<1.0"
 name = "langchain-google-genai"
 version = "4.3.7"
 description = "An integration package connecting Google's genai package and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "langchain_google_genai-4.3.7-py3-none-any.whl", hash = "sha256:8d4b1aa8f2c2e17b8e790d34a7e9a7b8e7d13e9a00175679d17647c235104bf9"},
     {file = "langchain_google_genai-4.3.7.tar.gz", hash = "sha256:8a57f936b1fbde52776fdde6673fdabd99cfa5cbbb122a926f1cff0ba00f6bc6"},
@@ -2208,9 +2220,10 @@ pydantic = ">=2.0.0,<3.0.0"
 name = "langchain-ollama"
 version = "1.1.0"
 description = "An integration package connecting Ollama and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"ollama\" or extra == \"all\""
 files = [
     {file = "langchain_ollama-1.1.0-py3-none-any.whl", hash = "sha256:43ac83a6eacb0f43855810739794dd55019e0d9b17bdcf3ecb3b1991ac3b59dd"},
     {file = "langchain_ollama-1.1.0.tar.gz", hash = "sha256:f776f56f6782ae4da7692579b94a6575906118318d1023b455d7207f9d059811"},
@@ -2224,9 +2237,10 @@ ollama = ">=0.6.1,<1.0.0"
 name = "langchain-openai"
 version = "1.3.3"
 description = "An integration package connecting OpenAI and LangChain"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "langchain_openai-1.3.3-py3-none-any.whl", hash = "sha256:e469659862c8aabba4f6653df973206e7be54f98cf2275c86be7f06b7abe20d7"},
     {file = "langchain_openai-1.3.3.tar.gz", hash = "sha256:143769bf943820b80db769e47ca8fd0aac08ed18714519333b044c4431e9aa67"},
@@ -2241,9 +2255,10 @@ tiktoken = ">=0.7.0,<1.0.0"
 name = "langchain-protocol"
 version = "0.0.18"
 description = "Python bindings for the LangChain agent streaming protocol"
-optional = false
+optional = true
 python-versions = "<4.0.0,>=3.10.0"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "langchain_protocol-0.0.18-py3-none-any.whl", hash = "sha256:70b53a86fbf9cedc863555effe44da192ab02d556ddbf2cf95b8873adcf41b5a"},
     {file = "langchain_protocol-0.0.18.tar.gz", hash = "sha256:ec3e11782f1ed0c9db38e5a9ed01b0e7a0d3fba406faa8aef6594b73c56a63e6"},
@@ -2743,9 +2758,10 @@ files = [
 name = "ollama"
 version = "0.6.2"
 description = "The official Python client for Ollama."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"ollama\" or extra == \"all\""
 files = [
     {file = "ollama-0.6.2-py3-none-any.whl", hash = "sha256:3ad7daab28e5a973445c36a73882a3ef698c2ebb00e21e308652741577509f7d"},
     {file = "ollama-0.6.2.tar.gz", hash = "sha256:936d55daa684f474364c098611c933626f8d6c7d67065c5b7ae0c477b508b07f"},
@@ -2759,9 +2775,10 @@ pydantic = ">=2.9"
 name = "openai"
 version = "2.44.0"
 description = "The official Python library for the openai API"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "openai-2.44.0-py3-none-any.whl", hash = "sha256:0a2a3ab2e29aeda368700f662ff9ba0f9df17ba4c54577a64e08b8115a3cc0ad"},
     {file = "openai-2.44.0.tar.gz", hash = "sha256:68a5a5ffad82b8ff7d451c437529fb64f7c3b8123aaf0c021966a882d9e3947d"},
@@ -3346,9 +3363,10 @@ tests = ["pytest"]
 name = "pyasn1"
 version = "0.6.4"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "pyasn1-0.6.4-py3-none-any.whl", hash = "sha256:deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b"},
     {file = "pyasn1-0.6.4.tar.gz", hash = "sha256:9c447d8431c947fe4c8febc4ed9e760bc29011a5b01e5c74b67025bd9fb8ce81"},
@@ -3358,9 +3376,10 @@ files = [
 name = "pyasn1-modules"
 version = "0.4.2"
 description = "A collection of ASN.1-based protocols modules"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
+markers = "extra == \"vertex\" or extra == \"all\""
 files = [
     {file = "pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"},
     {file = "pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6"},
@@ -3380,7 +3399,7 @@ files = [
     {file = "pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"},
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
-markers = {main = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", notebook = "implementation_name != \"PyPy\""}
+markers = {main = "(extra == \"vertex\" or extra == \"all\") and implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\"", notebook = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -3789,6 +3808,7 @@ files = [
     {file = "pyyaml-6.0.3-cp39-cp39-win_amd64.whl", hash = "sha256:2e71d11abed7344e42a8849600193d15b6def118602c4c176f748e4583246007"},
     {file = "pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"},
 ]
+markers = {main = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""}
 
 [[package]]
 name = "pyzmq"
@@ -4012,9 +4032,10 @@ typing-extensions = {version = ">=4.4.0", markers = "python_version < \"3.13\""}
 name = "regex"
 version = "2026.6.28"
 description = "Alternative regular expression module, to replace re."
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "regex-2026.6.28-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b83932645630965fd860fdb70ebbf964bf3e8007f08851ea424d01f8d35454a8"},
     {file = "regex-2026.6.28-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e81f1952355042e517dc9861ce65c676e4a098f42402993c40461786d1f794d4"},
@@ -4186,29 +4207,36 @@ packaging = ">=23.2"
 
 [[package]]
 name = "reusable-llm-provider"
-version = "0.5.1"
+version = "0.8.0"
 description = "Reusable LLM provider abstraction layer supporting Anthropic, OpenAI, Vertex AI, and Ollama"
 optional = false
-python-versions = "^3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main"]
 files = []
 develop = false
 
 [package.dependencies]
-anthropic = ">=0.96.0,<1.0.0"
-google-genai = "^1.61.0"
-langchain-anthropic = "^1.3.1"
-langchain-google-genai = "^4.3.7"
-langchain-ollama = "^1.0.1"
-langchain-openai = "^1.1.7"
-openai = "^2.15.0"
-pydantic = "^2.12.0"
+anthropic = {version = ">=0.96.0,<1.0.0", optional = true}
+google-genai = {version = ">=1.61.0,<2.0.0", optional = true}
+langchain-anthropic = {version = ">=1.3.1,<2.0.0", optional = true}
+langchain-google-genai = {version = ">=4.3.7,<5.0.0", optional = true}
+langchain-ollama = {version = ">=1.0.1,<2.0.0", optional = true}
+langchain-openai = {version = ">=1.1.7,<2.0.0", optional = true}
+openai = {version = ">=2.15.0,<3.0.0", optional = true}
+pydantic = ">=2.12.0,<3.0.0"
+
+[package.extras]
+all = ["anthropic (>=0.96.0,<1.0.0)", "google-genai (>=1.61.0,<2.0.0)", "langchain-anthropic (>=1.3.1,<2.0.0)", "langchain-google-genai (>=4.3.7,<5.0.0)", "langchain-ollama (>=1.0.1,<2.0.0)", "langchain-openai (>=1.1.7,<2.0.0)", "openai (>=2.15.0,<3.0.0)"]
+anthropic = ["anthropic (>=0.96.0,<1.0.0)", "langchain-anthropic (>=1.3.1,<2.0.0)"]
+ollama = ["langchain-ollama (>=1.0.1,<2.0.0)"]
+openai = ["langchain-openai (>=1.1.7,<2.0.0)", "openai (>=2.15.0,<3.0.0)"]
+vertex = ["google-genai (>=1.61.0,<2.0.0)", "langchain-google-genai (>=4.3.7,<5.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/newexo/reusable-llm-provider.git"
-reference = "v0.5.1"
-resolved_reference = "0055dabaf3fbebb93797c21a8771b7211ab3e81e"
+reference = "v0.8.0"
+resolved_reference = "27f74bdb5a99869c37764457aa4d78d03c4623ba"
 
 [[package]]
 name = "rfc3339-validator"
@@ -4623,9 +4651,10 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 name = "tenacity"
 version = "9.1.4"
 description = "Retry code until it succeeds"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "extra == \"anthropic\" or extra == \"all\" or extra == \"openai\" or extra == \"vertex\" or extra == \"ollama\""
 files = [
     {file = "tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55"},
     {file = "tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a"},
@@ -4661,9 +4690,10 @@ typing = ["mypy (>=1.6,<2.0)", "traitlets (>=5.11.1)"]
 name = "tiktoken"
 version = "0.13.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"openai\" or extra == \"all\""
 files = [
     {file = "tiktoken-0.13.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:47b1df8d73390a24f94980c75158cdd5c56d256f16d55f30cb49c230caba9ba4"},
     {file = "tiktoken-0.13.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:7d40c6c5aab171dcd6eb8455bc567bde404bb9def60cdb8c1299cc782b242bb9"},
@@ -5517,7 +5547,14 @@ files = [
 [package.extras]
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b0) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
+[extras]
+all = ["reusable-llm-provider"]
+anthropic = ["reusable-llm-provider"]
+ollama = ["reusable-llm-provider"]
+openai = ["reusable-llm-provider"]
+vertex = ["reusable-llm-provider"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4.0"
-content-hash = "d477caf8cdadb2b7cb24d963df9d3c62042d942d59553ccf277f2ecc31f1fffa"
+content-hash = "1aa8d6e77a4ed80f99a30cd1734567452a9889a03276655a1adfc5835e446199"
