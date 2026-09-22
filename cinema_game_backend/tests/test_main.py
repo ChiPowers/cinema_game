@@ -23,6 +23,15 @@ def test_startup_fails_when_provider_unconfigured(monkeypatch):
     """
     monkeypatch.setattr("cinema_game_backend.main.NEXTAUTH_SECRET", "test-secret")
     monkeypatch.setattr("cinema_game_backend.main.INTERNAL_SECRET", "test-internal")
+    # Everything the lifespan does BEFORE the LLM check is neutralised, so this
+    # test asserts what it claims and nothing else. Each of these otherwise
+    # reads real configuration -- a writable DB path, a TMDb cache setting --
+    # which exists locally via secrets/.env and does not in CI, so leaving any
+    # of them live makes the lifespan raise about that instead, and the test
+    # fails on a message it was never about.
+    monkeypatch.setattr("cinema_game_backend.main.init_db", lambda: None)
+    monkeypatch.setattr("cinema_game_backend.main.seed_beta_users", lambda *_: None)
+    monkeypatch.setattr("cinema_game_backend.main.create_tmdb_client", lambda: object())
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
     with pytest.raises(RuntimeError, match="LLM_PROVIDER"):
         with TestClient(app):
