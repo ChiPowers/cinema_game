@@ -13,9 +13,6 @@ load_cinema_game_env()
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET", "")
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET", "")
@@ -32,7 +29,6 @@ BETA_SEED_EMAILS = [
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
-TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280"
 
