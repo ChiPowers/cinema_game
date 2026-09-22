@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        LLM_EXTRA: ${LLM_EXTRA:-anthropic}
     ports:
       - "8000:8000"
     env_file:

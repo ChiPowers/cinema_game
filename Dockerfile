@@ -22,11 +22,22 @@ RUN apt-get update \
 
 # Install dependencies before copying source, so this layer is cached
 # across source-only changes.
+# Which LLM backend to build in. Exactly one vendor SDK ends up in the image.
+# LLM_PROVIDER is derived from it below so a build/runtime mismatch is
+# impossible rather than a startup failure. "all" is not valid here.
+ARG LLM_EXTRA=vertex
+RUN case "$LLM_EXTRA" in \
+      anthropic|openai|vertex|ollama) ;; \
+      *) echo "LLM_EXTRA must be one of: anthropic openai vertex ollama" >&2; exit 1 ;; \
+    esac
+
 COPY pyproject.toml poetry.lock README.md ./
-RUN poetry install --only main --no-root
+RUN poetry install --only main --extras "$LLM_EXTRA" --no-root
 
 COPY cinema_game_backend ./cinema_game_backend
-RUN poetry install --only main
+RUN poetry install --only main --extras "$LLM_EXTRA"
+
+ENV LLM_PROVIDER=${LLM_EXTRA}
 
 RUN useradd --create-home --uid 1000 appuser \
     && chown -R appuser:appuser /app
