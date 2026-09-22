@@ -1,8 +1,8 @@
 """Shared pytest fixtures for functional tests.
 
 These tests verify that validate_move works correctly against the real
-TMDb API (and, when an llm fixture is passed, the real Anthropic API).
-They require valid credentials in secrets/.env.
+TMDb API (and, when an llm fixture is passed, the provider named by
+LLM_PROVIDER). They require valid credentials in secrets/.env.
 
 Functional tests are never run in CI — they require actual API credentials
 and external service access.
@@ -22,7 +22,11 @@ load_cinema_game_env()
 
 @pytest.fixture(autouse=True)
 async def throttle_between_tests():
-    """Sleep between tests to avoid Anthropic 30k tokens/min rate limit."""
+    """Sleep between tests to stay under the LLM provider's rate limit.
+
+    Conservative and calibrated for Anthropic's 30k tokens/min limit; may be
+    more throttling than other providers need.
+    """
     yield
     await asyncio.sleep(3)
 
@@ -35,15 +39,13 @@ def tmdb():
 
 @pytest.fixture
 def llm():
-    """Provide the real LLM provider configured from secrets/.env.
+    """Provide the real LLM provider selected by LLM_PROVIDER.
 
-    Skips rather than fails when no key is configured, so the rest of the
-    functional suite still runs without Anthropic credentials.
+    Raises rather than skipping. These tests exist to exercise a real
+    provider; silently skipping them is how the suite came to pass against
+    a dead key for months.
     """
-    provider = create_llm_provider()
-    if provider is None:
-        pytest.skip("ANTHROPIC_API_KEY not set; LLM fallback cannot be tested")
-    return provider
+    return create_llm_provider()
 
 
 @pytest.fixture

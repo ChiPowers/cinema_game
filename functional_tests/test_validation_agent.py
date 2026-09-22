@@ -1,7 +1,8 @@
 """Functional tests for the validation agent (validate_move).
 
 These tests verify that validate_move() correctly verifies movie connections
-between actors. They hit the real Anthropic and TMDb APIs.
+between actors. They hit the real TMDb API and, for tests using the llm
+fixture, the real provider named by LLM_PROVIDER.
 
 Test cases establish the contract:
 - Valid movie connections are correctly identified

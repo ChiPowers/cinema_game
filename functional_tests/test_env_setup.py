@@ -22,16 +22,19 @@ class TestEnvironmentSetup:
         """Test that .env file can be loaded without errors."""
         load_cinema_game_env()
 
-    def test_anthropic_api_key_present(self):
-        """Test that Anthropic API key is set."""
+    def test_selected_provider_credentials_present(self):
+        """Test that the provider named by LLM_PROVIDER has its credentials."""
         load_cinema_game_env()
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        assert api_key is not None, "ANTHROPIC_API_KEY required but not set"
-        assert len(api_key) > 0, "ANTHROPIC_API_KEY is empty"
-        assert api_key.startswith("sk-ant-"), (
-            "ANTHROPIC_API_KEY does not look like a valid Anthropic key "
-            "(should start with 'sk-ant-')"
+        from cinema_game_backend.config import _REQUIRED_ENV
+
+        name = os.getenv("LLM_PROVIDER", "").strip().lower()
+        assert name in _REQUIRED_ENV, (
+            f"LLM_PROVIDER={name!r} is not a known provider; "
+            f"expected one of {sorted(_REQUIRED_ENV)}"
         )
+        for var in _REQUIRED_ENV[name]:
+            value = os.getenv(var)
+            assert value, f"{var} required for LLM_PROVIDER={name} but not set"
 
     def test_tmdb_api_key_present(self):
         """Test that TMDb API key is set."""
