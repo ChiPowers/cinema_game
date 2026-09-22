@@ -41,11 +41,6 @@ pytest-asyncio = "^1.3.0"
 coverage = "^7.12.0"
 vulture = "^2.16"
 deptry = "^0.25.1"
-# Used directly by the LLM experiment harness (cinema_game_backend/experiments_llm_harness.py),
-# which is a dev-only tool invoked via scripts/run_llm_experiments.py, not by the
-# deployed application.
-anthropic = "^0.116.0"
-httpx = "^0.28.1"
 
 [tool.poetry.group.notebook.dependencies]
 jupyter = "^1.1.1"
@@ -101,16 +96,20 @@ exclude_lines = [
 # directory (see deptry.cli.DEFAULT_EXCLUDE); this project nests its tests at
 # cinema_game_backend/tests/, so that exclusion never applies and the test
 # suite's import of pytest is flagged even though it is correctly a dev
-# dependency. The same non-standard layout puts
-# cinema_game_backend/experiments_llm_harness.py -- a dev-only LLM experiment
-# tool invoked via scripts/run_llm_experiments.py, never by the deployed app
-# -- inside the package tree instead of an excluded directory, so its direct
-# imports of anthropic and httpx (both correctly dev dependencies) are flagged
-# the same way.
+# dependency.
+# cinema_game_backend/experiments_llm_harness.py is a dev-only LLM experiment
+# tool invoked via scripts/run_llm_experiments.py, never by the deployed app,
+# but it lives inside the package tree (same non-standard layout as above)
+# rather than an excluded directory. It imports anthropic/httpx directly for
+# experimentation, but this project names no vendor LLM package or version
+# range of its own -- that lives solely in reusable-llm-provider, so those
+# packages are deliberately NOT declared as dependencies here. The file is
+# excluded from analysis instead of adding a vendor declaration.
 # uvicorn is run as the container's ASGI server (see Dockerfile CMD), never
 # imported in Python code, so deptry cannot see the usage.
+extend_exclude = ["cinema_game_backend/experiments_llm_harness.py"]
 [tool.deptry.per_rule_ignores]
-DEP004 = ["pytest", "anthropic", "httpx"]
+DEP004 = ["pytest"]
 DEP002 = ["uvicorn"]
 
 [build-system]
