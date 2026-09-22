@@ -88,7 +88,7 @@ poetry install --extras anthropic   # or: openai, vertex, ollama
 
 There's also an `all` extra, which forwards to `reusable-llm-provider`'s own `all` extra for local convenience (e.g. experimenting with more than one backend). Never use `all` to build a deployable image — see Docker below, where it's rejected outright.
 
-Then set `LLM_PROVIDER` in `secrets/.env` to the **same name** as the extra you installed:
+Then, after creating `secrets/.env` as described under Configuration below, set `LLM_PROVIDER` in it to the **same name** as the extra you installed:
 
 ```
 LLM_PROVIDER=anthropic
