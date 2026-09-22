@@ -1,9 +1,17 @@
 import os
+from importlib.util import find_spec
 
 from art_graph.cinema_data_providers.cache.cached_client import CachedTMDbClient
 from art_graph.cinema_data_providers.filters import MovieFilter
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from art_graph.cinema_data_providers.tmdb.config import TMDbConfig
+from reusable_llm_provider.config import (
+    create_anthropic_config,
+    create_ollama_config,
+    create_openai_config,
+    create_vertex_config,
+)
+from reusable_llm_provider.providers import create_provider
 from sqlalchemy import create_engine
 
 from . import directories
@@ -55,22 +63,92 @@ def create_tmdb_client() -> TMDbClient:
 DB_PATH = os.getenv("DB_PATH", directories.base("cinema_game.db"))
 
 
-def create_llm_provider():
-    """Create an LLM provider for fallback name matching.
+# Extra name == LLM_PROVIDER value == Docker build-arg value, deliberately.
+_CONFIG_FACTORIES = {
+    "anthropic": create_anthropic_config,
+    "openai": create_openai_config,
+    "vertex": create_vertex_config,
+    "ollama": create_ollama_config,
+}
 
-    Currently hardcoded to Anthropic. A follow-up PR will make the provider
-    configurable via an environment variable (e.g. LLM_PROVIDER=openai).
+# Vertex authenticates via Application Default Credentials (the Cloud Run
+# runtime service account), so it needs no key -- only a project and region.
+# Ollama is local and needs nothing.
+_REQUIRED_ENV = {
+    "anthropic": ("ANTHROPIC_API_KEY",),
+    "openai": ("OPENAI_API_KEY",),
+    "vertex": ("VERTEX_PROJECT_ID", "VERTEX_LOCATION"),
+    "ollama": (),
+}
 
-    Returns None if ANTHROPIC_API_KEY is not set, in which case validation
-    falls back to fuzzy string matching only.
+# Model names are provider-specific, so the variable is too. One global
+# LLM_MODEL would let a Claude model name survive a switch to Vertex and fail
+# at first call rather than at startup. Whether a model still EXISTS is not
+# knowable locally -- only the provider knows -- but this makes the category
+# error unrepresentable. Unset falls through to the library's DEFAULT_MODELS.
+_MODEL_ENV = {
+    "anthropic": "ANTHROPIC_MODEL",
+    "openai": "OPENAI_MODEL",
+    "vertex": "VERTEX_MODEL",
+    "ollama": "OLLAMA_MODEL",
+}
+
+# One module per extra, checked with find_spec, which locates without
+# executing. Importing the SDK costs ~773 ms and belongs off the cold-start
+# path. Every extra ships a langchain package, so these are uniform top-level
+# names -- no PEP 420 namespace ambiguity, which `google` would carry.
+_BACKEND_MODULE = {
+    "anthropic": "langchain_anthropic",
+    "openai": "langchain_openai",
+    "vertex": "langchain_google_genai",
+    "ollama": "langchain_ollama",
+}
+
+
+def validate_llm_config() -> str:
+    """Check everything knowable without importing a vendor SDK; return the name.
+
+    Called from the application lifespan so a misconfigured deployment fails
+    at rollout instead of serving games with nickname resolution silently
+    disabled. Deliberately does NOT construct the provider: that costs ~773 ms
+    of vendor import, and the LLM is a fallback most games never reach.
+
+    Reads os.getenv at call time rather than using this module's constants,
+    which are bound at import and cannot be monkeypatched by tests.
     """
-    if not ANTHROPIC_API_KEY:
-        return None
-    from reusable_llm_provider.config import create_anthropic_config
-    from reusable_llm_provider.providers import create_provider
+    names = ", ".join(sorted(_CONFIG_FACTORIES))
+    name = os.getenv("LLM_PROVIDER", "").strip().lower()
+    if not name:
+        raise RuntimeError(f"LLM_PROVIDER is not set. Set it to one of: {names}")
 
-    model = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
-    config = create_anthropic_config(model=model)
+    if name not in _CONFIG_FACTORIES:
+        raise RuntimeError(f"LLM_PROVIDER={name!r} is not one of: {names}")
+
+    missing = [var for var in _REQUIRED_ENV[name] if not os.getenv(var)]
+    if missing:
+        raise RuntimeError(
+            f"LLM_PROVIDER={name} requires {', '.join(missing)}, which is not set"
+        )
+
+    module = _BACKEND_MODULE[name]
+    if find_spec(module) is None:
+        raise RuntimeError(
+            f"LLM_PROVIDER={name} but its backend is not installed "
+            f"({module!r} not found). Install with --extras {name}."
+        )
+
+    return name
+
+
+def create_llm_provider():
+    """Construct the configured provider, or raise. Never returns None.
+
+    Pays the vendor import, so it is called lazily on first use rather than
+    at startup. Validation has already run in the lifespan by then; it runs
+    again here because the functional tests call this directly.
+    """
+    name = validate_llm_config()
+    config = _CONFIG_FACTORIES[name](model=os.getenv(_MODEL_ENV[name]) or None)
     return create_provider(config)
 
 
