@@ -261,3 +261,20 @@ class TestListGames:
         save_game(_make_game("game-c"))
         games = list_games(limit=None)
         assert len(games) == 3
+
+
+class TestAppDatabaseUrl:
+    def test_sqlite_fallback_keeps_special_characters(self, monkeypatch):
+        from cinema_game_backend import database
+
+        monkeypatch.setattr(database, "DATABASE_URL", None)
+        monkeypatch.setattr(database, "DB_PATH", "/data/a?b#c%41.db")
+        url = database._app_database_url()
+        assert url.drivername == "sqlite"
+        assert url.database == "/data/a?b#c%41.db"
+
+    def test_database_url_wins_and_pins_psycopg(self, monkeypatch):
+        from cinema_game_backend import database
+
+        monkeypatch.setattr(database, "DATABASE_URL", "postgres://u:p@h/db")
+        assert database._app_database_url() == "postgresql+psycopg://u:p@h/db"

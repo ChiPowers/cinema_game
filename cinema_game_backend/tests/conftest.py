@@ -21,6 +21,14 @@ def db_engine():
     database because the app's tables are dropped before and after each test.
     """
     url = os.getenv("TEST_DATABASE_URL")
+    app_url = os.getenv("DATABASE_URL")
+    if url and app_url and _normalise_url(url) == _normalise_url(app_url):
+        # This fixture drops the app's tables; never let it near the real data.
+        pytest.exit(
+            "TEST_DATABASE_URL must not be the app's DATABASE_URL: the test "
+            "suite drops its tables.",
+            returncode=2,
+        )
     if url:
         engine = create_engine(_normalise_url(url))
     else:
