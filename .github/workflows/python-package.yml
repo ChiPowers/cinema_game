@@ -66,6 +66,46 @@ jobs:
     - name: Import boundaries
       run: make import-boundaries
 
+  # The same unit suite as `build`, against a real Postgres, so the SQLite
+  # default cannot hide dialect differences or DDL races.
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cinema_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cinema_test
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.13"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.4.3
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --only main,dev
+
+    - name: Run tests against Postgres
+      run: make test
+
   # The build job runs with no extras, so it passes whether or not the
   # optional-dependency machinery works. These two build environments that
   # really do have exactly one backend, or none.

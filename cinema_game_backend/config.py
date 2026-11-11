@@ -61,6 +61,13 @@ def create_tmdb_client() -> TMDbClient:
 
 DB_PATH = os.getenv("DB_PATH", directories.base("cinema_game.db"))
 
+# Connection URL for the app database (games, beta_users). Production sets this
+# to Postgres, e.g. postgresql://user:pass@host/dbname; unset (None) falls back
+# to the SQLite file at DB_PATH so local runs and docker-compose need no new
+# config. The fallback is built as a URL object in database.py rather than
+# formatted here: a "?" in DB_PATH would otherwise be parsed as a query string.
+DATABASE_URL = os.getenv("DATABASE_URL") or None
+
 
 # Extra name == LLM_PROVIDER value == Docker build-arg value, deliberately.
 _CONFIG_FACTORIES = {
