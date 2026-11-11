@@ -240,7 +240,7 @@ API runs at `http://localhost:8000`.
 Access to `/game/*` is gated by two independent layers, and both must pass:
 
 1. **Google level.** While the OAuth consent screen is in "testing" mode, only the Gmail addresses listed as test users in the Google Console can authenticate at all.
-2. **App level.** After a successful Google sign-in, the frontend's NextAuth `signIn` callback calls `POST /auth/check-beta`, which looks up the email in the `beta_users` table in this repo's SQLite database. Emails not present in the table are denied.
+2. **App level.** After a successful Google sign-in, the frontend's NextAuth `signIn` callback calls `POST /auth/check-beta`, which looks up the email in the `beta_users` table in this repo's database (SQLite locally, Postgres in production). Emails not present in the table are denied.
 
 Manage the `beta_users` table from the backend:
 

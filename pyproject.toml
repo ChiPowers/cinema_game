@@ -21,6 +21,7 @@ dependencies = [
     "rapidfuzz>=3.12.0,<4.0.0",
     "pyjwt>=2.15.0,<3.0.0",
     "sqlalchemy>=2.0.51,<3.0.0",
+    "psycopg[binary]>=3.2,<4.0",
     "art-graph",
     "reusable-llm-provider",
 ]
@@ -122,7 +123,9 @@ exclude_lines = [
 extend_exclude = ["cinema_game_backend/experiments_llm_harness.py"]
 [tool.deptry.per_rule_ignores]
 DEP004 = ["pytest"]
-DEP002 = ["uvicorn"]
+# psycopg is the Postgres driver, loaded by SQLAlchemy from the
+# postgresql+psycopg:// URL in database.py, never imported directly.
+DEP002 = ["uvicorn", "psycopg"]
 
 [build-system]
 requires = ["poetry-core"]
