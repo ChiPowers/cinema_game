@@ -21,9 +21,9 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects import postgresql, sqlite
-from sqlalchemy.engine import Connection, Row
+from sqlalchemy.engine import URL, Connection, Row
 
-from .config import DATABASE_URL
+from .config import DATABASE_URL, DB_PATH
 
 metadata = MetaData()
 
@@ -69,14 +69,20 @@ def _normalise_url(url: str) -> str:
     return url
 
 
+def _app_database_url() -> str | URL:
+    if DATABASE_URL:
+        return _normalise_url(DATABASE_URL)
+    # URL.create keeps DB_PATH verbatim; "sqlite:///" + DB_PATH would truncate
+    # a path containing "?" at that character.
+    return URL.create("sqlite", database=DB_PATH)
+
+
 def get_engine() -> Engine:
     global _engine
     if _engine is None:
         with _engine_lock:
             if _engine is None:
-                _engine = create_engine(
-                    _normalise_url(DATABASE_URL), pool_pre_ping=True
-                )
+                _engine = create_engine(_app_database_url(), pool_pre_ping=True)
     return _engine
 
 
