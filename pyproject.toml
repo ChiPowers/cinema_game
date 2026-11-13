@@ -1,6 +1,6 @@
 [project]
 name = "cinema_game_backend"
-version = "2.4.0"
+version = "2.4.1"
 description = "Cinema Game — connect actors through shared movies"
 authors = [
     { name = "Chivon Powers", email = "chivon.powers@gmail.com" },
