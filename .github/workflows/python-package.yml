@@ -126,6 +126,9 @@ jobs:
   container:
     name: container smoke test
     runs-on: ubuntu-latest
+    # A hung build or a container that never answers should fail in minutes,
+    # not hold a runner for the 6-hour default.
+    timeout-minutes: 20
 
     steps:
     - uses: actions/checkout@v7

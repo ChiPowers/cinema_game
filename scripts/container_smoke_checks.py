@@ -26,7 +26,10 @@ def wait_for_health(timeout: float = 60.0) -> dict:
         try:
             with urllib.request.urlopen(f"{BASE}/health", timeout=3) as res:
                 return json.load(res)
-        except (urllib.error.URLError, ConnectionError):
+        # OSError, not just URLError: a read timeout surfaces as a bare
+        # TimeoutError and a reset during startup as RemoteDisconnected, and
+        # either should mean "not up yet" rather than abort the first check.
+        except OSError:
             if time.monotonic() > deadline:
                 raise
             time.sleep(1)

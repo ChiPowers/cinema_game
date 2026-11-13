@@ -81,13 +81,18 @@ run_scenario() {
     echo "FAIL container exited"
     status=1
   fi
-  if docker logs "$name" 2>&1 | grep -q Traceback; then
+  # Capture the log first: with pipefail, `docker logs | grep -q` can report
+  # failure when grep exits on the first match and docker logs gets SIGPIPE,
+  # which would hide the very traceback being looked for.
+  local log
+  log=$(docker logs "$name" 2>&1)
+  if grep -q Traceback <<<"$log"; then
     echo "FAIL traceback in container log"
     status=1
   fi
   if [ "$status" -ne 0 ]; then
     echo "-- container log ($scenario)"
-    docker logs "$name" 2>&1 | tail -50
+    tail -50 <<<"$log"
     return "$status"
   fi
 }
