@@ -12,7 +12,7 @@ from reusable_llm_provider.config import (
     create_vertex_config,
 )
 from reusable_llm_provider.providers import create_provider
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 
 from . import directories
 from .env import load_cinema_game_env
@@ -50,7 +50,9 @@ def create_tmdb_client() -> TMDbClient:
     if TMDB_CACHE_DISABLE:
         return TMDbClient(config)
     elif TMDB_CACHE_PATH:
-        engine = create_engine(f"sqlite:///{TMDB_CACHE_PATH}")
+        # URL.create keeps the path verbatim; "sqlite:///" + path would parse a
+        # "?" in it as the start of a query string and open another file.
+        engine = create_engine(URL.create("sqlite", database=TMDB_CACHE_PATH))
         return CachedTMDbClient(config, engine=engine)
     else:
         raise RuntimeError(
