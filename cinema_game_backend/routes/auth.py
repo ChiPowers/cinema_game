@@ -1,6 +1,7 @@
 import hmac
 
 from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 
 from ..config import INTERNAL_SECRET
@@ -25,6 +26,6 @@ async def check_beta(
     body: BetaCheckRequest,
     _: None = Depends(_require_internal),
 ):
-    if not is_beta_user(body.email):
+    if not await run_in_threadpool(is_beta_user, body.email):
         raise HTTPException(status_code=403, detail="Not in beta")
     return {"allowed": True}
