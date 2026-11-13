@@ -23,7 +23,13 @@ async def throttle_between_tests():
 def app_database(monkeypatch, tmp_path):
     """A real SQLite file, so the app opens its own connection on each call."""
     monkeypatch.setattr(database, "DB_PATH", str(tmp_path / "cinema_game.db"))
+    # A database layer that caches one engine per process (#109) would keep
+    # the previous test's file; drop it so the next call builds one on DB_PATH.
+    reset_engine = getattr(database, "set_engine", lambda engine: None)
+    reset_engine(None)
     database.init_db()
+    yield
+    reset_engine(None)
 
 
 @pytest.fixture(autouse=True)
