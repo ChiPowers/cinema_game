@@ -93,3 +93,19 @@ class TestValidateLLMConfig:
         )
         validate_llm_config()
         assert called == ["langchain_anthropic"]
+
+
+class TestCreateTmdbClient:
+    def test_cache_path_is_used_verbatim(self, monkeypatch, tmp_path):
+        # Formatted into "sqlite:///...", a "?" starts a query string, so the
+        # path is cut short there and a different file is opened.
+        from cinema_game_backend import config
+
+        cache_path = tmp_path / "tmdb?v=1.db"
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", str(cache_path))
+
+        config.create_tmdb_client()
+
+        assert cache_path.exists()
+        assert [p.name for p in tmp_path.iterdir()] == [cache_path.name]
