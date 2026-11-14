@@ -1,6 +1,6 @@
 [project]
 name = "cinema_game_backend"
-version = "2.4.0"
+version = "2.4.1"
 description = "Cinema Game — connect actors through shared movies"
 authors = [
     { name = "Chivon Powers", email = "chivon.powers@gmail.com" },
@@ -53,6 +53,7 @@ pytest-asyncio = "^1.3.0"
 coverage = "^7.12.0"
 vulture = "^2.16"
 deptry = "^0.25.1"
+httpx = "^0.28.1"
 
 [tool.poetry.group.notebook.dependencies]
 jupyter = "^1.1.1"
@@ -108,7 +109,8 @@ exclude_lines = [
 # directory (see deptry.cli.DEFAULT_EXCLUDE); this project nests its tests at
 # cinema_game_backend/tests/, so that exclusion never applies and the test
 # suite's import of pytest is flagged even though it is correctly a dev
-# dependency.
+# dependency. The same holds for functional_tests/, where the concurrency
+# tests import httpx (a dev dependency) to drive the app over ASGI.
 # cinema_game_backend/experiments_llm_harness.py is a dev-only LLM experiment
 # tool invoked via scripts/run_llm_experiments.py, never by the deployed app,
 # but it lives inside the package tree (same non-standard layout as above)
@@ -121,7 +123,7 @@ exclude_lines = [
 # imported in Python code, so deptry cannot see the usage.
 extend_exclude = ["cinema_game_backend/experiments_llm_harness.py"]
 [tool.deptry.per_rule_ignores]
-DEP004 = ["pytest"]
+DEP004 = ["pytest", "httpx"]
 DEP002 = ["uvicorn"]
 
 [build-system]

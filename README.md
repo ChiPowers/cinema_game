@@ -227,6 +227,12 @@ A `Makefile` provides standard development commands:
 | `make coverage`       | Run unit tests with coverage enforcement (50% min)  |
 | `make coverage-html`  | Generate an HTML coverage report at `htmlcov/`      |
 
+`functional_tests/concurrency/` holds timing tests that check a slow database call does not stall other requests. They need no credentials or network, but they are deliberately not run in CI: a timing test can pass on one run while the bug remains. Run them after changing the route handlers or `database.py`:
+
+```bash
+poetry run pytest functional_tests/concurrency/
+```
+
 ### Running the server
 
 ```bash

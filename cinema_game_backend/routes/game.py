@@ -2,6 +2,7 @@ import uuid
 
 from art_graph.cinema_data_providers.tmdb.client import TMDbClient
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from langsmith import get_current_run_tree, traceable
 
 from ..agents.puzzle_agent import generate_puzzle
@@ -71,7 +72,7 @@ async def new_game(
         "status": "in_progress",
         "strikes": 0,
     }
-    save_game(game)
+    await run_in_threadpool(save_game, game)
 
     return NewGameResponse(
         game_id=game_id,
@@ -91,7 +92,7 @@ async def make_move(
     llm=Depends(get_llm),
     _user: dict = Depends(require_auth),
 ):
-    game = load_game(game_id)
+    game = await run_in_threadpool(load_game, game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     if game["status"] != "in_progress":
@@ -123,7 +124,14 @@ async def make_move(
     if not result.valid:
         strikes = game.get("strikes", 0) + 1
         new_status = "lost" if strikes >= 3 else "in_progress"
-        update_game(game_id, game["moves"], game["current_actor"], new_status, strikes)
+        await run_in_threadpool(
+            update_game,
+            game_id,
+            game["moves"],
+            game["current_actor"],
+            new_status,
+            strikes,
+        )
         return MoveResponse(
             valid=False,
             explanation=result.explanation,
@@ -161,7 +169,9 @@ async def make_move(
     new_status = "won" if reached else "in_progress"
 
     strikes = game.get("strikes", 0)
-    update_game(game_id, game["moves"], new_actor, new_status, strikes)
+    await run_in_threadpool(
+        update_game, game_id, game["moves"], new_actor, new_status, strikes
+    )
 
     return MoveResponse(
         valid=True,
@@ -184,7 +194,7 @@ async def undo_move(
     tmdb: TMDbClient = Depends(get_tmdb),
     _user: dict = Depends(require_auth),
 ):
-    game = load_game(game_id)
+    game = await run_in_threadpool(load_game, game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     if game["status"] != "in_progress":
@@ -199,7 +209,9 @@ async def undo_move(
         fallback_id=game["start_actor"]["id"] if not game["moves"] else 0,
     )
     strikes = game.get("strikes", 0)
-    update_game(game_id, game["moves"], restored_actor, "in_progress", strikes)
+    await run_in_threadpool(
+        update_game, game_id, game["moves"], restored_actor, "in_progress", strikes
+    )
 
     return UndoResponse(
         current_actor=Actor(**restored_actor),
@@ -211,7 +223,7 @@ async def undo_move(
 
 @router.get("/{game_id}", response_model=GameState)
 async def get_game(game_id: str, _user: dict = Depends(require_auth)):
-    game = load_game(game_id)
+    game = await run_in_threadpool(load_game, game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
 
