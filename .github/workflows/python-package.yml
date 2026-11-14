@@ -122,3 +122,19 @@ jobs:
 
     - name: No backend is usable
       run: poetry run python scripts/check_extras.py
+
+  container:
+    name: container smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    # One extra is enough to prove the image builds and starts: the extras
+    # jobs above already check each backend installs on its own. anthropic
+    # matches docker-compose.yml's default.
+    - name: Build the backend image
+      run: docker build --build-arg LLM_EXTRA=anthropic -t cinema-backend:smoke .
+
+    - name: Run it against a fresh and a pre-strikes database
+      run: scripts/container_smoke.sh cinema-backend:smoke
