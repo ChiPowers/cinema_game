@@ -1,11 +1,9 @@
-import sqlite3
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from art_graph.cinema_data_providers.tmdb_models import Person
 from fastapi.testclient import TestClient
 
-from cinema_game_backend.database import init_db
 from cinema_game_backend.dependencies import get_llm, get_tmdb, require_auth
 from cinema_game_backend.main import app
 from cinema_game_backend.models.game import ValidationResult
@@ -59,17 +57,6 @@ class TestReachedEnd:
 # --- FastAPI integration tests ---
 
 
-class _NoCloseConnection:
-    def __init__(self, conn):
-        self._conn = conn
-
-    def close(self):
-        pass
-
-    def __getattr__(self, name):
-        return getattr(self._conn, name)
-
-
 def _mock_puzzle():
     return {
         "start_actor": {"name": "Brad Pitt", "id": 287, "profile_url": None},
@@ -86,22 +73,6 @@ def _mock_puzzle():
             {"type": "actor", "name": "Colin Firth", "id": 1891},
         ],
     }
-
-
-@pytest.fixture(autouse=True)
-def use_in_memory_db():
-    conn = sqlite3.connect(
-        "file::memory:?cache=shared", uri=True, check_same_thread=False
-    )
-    conn.row_factory = sqlite3.Row
-
-    def make_wrapper():
-        return _NoCloseConnection(conn)
-
-    with patch("cinema_game_backend.database.get_db", side_effect=make_wrapper):
-        init_db()
-        yield
-    conn.close()
 
 
 @pytest.fixture
