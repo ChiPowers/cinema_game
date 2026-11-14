@@ -139,7 +139,34 @@ class TestCreateTmdbClient:
         )
 
         assert config.create_tmdb_client() == ("client", "engine")
-        assert seen == ["postgresql://u:p@h/db"]
+        assert seen == ["postgresql+psycopg://u:p@h/db"]
+
+    def test_both_set_warns_that_path_is_ignored(self, monkeypatch, caplog, tmp_path):
+        from cinema_game_backend import config
+
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", str(tmp_path / "old.db"))
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", f"sqlite:///{tmp_path}/new.db")
+
+        with caplog.at_level("WARNING"):
+            config.create_tmdb_client()
+
+        assert "ignoring TMDB_CACHE_PATH" in caplog.text
+        assert (tmp_path / "new.db").exists()
+        assert not (tmp_path / "old.db").exists()
+
+    def test_blank_cache_url_env_falls_back_to_path(self, monkeypatch):
+        import importlib
+
+        from cinema_game_backend import config
+
+        monkeypatch.setenv("TMDB_CACHE_URL", "   ")
+        try:
+            importlib.reload(config)
+            assert config.TMDB_CACHE_URL is None
+        finally:
+            monkeypatch.delenv("TMDB_CACHE_URL")
+            importlib.reload(config)
 
 
 @pytest.mark.skipif(

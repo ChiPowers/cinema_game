@@ -1,3 +1,4 @@
+import logging
 import os
 from importlib.util import find_spec
 
@@ -19,6 +20,8 @@ from .env import load_cinema_game_env
 
 load_cinema_game_env()
 
+logger = logging.getLogger(__name__)
+
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 
 NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET", "")
@@ -36,12 +39,25 @@ BETA_SEED_EMAILS = [
 # Full SQLAlchemy URL for the TMDb cache, e.g. postgresql://user:pass@host/db or
 # sqlite:////abs/path/tmdb_cache.db. Takes precedence over TMDB_CACHE_PATH, which
 # is kept as a SQLite-file shorthand so existing deployments keep working.
-TMDB_CACHE_URL = os.getenv("TMDB_CACHE_URL") or None
+TMDB_CACHE_URL = os.getenv("TMDB_CACHE_URL", "").strip() or None
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280"
+
+
+def normalise_db_url(url: str) -> str:
+    """Pin bare postgres:// / postgresql:// URLs to the psycopg (v3) driver.
+
+    Hosts hand out the bare forms; SQLAlchemy rejects postgres:// and would
+    resolve postgresql:// to psycopg2. Shared by the app DB and the TMDb cache
+    so both engines use the driver we depend on.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix) :]
+    return url
 
 
 def create_tmdb_client() -> TMDbClient:
@@ -54,11 +70,13 @@ def create_tmdb_client() -> TMDbClient:
     if TMDB_CACHE_DISABLE:
         return TMDbClient(config)
     elif TMDB_CACHE_URL:
-        # SQLAlchemy rejects the bare postgres:// scheme some hosts hand out.
-        url = TMDB_CACHE_URL
-        if url.startswith("postgres://"):
-            url = "postgresql://" + url[len("postgres://") :]
-        return CachedTMDbClient(config, engine=create_engine(url, pool_pre_ping=True))
+        if TMDB_CACHE_PATH:
+            logger.warning(
+                "Both TMDB_CACHE_URL and TMDB_CACHE_PATH are set; using "
+                "TMDB_CACHE_URL and ignoring TMDB_CACHE_PATH."
+            )
+        engine = create_engine(normalise_db_url(TMDB_CACHE_URL), pool_pre_ping=True)
+        return CachedTMDbClient(config, engine=engine)
     elif TMDB_CACHE_PATH:
         # URL.create keeps the path verbatim; "sqlite:///" + path would parse a
         # "?" in it as the start of a query string and open another file.

@@ -136,7 +136,7 @@ ANTHROPIC_API_KEY=...     # Required when LLM_PROVIDER=anthropic
 | `TMDB_CACHE_PATH=/path/to/tmdb_cache.db` | Shorthand: SQLite-backed TMDb caching at the given path |
 | `TMDB_CACHE_DISABLE=true` | Run without caching (every request hits TMDb directly) |
 
-For local development, `TMDB_CACHE_DISABLE=true` is the simplest option. For production or heavy use, set `TMDB_CACHE_PATH` to a writable file path — this dramatically reduces TMDb API calls.
+For local development, `TMDB_CACHE_DISABLE=true` is the simplest option. For production or heavy use, set `TMDB_CACHE_URL` to a database URL (Postgres is recommended on hosts with an ephemeral filesystem such as Cloud Run), or `TMDB_CACHE_PATH` to a writable SQLite file path — this dramatically reduces TMDb API calls. If both are set, `TMDB_CACHE_URL` wins and a warning is logged.
 
 **LangSmith tracing** (optional):
 
@@ -283,7 +283,7 @@ docker run -p 8000:8000 \
   cinema-game-backend
 ```
 
-The API is then available at `http://localhost:8000`. The image sets `TMDB_CACHE_DISABLE=true` by default so it runs without any cache configuration; override with `TMDB_CACHE_PATH` (and a mounted volume, so the cache file persists) for cached lookups.
+The API is then available at `http://localhost:8000`. The image sets `TMDB_CACHE_DISABLE=true` by default so it runs without any cache configuration; override with `TMDB_CACHE_URL` (e.g. a Postgres URL) for cached lookups, or with `TMDB_CACHE_PATH` plus a mounted volume so the SQLite cache file persists.
 
 The container's own SQLite files (`cinema_game.db`, and any TMDb cache path under `/app`) live inside the container's filesystem and are lost when the container is removed unless a volume is mounted.
 
