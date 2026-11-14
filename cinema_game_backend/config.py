@@ -13,7 +13,7 @@ from reusable_llm_provider.config import (
     create_vertex_config,
 )
 from reusable_llm_provider.providers import create_provider
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, Engine, create_engine, text
 
 from . import directories
 from .env import load_cinema_game_env
@@ -43,6 +43,11 @@ TMDB_CACHE_URL = os.getenv("TMDB_CACHE_URL", "").strip() or None
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
+# Arbitrary constant identifying the TMDb cache's schema-creation advisory lock
+# (Postgres only). Distinct from database._INIT_LOCK_KEY so the two never wait
+# on each other when the cache and the app share one database.
+_TMDB_CACHE_INIT_LOCK_KEY = 0x746D6462  # "tmdb"
+
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280"
 
@@ -58,6 +63,27 @@ def normalise_db_url(url: str) -> str:
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix) :]
     return url
+
+
+def _cached_tmdb_client(config: TMDbConfig, engine: Engine) -> CachedTMDbClient:
+    """Build the cached client, serialising its schema creation on Postgres.
+
+    CachedTMDbClient runs Base.metadata.create_all in its constructor, and
+    CREATE TABLE IF NOT EXISTS is not race-safe on Postgres: instances starting
+    together during a rollout fail with DuplicateTable / a pg_type unique
+    violation. Hold a transaction-scoped advisory lock (released at commit, or
+    when the instance dies) around construction, as database.init_db does.
+    create_all runs on a second pooled connection; that is fine, the lock only
+    has to keep other instances out until it has committed.
+    """
+    if engine.dialect.name != "postgresql":
+        return CachedTMDbClient(config, engine=engine)
+    with engine.begin() as conn:
+        conn.execute(
+            text("SELECT pg_advisory_xact_lock(:key)"),
+            {"key": _TMDB_CACHE_INIT_LOCK_KEY},
+        )
+        return CachedTMDbClient(config, engine=engine)
 
 
 def create_tmdb_client() -> TMDbClient:
@@ -76,7 +102,7 @@ def create_tmdb_client() -> TMDbClient:
                 "TMDB_CACHE_URL and ignoring TMDB_CACHE_PATH."
             )
         engine = create_engine(normalise_db_url(TMDB_CACHE_URL), pool_pre_ping=True)
-        return CachedTMDbClient(config, engine=engine)
+        return _cached_tmdb_client(config, engine)
     elif TMDB_CACHE_PATH:
         # URL.create keeps the path verbatim; "sqlite:///" + path would parse a
         # "?" in it as the start of a query string and open another file.
