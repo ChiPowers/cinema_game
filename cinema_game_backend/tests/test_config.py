@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from cinema_game_backend.config import (
@@ -109,3 +111,85 @@ class TestCreateTmdbClient:
 
         assert cache_path.exists()
         assert [p.name for p in tmp_path.iterdir()] == [cache_path.name]
+
+    def test_cache_url_sqlite(self, monkeypatch, tmp_path):
+        from cinema_game_backend import config
+
+        db = tmp_path / "cache.db"
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", None)
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", f"sqlite:///{db}")
+
+        config.create_tmdb_client()
+
+        assert db.exists()
+
+    def test_cache_url_wins_over_path_and_fixes_postgres_scheme(self, monkeypatch):
+        from cinema_game_backend import config
+
+        seen = []
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", "/ignored.db")
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", "postgres://u:p@h/db")
+        monkeypatch.setattr(
+            config, "create_engine", lambda url, **kw: seen.append(url) or "engine"
+        )
+        monkeypatch.setattr(
+            config, "CachedTMDbClient", lambda cfg, engine: ("client", engine)
+        )
+
+        assert config.create_tmdb_client() == ("client", "engine")
+        assert seen == ["postgresql://u:p@h/db"]
+
+
+@pytest.mark.skipif(
+    not os.getenv("TEST_DATABASE_URL", "").startswith("postgres"),
+    reason="needs a real Postgres in TEST_DATABASE_URL",
+)
+def test_cache_url_round_trips_on_postgres(monkeypatch):
+    """TMDB_CACHE_URL alone points the cache at Postgres: schema + cache hit."""
+    import asyncio
+    import datetime
+
+    from art_graph.cinema_data_providers.cache.operations import store_person_movies
+    from art_graph.cinema_data_providers.cache.orm_models import Base
+    from art_graph.cinema_data_providers.tmdb_models import MovieCreditRole, Person
+    from sqlalchemy import inspect
+    from sqlalchemy.orm import Session
+
+    from cinema_game_backend import config
+
+    monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+    monkeypatch.setattr(config, "TMDB_CACHE_PATH", None)
+    monkeypatch.setattr(config, "TMDB_CACHE_URL", os.environ["TEST_DATABASE_URL"])
+
+    client = config.create_tmdb_client()
+    try:
+        assert client.engine.dialect.name == "postgresql"
+        assert {"person", "movie", "credit"} <= set(
+            inspect(client.engine).get_table_names()
+        )
+
+        person = Person(id=1, name="Test Actor", popularity=9.0)
+        movies = [
+            MovieCreditRole(
+                id=10,
+                title="Test Movie",
+                popularity=5.0,
+                character="Lead",
+                order=0,
+                release_date=datetime.date(2000, 1, 1),
+            )
+        ]
+        with Session(bind=client.engine) as session:
+            store_person_movies(session, person, movies)
+            session.commit()
+
+        # trust_cache=True returns from the database without calling TMDb, so
+        # this has no network dependency (and no API key) to pass.
+        cached = asyncio.run(client.get_person_movies(1, trust_cache=True))
+        assert [m.title for m in cached] == ["Test Movie"]
+    finally:
+        # Only the cache's own tables; the app tables belong to db_engine.
+        Base.metadata.drop_all(client.engine)
+        client.engine.dispose()

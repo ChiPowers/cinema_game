@@ -132,7 +132,8 @@ ANTHROPIC_API_KEY=...     # Required when LLM_PROVIDER=anthropic
 
 | Variable | Effect |
 |----------|--------|
-| `TMDB_CACHE_PATH=/path/to/tmdb_cache.db` | Enable SQLite-backed TMDb caching at the given path |
+| `TMDB_CACHE_URL=postgresql://user:pass@host/db` | Enable TMDb caching in any SQLAlchemy-supported database (Postgres, or `sqlite:////abs/path.db`). Takes precedence over `TMDB_CACHE_PATH` |
+| `TMDB_CACHE_PATH=/path/to/tmdb_cache.db` | Shorthand: SQLite-backed TMDb caching at the given path |
 | `TMDB_CACHE_DISABLE=true` | Run without caching (every request hits TMDb directly) |
 
 For local development, `TMDB_CACHE_DISABLE=true` is the simplest option. For production or heavy use, set `TMDB_CACHE_PATH` to a writable file path — this dramatically reduces TMDb API calls.

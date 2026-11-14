@@ -33,6 +33,10 @@ BETA_SEED_EMAILS = [
     if email.strip()
 ]
 
+# Full SQLAlchemy URL for the TMDb cache, e.g. postgresql://user:pass@host/db or
+# sqlite:////abs/path/tmdb_cache.db. Takes precedence over TMDB_CACHE_PATH, which
+# is kept as a SQLite-file shorthand so existing deployments keep working.
+TMDB_CACHE_URL = os.getenv("TMDB_CACHE_URL") or None
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
@@ -49,6 +53,12 @@ def create_tmdb_client() -> TMDbClient:
 
     if TMDB_CACHE_DISABLE:
         return TMDbClient(config)
+    elif TMDB_CACHE_URL:
+        # SQLAlchemy rejects the bare postgres:// scheme some hosts hand out.
+        url = TMDB_CACHE_URL
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://") :]
+        return CachedTMDbClient(config, engine=create_engine(url, pool_pre_ping=True))
     elif TMDB_CACHE_PATH:
         # URL.create keeps the path verbatim; "sqlite:///" + path would parse a
         # "?" in it as the start of a query string and open another file.
@@ -56,7 +66,8 @@ def create_tmdb_client() -> TMDbClient:
         return CachedTMDbClient(config, engine=engine)
     else:
         raise RuntimeError(
-            "TMDB_CACHE_PATH must be set to a writable file path for the TMDb cache, "
+            "TMDB_CACHE_URL (a database URL) or TMDB_CACHE_PATH (a SQLite file "
+            "path) must be set for the TMDb cache, "
             "or set TMDB_CACHE_DISABLE=true to run without caching."
         )
 
