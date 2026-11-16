@@ -1,3 +1,6 @@
+import os
+from types import SimpleNamespace
+
 import pytest
 
 from cinema_game_backend.config import (
@@ -109,3 +112,158 @@ class TestCreateTmdbClient:
 
         assert cache_path.exists()
         assert [p.name for p in tmp_path.iterdir()] == [cache_path.name]
+
+    def test_cache_url_sqlite(self, monkeypatch, tmp_path):
+        from cinema_game_backend import config
+
+        db = tmp_path / "cache.db"
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", None)
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", f"sqlite:///{db}")
+
+        config.create_tmdb_client()
+
+        assert db.exists()
+
+    def test_cache_url_wins_over_path_and_fixes_postgres_scheme(self, monkeypatch):
+        from cinema_game_backend import config
+
+        seen = []
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", "/ignored.db")
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", "postgres://u:p@h/db")
+        fake_engine = SimpleNamespace(dialect=SimpleNamespace(name="sqlite"))
+        monkeypatch.setattr(
+            config, "create_engine", lambda url, **kw: seen.append(url) or fake_engine
+        )
+        monkeypatch.setattr(
+            config, "CachedTMDbClient", lambda cfg, engine: ("client", engine)
+        )
+
+        assert config.create_tmdb_client() == ("client", fake_engine)
+        assert seen == ["postgresql+psycopg://u:p@h/db"]
+
+    def test_both_set_warns_that_path_is_ignored(self, monkeypatch, caplog, tmp_path):
+        from cinema_game_backend import config
+
+        monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+        monkeypatch.setattr(config, "TMDB_CACHE_PATH", str(tmp_path / "old.db"))
+        monkeypatch.setattr(config, "TMDB_CACHE_URL", f"sqlite:///{tmp_path}/new.db")
+
+        with caplog.at_level("WARNING"):
+            config.create_tmdb_client()
+
+        assert "ignoring TMDB_CACHE_PATH" in caplog.text
+        assert (tmp_path / "new.db").exists()
+        assert not (tmp_path / "old.db").exists()
+
+    def test_blank_cache_url_env_falls_back_to_path(self, monkeypatch):
+        import importlib
+
+        from cinema_game_backend import config
+
+        monkeypatch.setenv("TMDB_CACHE_URL", "   ")
+        try:
+            importlib.reload(config)
+            assert config.TMDB_CACHE_URL is None
+        finally:
+            monkeypatch.delenv("TMDB_CACHE_URL")
+            importlib.reload(config)
+
+
+_needs_postgres = pytest.mark.skipif(
+    not os.getenv("TEST_DATABASE_URL", "").startswith("postgres"),
+    reason="needs a real Postgres in TEST_DATABASE_URL",
+)
+
+
+@pytest.fixture
+def postgres_cache_url(monkeypatch):
+    """TEST_DATABASE_URL as the cache URL; refuses to touch a real cache."""
+    from cinema_game_backend import config
+
+    url = os.environ["TEST_DATABASE_URL"]
+    real = os.getenv("TMDB_CACHE_URL", "").strip()
+    if real and config.normalise_db_url(real) == config.normalise_db_url(url):
+        # These tests drop the cache tables; never let them near real data.
+        pytest.exit(
+            "TEST_DATABASE_URL must not be the TMDB_CACHE_URL: the test suite "
+            "drops the cache tables.",
+            returncode=2,
+        )
+    monkeypatch.setattr(config, "TMDB_CACHE_DISABLE", False)
+    monkeypatch.setattr(config, "TMDB_CACHE_PATH", None)
+    monkeypatch.setattr(config, "TMDB_CACHE_URL", url)
+    return url
+
+
+@_needs_postgres
+def test_concurrent_cache_init_is_safe(postgres_cache_url):
+    """Instances starting together must not collide on the cache's DDL."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from art_graph.cinema_data_providers.cache.orm_models import Base
+    from sqlalchemy import create_engine, inspect
+
+    from cinema_game_backend import config
+
+    engine = create_engine(config.normalise_db_url(postgres_cache_url))
+    Base.metadata.drop_all(engine)
+
+    def run(_):
+        # Each "instance" builds its own engine, as separate processes would.
+        config.create_tmdb_client().engine.dispose()
+
+    try:
+        with ThreadPoolExecutor(8) as pool:
+            list(pool.map(run, range(8)))  # re-raises any worker failure
+        assert {"person", "movie", "credit"} <= set(inspect(engine).get_table_names())
+    finally:
+        Base.metadata.drop_all(engine)
+        engine.dispose()
+
+
+@_needs_postgres
+def test_cache_url_round_trips_on_postgres(postgres_cache_url):
+    """TMDB_CACHE_URL alone points the cache at Postgres: schema + cache hit."""
+    import asyncio
+    import datetime
+
+    from art_graph.cinema_data_providers.cache.operations import store_person_movies
+    from art_graph.cinema_data_providers.cache.orm_models import Base
+    from art_graph.cinema_data_providers.tmdb_models import MovieCreditRole, Person
+    from sqlalchemy import inspect
+    from sqlalchemy.orm import Session
+
+    from cinema_game_backend import config
+
+    client = config.create_tmdb_client()
+    try:
+        assert client.engine.dialect.name == "postgresql"
+        assert {"person", "movie", "credit"} <= set(
+            inspect(client.engine).get_table_names()
+        )
+
+        person = Person(id=1, name="Test Actor", popularity=9.0)
+        movies = [
+            MovieCreditRole(
+                id=10,
+                title="Test Movie",
+                popularity=5.0,
+                character="Lead",
+                order=0,
+                release_date=datetime.date(2000, 1, 1),
+            )
+        ]
+        with Session(bind=client.engine) as session:
+            store_person_movies(session, person, movies)
+            session.commit()
+
+        # trust_cache=True returns from the database without calling TMDb, so
+        # this has no network dependency (and no API key) to pass.
+        cached = asyncio.run(client.get_person_movies(1, trust_cache=True))
+        assert [m.title for m in cached] == ["Test Movie"]
+    finally:
+        # Only the cache's own tables; the app tables belong to db_engine.
+        Base.metadata.drop_all(client.engine)
+        client.engine.dispose()

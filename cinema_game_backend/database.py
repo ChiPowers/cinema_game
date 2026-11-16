@@ -24,6 +24,7 @@ from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.engine import URL, Connection, Row
 
 from .config import DATABASE_URL, DB_PATH
+from .config import normalise_db_url as _normalise_url
 
 metadata = MetaData()
 
@@ -58,15 +59,6 @@ _INIT_LOCK_KEY = 0x63696E656D61  # "cinema"
 
 _engine: Engine | None = None
 _engine_lock = threading.Lock()
-
-
-def _normalise_url(url: str) -> str:
-    # Hosts hand out bare postgres:// or postgresql:// URLs; SQLAlchemy would
-    # resolve those to psycopg2. Pin the psycopg (v3) driver we depend on.
-    for prefix in ("postgres://", "postgresql://"):
-        if url.startswith(prefix):
-            return "postgresql+psycopg://" + url[len(prefix) :]
-    return url
 
 
 def _app_database_url() -> str | URL:

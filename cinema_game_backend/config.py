@@ -1,3 +1,4 @@
+import logging
 import os
 from importlib.util import find_spec
 
@@ -12,12 +13,14 @@ from reusable_llm_provider.config import (
     create_vertex_config,
 )
 from reusable_llm_provider.providers import create_provider
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, Engine, create_engine, text
 
 from . import directories
 from .env import load_cinema_game_env
 
 load_cinema_game_env()
+
+logger = logging.getLogger(__name__)
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 
@@ -33,11 +36,54 @@ BETA_SEED_EMAILS = [
     if email.strip()
 ]
 
+# Full SQLAlchemy URL for the TMDb cache, e.g. postgresql://user:pass@host/db or
+# sqlite:////abs/path/tmdb_cache.db. Takes precedence over TMDB_CACHE_PATH, which
+# is kept as a SQLite-file shorthand so existing deployments keep working.
+TMDB_CACHE_URL = os.getenv("TMDB_CACHE_URL", "").strip() or None
 TMDB_CACHE_PATH = os.getenv("TMDB_CACHE_PATH")
 TMDB_CACHE_DISABLE = os.getenv("TMDB_CACHE_DISABLE", "").lower() == "true"
 
+# Arbitrary constant identifying the TMDb cache's schema-creation advisory lock
+# (Postgres only). Distinct from database._INIT_LOCK_KEY so the two never wait
+# on each other when the cache and the app share one database.
+_TMDB_CACHE_INIT_LOCK_KEY = 0x746D6462  # "tmdb"
+
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280"
+
+
+def normalise_db_url(url: str) -> str:
+    """Pin bare postgres:// / postgresql:// URLs to the psycopg (v3) driver.
+
+    Hosts hand out the bare forms; SQLAlchemy rejects postgres:// and would
+    resolve postgresql:// to psycopg2. Shared by the app DB and the TMDb cache
+    so both engines use the driver we depend on.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix) :]
+    return url
+
+
+def _cached_tmdb_client(config: TMDbConfig, engine: Engine) -> CachedTMDbClient:
+    """Build the cached client, serialising its schema creation on Postgres.
+
+    CachedTMDbClient runs Base.metadata.create_all in its constructor, and
+    CREATE TABLE IF NOT EXISTS is not race-safe on Postgres: instances starting
+    together during a rollout fail with DuplicateTable / a pg_type unique
+    violation. Hold a transaction-scoped advisory lock (released at commit, or
+    when the instance dies) around construction, as database.init_db does.
+    create_all runs on a second pooled connection; that is fine, the lock only
+    has to keep other instances out until it has committed.
+    """
+    if engine.dialect.name != "postgresql":
+        return CachedTMDbClient(config, engine=engine)
+    with engine.begin() as conn:
+        conn.execute(
+            text("SELECT pg_advisory_xact_lock(:key)"),
+            {"key": _TMDB_CACHE_INIT_LOCK_KEY},
+        )
+        return CachedTMDbClient(config, engine=engine)
 
 
 def create_tmdb_client() -> TMDbClient:
@@ -49,6 +95,14 @@ def create_tmdb_client() -> TMDbClient:
 
     if TMDB_CACHE_DISABLE:
         return TMDbClient(config)
+    elif TMDB_CACHE_URL:
+        if TMDB_CACHE_PATH:
+            logger.warning(
+                "Both TMDB_CACHE_URL and TMDB_CACHE_PATH are set; using "
+                "TMDB_CACHE_URL and ignoring TMDB_CACHE_PATH."
+            )
+        engine = create_engine(normalise_db_url(TMDB_CACHE_URL), pool_pre_ping=True)
+        return _cached_tmdb_client(config, engine)
     elif TMDB_CACHE_PATH:
         # URL.create keeps the path verbatim; "sqlite:///" + path would parse a
         # "?" in it as the start of a query string and open another file.
@@ -56,7 +110,8 @@ def create_tmdb_client() -> TMDbClient:
         return CachedTMDbClient(config, engine=engine)
     else:
         raise RuntimeError(
-            "TMDB_CACHE_PATH must be set to a writable file path for the TMDb cache, "
+            "TMDB_CACHE_URL (a database URL) or TMDB_CACHE_PATH (a SQLite file "
+            "path) must be set for the TMDb cache, "
             "or set TMDB_CACHE_DISABLE=true to run without caching."
         )
 
